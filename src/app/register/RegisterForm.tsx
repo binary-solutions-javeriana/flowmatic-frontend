@@ -55,14 +55,14 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
   React.useEffect(() => {
     clearAllErrors();
     clearError();
-  }, [email, password, confirmPassword, clearAllErrors, clearError]);
+  }, [email, password, confirmPassword]); // Remove function dependencies to prevent infinite loop
 
   // Display auth store errors
   React.useEffect(() => {
     if (state.error) {
       setGlobalErrorFromException(new Error(state.error), 'register');
     }
-  }, [state.error, setGlobalErrorFromException]);
+  }, [state.error]); // Remove function dependency to prevent infinite loop
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

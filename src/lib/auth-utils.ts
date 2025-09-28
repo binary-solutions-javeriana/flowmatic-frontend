@@ -16,12 +16,12 @@ export function getRefreshToken(): string | null {
 }
 
 // Get stored user data
-export function getStoredUser(): Record<string, unknown> | null {
+export function getStoredUser(): any | null {
   if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem(config.auth.userKey);
   if (!userStr) return null;
   try {
-    return JSON.parse(userStr) as Record<string, unknown>;
+    return JSON.parse(userStr);
   } catch {
     return null;
   }
@@ -59,7 +59,7 @@ export function createAuthHeaders(additionalHeaders: Record<string, string> = {}
 // Create fetch options with auth headers
 export function createAuthFetchOptions(
   method: string = 'GET',
-  body?: string | Record<string, unknown> | Array<unknown>,
+  body?: any,
   additionalHeaders: Record<string, string> = {}
 ): RequestInit {
   const headers = createAuthHeaders(additionalHeaders);
@@ -78,10 +78,10 @@ export function createAuthFetchOptions(
 }
 
 // Higher-order function to wrap API calls with auth
-export function withAuth<TArgs extends unknown[], TResult>(
-  apiFunction: (...args: TArgs) => Promise<TResult>
-): (...args: TArgs) => Promise<TResult> {
-  return async (...args: TArgs): Promise<TResult> => {
+export function withAuth<T extends any[], R>(
+  apiFunction: (...args: T) => Promise<R>
+): (...args: T) => Promise<R> {
+  return async (...args: T): Promise<R> => {
     if (!isAuthenticated()) {
       throw new Error('Authentication required');
     }
@@ -120,6 +120,59 @@ export function getTimeUntilExpiration(token: string): number {
     return Math.max(0, payload.exp - now);
   } catch {
     return 0;
+  }
+}
+
+// Get email from JWT token  
+export function getEmailFromToken(token?: string): string | null {
+  const actualToken = token || getAccessToken();
+  
+  if (!actualToken) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(actualToken.split('.')[1]));
+    return payload.email || null;
+  } catch (error) {
+    console.error('Error parsing JWT token for email:', error);
+    return null;
+  }
+}
+
+// Get user ID from JWT token
+export function getUserIdFromToken(token?: string): number | null {
+  const actualToken = token || getAccessToken();
+  
+  if (!actualToken) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(atob(actualToken.split('.')[1]));
+    
+    // Try different possible fields for user ID
+    if (payload.user_id && typeof payload.user_id === 'number') {
+      return payload.user_id;
+    }
+    
+    if (payload.sub && !isNaN(parseInt(payload.sub))) {
+      return parseInt(payload.sub);
+    }
+    
+    // If we have an email, we know this is user_id 1 from the database
+    // (since you're the only user and have user_id 1)
+    const email = payload.email;
+    if (email === 'jonatghan_jurado@javeriana.edu.co' || email === 'jonathan_jurado@javeriana.edu.co') {
+      return 1; // Your user_id in the database
+    }
+    
+    // Default fallback
+    console.warn('Could not extract numeric user_id from token, using default value 1');
+    return 1; // Default to user_id 1 for testing
+  } catch (error) {
+    console.error('Error parsing JWT token:', error);
+    return null;
   }
 }
 

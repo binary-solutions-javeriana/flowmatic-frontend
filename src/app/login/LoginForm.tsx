@@ -45,14 +45,14 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
   React.useEffect(() => {
     clearAllErrors();
     clearError();
-  }, [email, password, clearAllErrors, clearError]);
+  }, [email, password]); // Remove function dependencies to prevent infinite loop
 
   // Display auth store errors
   React.useEffect(() => {
     if (state.error) {
       setGlobalErrorFromException(new Error(state.error), 'login');
     }
-  }, [state.error, setGlobalErrorFromException]);
+  }, [state.error]); // Remove function dependency to prevent infinite loop
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

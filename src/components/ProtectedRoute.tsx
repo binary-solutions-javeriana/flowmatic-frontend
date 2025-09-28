@@ -1,9 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,10 +19,11 @@ export default function ProtectedRoute({
   const router = useRouter();
 
   useEffect(() => {
+    // Only redirect if we're sure the user is not authenticated
     if (!state.isLoading && !state.isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [state.isLoading, state.isAuthenticated, router, redirectTo]);
+  }, [state.isLoading, state.isAuthenticated, redirectTo]); // Remove router from dependencies
 
   // Show loading state while checking authentication
   if (state.isLoading) {
@@ -71,7 +71,7 @@ export function useAuthProtection(redirectTo: string = '/login') {
     if (!state.isLoading && !state.isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [state.isLoading, state.isAuthenticated, router, redirectTo]);
+  }, [state.isLoading, state.isAuthenticated, redirectTo]); // Remove router from dependencies
 
   return {
     isAuthenticated: state.isAuthenticated,
