@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { authService } from './http-auth-service';
 import type { AuthService, AuthUser, AuthTokens, AuthResult } from './auth-service';
 
@@ -192,9 +192,9 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
     }
   };
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'AUTH_ERROR', payload: '' });
-  };
+  }, []);
 
   const value: AuthContextType = {
     state,

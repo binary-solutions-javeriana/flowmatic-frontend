@@ -69,7 +69,7 @@ export function useAuthenticatedApiCall<T>() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<T | null>(null);
-  const { api } = useAuthenticatedApi();
+  
 
   const execute = useCallback(async (
     apiCall: () => Promise<T>,

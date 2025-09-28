@@ -38,19 +38,31 @@ export function createMockLocalStorage() {
 }
 
 // Mock fetch for API tests
+export type MockFetchData = {
+  ok?: boolean;
+  status?: number;
+  data?: unknown;
+};
+
 export function createMockFetch(responses: Record<string, unknown> = {}) {
   const mockFetch = vi.fn();
   
   mockFetch.mockImplementation((url: string, options?: RequestInit) => {
     const responseKey = `${options?.method || 'GET'}:${url}`;
-    const response = (responses as Record<string, any>)[responseKey] || (responses as Record<string, any>)[url] || (responses as Record<string, any>)['default'];
+    const response = (responses as Record<string, MockFetchData | unknown>)[responseKey]
+      || (responses as Record<string, MockFetchData | unknown>)[url]
+      || (responses as Record<string, MockFetchData | unknown>)['default'];
     
     if (response) {
+      const typed = response as MockFetchData | unknown;
+      const ok = (typed as MockFetchData).ok;
+      const status = (typed as MockFetchData).status;
+      const data = (typed as MockFetchData).data ?? typed;
       return Promise.resolve({
-        ok: response.ok !== false,
-        status: response.status || 200,
-        json: () => Promise.resolve(response.data || response),
-        text: () => Promise.resolve(JSON.stringify(response.data || response))
+        ok: ok !== false,
+        status: status || 200,
+        json: () => Promise.resolve(data),
+        text: () => Promise.resolve(JSON.stringify(data))
       });
     }
     

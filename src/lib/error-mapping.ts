@@ -216,7 +216,7 @@ export function mapErrorToUserFriendly(error: unknown, context?: string): UserFr
 }
 
 // Map ApiException to user-friendly error
-function mapApiException(error: ApiException, context?: string): UserFriendlyError {
+function mapApiException(error: ApiException, _context?: string): UserFriendlyError {
   const errorCode = HTTP_STATUS_MAPPINGS[error.statusCode] || 'UNKNOWN_ERROR';
   const baseError = ERROR_MAPPINGS[errorCode] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
@@ -238,7 +238,7 @@ function mapApiException(error: ApiException, context?: string): UserFriendlyErr
 }
 
 // Map AuthError to user-friendly error
-function mapAuthError(error: AuthError, context?: string): UserFriendlyError {
+function mapAuthError(error: AuthError, _context?: string): UserFriendlyError {
   const baseError = ERROR_MAPPINGS[error.code] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
   return {
@@ -253,7 +253,7 @@ function mapAuthError(error: AuthError, context?: string): UserFriendlyError {
 }
 
 // Map generic Error to user-friendly error
-function mapGenericError(error: Error, context?: string): UserFriendlyError {
+function mapGenericError(error: Error, _context?: string): UserFriendlyError {
   // Check for network-related errors
   if (error.message.includes('fetch') || error.message.includes('network')) {
     return {
