@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '../../test/test-utils';
 import LoginForm from '../LoginForm';
+import * as AuthStore from '@/lib/auth-store';
 
 // Mock the auth store
 const mockLogin = vi.fn();
@@ -131,7 +132,7 @@ describe('LoginForm', () => {
       error: 'Invalid credentials'
     };
 
-    vi.mocked(require('@/lib/auth-store').useAuth).mockReturnValue({
+    vi.mocked(AuthStore.useAuth).mockReturnValue({
       login: mockLogin,
       state: mockAuthStateWithError,
       clearError: mockClearError
@@ -166,7 +167,7 @@ describe('LoginForm', () => {
       error: 'Invalid credentials'
     };
 
-    vi.mocked(require('@/lib/auth-store').useAuth).mockReturnValue({
+    vi.mocked(AuthStore.useAuth).mockReturnValue({
       login: mockLogin,
       state: mockAuthStateWithError,
       clearError: mockClearError

@@ -31,12 +31,12 @@ export default function EmailConfirmPage() {
           </h1>
           
           <p className="text-blue-800 mb-6">
-            We've sent you a confirmation link. Please check your email and click the link to activate your account.
+            We&apos;ve sent you a confirmation link. Please check your email and click the link to activate your account.
           </p>
           
           <div className="space-y-4">
             <div className="text-sm text-blue-700">
-              <p>Didn't receive the email?</p>
+              <p>Didn&apos;t receive the email?</p>
               <ul className="mt-2 text-xs space-y-1">
                 <li>• Check your spam folder</li>
                 <li>• Make sure you entered the correct email address</li>

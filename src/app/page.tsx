@@ -27,7 +27,7 @@ export default function Home() {
           <div className="space-y-4">
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <h2 className="text-lg font-semibold text-green-900">
-                You're logged in! 🎉
+                You&apos;re logged in! 🎉
               </h2>
               <p className="text-green-700">
                 Welcome back, {state.user?.email}

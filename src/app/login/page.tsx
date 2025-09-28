@@ -11,7 +11,7 @@ export default function LoginPage() {
         <div className="text-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Login</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-green-600 hover:text-green-700 font-medium">
               Sign up here
             </Link>

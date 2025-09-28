@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '../../test/test-utils';
 import RegisterForm from '../RegisterForm';
+import * as AuthStore from '@/lib/auth-store';
 
 // Mock the auth store
 const mockRegister = vi.fn();
@@ -206,7 +207,7 @@ describe('RegisterForm', () => {
       error: 'Email already exists'
     };
 
-    vi.mocked(require('@/lib/auth-store').useAuth).mockReturnValue({
+    vi.mocked(AuthStore.useAuth).mockReturnValue({
       register: mockRegister,
       state: mockAuthStateWithError,
       clearError: mockClearError
@@ -243,7 +244,7 @@ describe('RegisterForm', () => {
       error: 'Email already exists'
     };
 
-    vi.mocked(require('@/lib/auth-store').useAuth).mockReturnValue({
+    vi.mocked(AuthStore.useAuth).mockReturnValue({
       register: mockRegister,
       state: mockAuthStateWithError,
       clearError: mockClearError
