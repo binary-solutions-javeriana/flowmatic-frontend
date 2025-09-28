@@ -16,12 +16,12 @@ export function getRefreshToken(): string | null {
 }
 
 // Get stored user data
-export function getStoredUser(): any | null {
+export function getStoredUser(): Record<string, unknown> | null {
   if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem(config.auth.userKey);
   if (!userStr) return null;
   try {
-    return JSON.parse(userStr);
+    return JSON.parse(userStr) as Record<string, unknown>;
   } catch {
     return null;
   }
@@ -59,7 +59,7 @@ export function createAuthHeaders(additionalHeaders: Record<string, string> = {}
 // Create fetch options with auth headers
 export function createAuthFetchOptions(
   method: string = 'GET',
-  body?: any,
+  body?: string | Record<string, unknown> | Array<unknown>,
   additionalHeaders: Record<string, string> = {}
 ): RequestInit {
   const headers = createAuthHeaders(additionalHeaders);
@@ -78,10 +78,10 @@ export function createAuthFetchOptions(
 }
 
 // Higher-order function to wrap API calls with auth
-export function withAuth<T extends any[], R>(
-  apiFunction: (...args: T) => Promise<R>
-): (...args: T) => Promise<R> {
-  return async (...args: T): Promise<R> => {
+export function withAuth<TArgs extends unknown[], TResult>(
+  apiFunction: (...args: TArgs) => Promise<TResult>
+): (...args: TArgs) => Promise<TResult> {
+  return async (...args: TArgs): Promise<TResult> => {
     if (!isAuthenticated()) {
       throw new Error('Authentication required');
     }

@@ -8,7 +8,7 @@ import Link from "next/link";
 
 function DashboardContent() {
   const { state } = useAuth();
-  const { api, isAuthenticated } = useAuthenticatedApi();
+  const { isAuthenticated } = useAuthenticatedApi();
 
   // Example of how to make authenticated API calls
   const handleTestApiCall = async () => {

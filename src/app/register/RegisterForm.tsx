@@ -26,7 +26,7 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+// type RegisterFormData = z.infer<typeof registerSchema>;
 
 export interface RegisterFormProps {
   onSubmit?: (email: string, password: string) => void;
@@ -54,7 +54,8 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
   // Clear errors when form values change
   React.useEffect(() => {
     clearAllErrors();
-  }, [email, password, confirmPassword, clearAllErrors]);
+    clearError();
+  }, [email, password, confirmPassword, clearAllErrors, clearError]);
 
   // Display auth store errors
   React.useEffect(() => {

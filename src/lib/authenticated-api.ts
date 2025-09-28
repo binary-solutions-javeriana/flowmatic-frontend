@@ -1,8 +1,8 @@
 // Authenticated API client for protected routes
 // Extends the base API client with automatic auth header injection
 
-import { api, ApiException } from './api';
-import { createAuthHeaders, createAuthFetchOptions, isAuthenticated } from './auth-utils';
+import { api } from './api';
+import { createAuthHeaders, isAuthenticated } from './auth-utils';
 
 // Authenticated API client that automatically adds auth headers
 export async function authenticatedApi<T>(
@@ -34,7 +34,7 @@ export const authApi = {
     });
   },
 
-  async post<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+  async post<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
     return authenticatedApi<T>(path, {
       method: 'POST',
       body: typeof body === 'string' ? body : JSON.stringify(body),
@@ -42,7 +42,7 @@ export const authApi = {
     });
   },
 
-  async put<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+  async put<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
     return authenticatedApi<T>(path, {
       method: 'PUT',
       body: typeof body === 'string' ? body : JSON.stringify(body),
@@ -50,7 +50,7 @@ export const authApi = {
     });
   },
 
-  async patch<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+  async patch<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
     return authenticatedApi<T>(path, {
       method: 'PATCH',
       body: typeof body === 'string' ? body : JSON.stringify(body),

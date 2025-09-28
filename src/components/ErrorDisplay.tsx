@@ -114,7 +114,7 @@ export class ErrorBoundary extends React.Component<
   { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> },
   ErrorBoundaryState
 > {
-  constructor(props: any) {
+  constructor(props: { children: React.ReactNode; fallback?: React.ComponentType<{ error: Error }> }) {
     super(props);
     this.state = { hasError: false };
   }

@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { HttpAuthService } from '../http-auth-service';
-import { createMockFetch, testData } from '../../test/test-utils';
+import { testData } from '../../test/test-utils';
 
 // Mock fetch globally
 global.fetch = vi.fn();
 
 describe('HttpAuthService', () => {
   let authService: HttpAuthService;
-  let mockFetch: any;
+  let mockFetch: ReturnType<typeof vi.mocked> & jest.Mock;
 
   beforeEach(() => {
     authService = new HttpAuthService();
-    mockFetch = vi.mocked(fetch);
+    mockFetch = vi.mocked(fetch) as unknown as jest.Mock;
     mockFetch.mockClear();
   });
 

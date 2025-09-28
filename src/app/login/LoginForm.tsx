@@ -19,7 +19,7 @@ const loginSchema = z.object({
     .min(6, "Password must be at least 6 characters"),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+// type LoginFormData = z.infer<typeof loginSchema>;
 
 export interface LoginFormProps {
   onSubmit?: (email: string, password: string) => void;
@@ -44,7 +44,8 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
   // Clear errors when form values change
   React.useEffect(() => {
     clearAllErrors();
-  }, [email, password, clearAllErrors]);
+    clearError();
+  }, [email, password, clearAllErrors, clearError]);
 
   // Display auth store errors
   React.useEffect(() => {

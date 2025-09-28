@@ -148,7 +148,7 @@ export function useApiErrorHandler() {
     setRetryCount(0);
   }, []);
 
-  const retry = useCallback((retryFunction: () => Promise<any>) => {
+  const retry = useCallback((retryFunction: () => Promise<unknown>) => {
     if (retryCount < maxRetries) {
       setRetryCount(prev => prev + 1);
       return retryFunction();

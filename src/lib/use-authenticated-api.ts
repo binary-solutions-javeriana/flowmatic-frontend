@@ -38,15 +38,15 @@ export function useAuthenticatedApi() {
       return authenticatedCall(() => authApi.get<T>(path, headers));
     },
 
-    async post<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+    async post<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
       return authenticatedCall(() => authApi.post<T>(path, body, headers));
     },
 
-    async put<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+    async put<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
       return authenticatedCall(() => authApi.put<T>(path, body, headers));
     },
 
-    async patch<T>(path: string, body?: any, headers?: Record<string, string>): Promise<T> {
+    async patch<T>(path: string, body?: string | Record<string, unknown> | Array<unknown>, headers?: Record<string, string>): Promise<T> {
       return authenticatedCall(() => authApi.patch<T>(path, body, headers));
     },
 
@@ -96,7 +96,7 @@ export function useAuthenticatedApiCall<T>() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, []);
 
   return {
     execute,

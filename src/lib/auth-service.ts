@@ -4,8 +4,6 @@
 import type {
   LoginRequest,
   RegisterRequest,
-  LoginResponse,
-  RegisterApiResponse,
   User
 } from './auth-types';
 
@@ -16,9 +14,7 @@ export interface AuthTokens {
   tokenType: 'bearer';
 }
 
-export interface AuthUser extends User {
-  // Extended user interface for client-side usage
-}
+export type AuthUser = User;
 
 export interface AuthResult {
   user: AuthUser;

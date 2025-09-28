@@ -4,10 +4,7 @@
 import { ApiException } from './api';
 import { 
   AuthError, 
-  NetworkError, 
-  ValidationError, 
-  UnauthorizedError, 
-  ConflictError 
+  ValidationError
 } from './auth-service';
 
 // Error severity levels

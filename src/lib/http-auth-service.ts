@@ -1,7 +1,7 @@
 // HttpAuthService - Concrete implementation of AuthService using HTTP
 // Following SOLID principles: Single Responsibility (handles HTTP transport only)
 
-import { api, ApiException, withAuth } from './api';
+import { api, ApiException } from './api';
 import { config } from './config';
 import type { AuthService, AuthResult, AuthTokens, AuthUser } from './auth-service';
 import type {
@@ -113,7 +113,13 @@ export class HttpAuthService implements AuthService {
 
   // Private helper methods
 
-  private mapUser(user: any): AuthUser {
+  private mapUser(user: {
+    id: string;
+    email: string;
+    app_metadata?: Record<string, unknown>;
+    user_metadata?: Record<string, unknown>;
+    aud: string;
+  }): AuthUser {
     return {
       id: user.id,
       email: user.email,
@@ -123,7 +129,12 @@ export class HttpAuthService implements AuthService {
     };
   }
 
-  private mapTokens(response: any): AuthTokens {
+  private mapTokens(response: {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+    token_type?: 'bearer';
+  }): AuthTokens {
     return {
       accessToken: response.access_token,
       refreshToken: response.refresh_token,
