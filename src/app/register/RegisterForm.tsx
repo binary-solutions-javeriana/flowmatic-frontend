@@ -77,8 +77,9 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.issues.forEach((issue) => {
-        if (issue.path[0]) {
-          fieldErrors[issue.path[0] as string] = issue.message;
+        const field = issue.path[0] as string | undefined;
+        if (field && !fieldErrors[field]) {
+          fieldErrors[field] = issue.message;
         }
       });
       setErrors(fieldErrors);
@@ -94,10 +95,10 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
       onSubmit?.(email, password);
       
       // Handle different registration outcomes
-      if (result.requiresEmailConfirmation) {
+      if (result && result.requiresEmailConfirmation) {
         // Redirect to email confirmation page for better UX
         router.push('/auth/confirm');
-      } else if (result.tokens) {
+      } else if (result && result.tokens) {
         // Auto-confirm case - redirect to success page
         router.push('/auth/success');
       } else {

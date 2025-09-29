@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '../../test/test-utils';
+import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import RegisterForm from '../RegisterForm';
 import * as AuthStore from '@/lib/auth-store';
 
@@ -15,13 +15,17 @@ const mockAuthState = {
   error: null
 };
 
-vi.mock('@/lib/auth-store', () => ({
-  useAuth: () => ({
-    register: mockRegister,
-    state: mockAuthState,
-    clearError: mockClearError
-  })
-}));
+vi.mock('@/lib/auth-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/auth-store')>();
+  return {
+    ...actual,
+    useAuth: () => ({
+      register: mockRegister,
+      state: mockAuthState,
+      clearError: mockClearError,
+    }),
+  };
+});
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -53,7 +57,7 @@ describe('RegisterForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-      expect(screen.getByText(/password is required/i)).toBeInTheDocument();
+      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument();
       expect(screen.getByText(/please confirm your password/i)).toBeInTheDocument();
     });
   });
@@ -207,7 +211,7 @@ describe('RegisterForm', () => {
       error: 'Email already exists'
     };
 
-    vi.mocked(AuthStore.useAuth).mockReturnValue({
+    vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
       register: mockRegister,
       state: mockAuthStateWithError,
       clearError: mockClearError
@@ -223,8 +227,7 @@ describe('RegisterForm', () => {
 
     const passwordInput = screen.getByLabelText(/^password$/i);
     const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
-    const passwordToggleButton = screen.getByLabelText(/show password/i);
-    const confirmPasswordToggleButton = screen.getByLabelText(/show password/i);
+    const [passwordToggleButton, confirmPasswordToggleButton] = screen.getAllByLabelText(/show password/i);
 
     expect(passwordInput).toHaveAttribute('type', 'password');
     expect(confirmPasswordInput).toHaveAttribute('type', 'password');
@@ -244,7 +247,7 @@ describe('RegisterForm', () => {
       error: 'Email already exists'
     };
 
-    vi.mocked(AuthStore.useAuth).mockReturnValue({
+    vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
       register: mockRegister,
       state: mockAuthStateWithError,
       clearError: mockClearError

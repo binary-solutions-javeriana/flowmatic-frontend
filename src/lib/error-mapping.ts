@@ -128,6 +128,19 @@ const ERROR_MAPPINGS: Record<string, Omit<UserFriendlyError, 'code'>> = {
     retryable: true
   },
 
+  // General validation error
+  'VALIDATION_ERROR': {
+    title: 'Required Information Missing',
+    message: 'Please fill in all required fields.',
+    severity: ErrorSeverity.LOW,
+    suggestions: [
+      'Complete all marked fields',
+      'Check for any empty inputs',
+      'Review the form requirements'
+    ],
+    retryable: true
+  },
+
   // Server errors
   'SERVER_ERROR': {
     title: 'Server Error',
@@ -224,6 +237,9 @@ function mapApiException(error: ApiException): UserFriendlyError {
   let field: string | undefined;
   if (error.statusCode === 400 || error.statusCode === 422) {
     field = extractFieldFromMessage(error.message);
+    if (!field) {
+      field = 'request';
+    }
   }
 
   return {
@@ -255,7 +271,7 @@ function mapAuthError(error: AuthError): UserFriendlyError {
 // Map generic Error to user-friendly error
 function mapGenericError(error: Error): UserFriendlyError {
   // Check for network-related errors
-  if (error.message.includes('fetch') || error.message.includes('network')) {
+  if (/fetch|network/i.test(error.message)) {
     return {
       code: 'NETWORK_ERROR',
       ...ERROR_MAPPINGS['NETWORK_ERROR']
@@ -279,9 +295,14 @@ function mapGenericError(error: Error): UserFriendlyError {
   }
 
   // Default to unknown error
+  const base = ERROR_MAPPINGS['UNKNOWN_ERROR'];
   return {
     code: 'UNKNOWN_ERROR',
-    ...ERROR_MAPPINGS['UNKNOWN_ERROR']
+    title: base.title,
+    message: enhanceMessage(base.message, error.message),
+    severity: base.severity,
+    suggestions: base.suggestions,
+    retryable: base.retryable,
   };
 }
 

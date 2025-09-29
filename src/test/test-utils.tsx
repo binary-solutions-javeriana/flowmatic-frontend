@@ -1,22 +1,13 @@
 // Test utilities for React Testing Library
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
-import { AuthProvider } from '@/lib/auth-store';
 
 // Custom render function that includes providers
 function customRender(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
 ) {
-  function AllTheProviders({ children }: { children: React.ReactNode }) {
-    return (
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    );
-  }
-
-  return render(ui, { wrapper: AllTheProviders, ...options });
+  return render(ui, { ...options });
 }
 
 // Mock localStorage for tests
@@ -24,16 +15,16 @@ export function createMockLocalStorage() {
   const store: Record<string, string> = {};
 
   return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
       store[key] = value;
-    },
-    removeItem: (key: string) => {
+    }),
+    removeItem: vi.fn((key: string) => {
       delete store[key];
-    },
-    clear: () => {
+    }),
+    clear: vi.fn(() => {
       Object.keys(store).forEach(key => delete store[key]);
-    }
+    })
   };
 }
 

@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from '../auth-store';
-import { createMockLocalStorage, testData } from '../../test/test-utils';
+import { createMockLocalStorage, testData } from '@/test/test-utils';
 
-// Mock the HttpAuthService
-const mockLogin = vi.fn();
-const mockRegister = vi.fn();
-const mockLogout = vi.fn();
-const mockIsAuthenticated = vi.fn();
-const mockGetCurrentUser = vi.fn();
+// hoisted mock definitions must be declared using vi.hoisted for use inside vi.mock
+const { mockLogin, mockRegister, mockLogout, mockIsAuthenticated, mockGetCurrentUser } = vi.hoisted(() => ({
+  mockLogin: vi.fn(),
+  mockRegister: vi.fn(),
+  mockLogout: vi.fn(),
+  mockIsAuthenticated: vi.fn(),
+  mockGetCurrentUser: vi.fn(),
+}));
 
 vi.mock('../http-auth-service', () => ({
   HttpAuthService: vi.fn().mockImplementation(() => ({
@@ -28,6 +29,10 @@ vi.mock('../http-auth-service', () => ({
     refreshTokens: vi.fn(),
   }
 }));
+
+import { AuthProvider, useAuth } from '../auth-store';
+
+// Mock the HttpAuthService
 
 describe('AuthStore', () => {
   let mockLocalStorage: ReturnType<typeof createMockLocalStorage>;

@@ -19,7 +19,8 @@ type AuthAction =
   | { type: 'AUTH_SUCCESS'; payload: { user: AuthUser; tokens?: AuthTokens } }
   | { type: 'AUTH_ERROR'; payload: string }
   | { type: 'AUTH_LOGOUT' }
-  | { type: 'AUTH_LOADING'; payload: boolean };
+  | { type: 'AUTH_LOADING'; payload: boolean }
+  | { type: 'CLEAR_ERROR' };
 
 // Initial state
 const initialState: AuthState = {
@@ -70,6 +71,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
       return {
         ...state,
         isLoading: action.payload,
+      };
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null,
       };
     default:
       return state;
@@ -193,7 +199,7 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
   };
 
   const clearError = () => {
-    dispatch({ type: 'AUTH_ERROR', payload: '' });
+    dispatch({ type: 'CLEAR_ERROR' });
   };
 
   const value: AuthContextType = {
