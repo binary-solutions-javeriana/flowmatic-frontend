@@ -2,9 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import RegisterForm from "./RegisterForm";
+import StyledLoginForm from "./LoginForm";
 
-export default function RegisterPage() {
+export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center relative">
       <div 
@@ -31,7 +31,7 @@ export default function RegisterPage() {
       </Link>
 
       <div className="relative z-10 w-full max-w-lg mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-0">
-        <RegisterForm className="w-full" />
+        <StyledLoginForm />
       </div>
     </div>
   );

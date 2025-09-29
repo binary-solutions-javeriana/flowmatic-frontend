@@ -126,7 +126,7 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
               className={`mt-1 block w-full rounded-md border px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 ${
                 errors.email
                   ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                  : "border-gray-300 focus:border-green-600 focus:ring-green-600"
+                  : "border-gray-300 focus:border-[#14a67e] focus:ring-[#14a67e]"
               }`}
               placeholder="name@mail.com"
               aria-required="true"
@@ -156,7 +156,7 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
                 className={`block w-full rounded-md border px-3 py-2 pr-10 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 ${
                   errors.password
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:border-green-600 focus:ring-green-600"
+                    : "border-gray-300 focus:border-[#14a67e] focus:ring-[#14a67e]"
                 }`}
                 placeholder="••••••••"
                 aria-required="true"
@@ -183,7 +183,7 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex w-full items-center justify-center rounded-md bg-green-600 px-4 py-2 text-white transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex w-full items-center justify-center rounded-xl bg-[#14a67e] px-8 py-3 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#14a67e]/90 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#14a67e] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>

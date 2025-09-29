@@ -26,27 +26,15 @@ const Nav: React.FC = () => {
           <div className="flex items-center space-x-3">
             <Link
               href="/login"
-              className="bg-transparent text-[#0c272d] px-6 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 border border-[#0c272d]/20 hover:border-[#14a67e]/40"
+              className="bg-[#14a67e] text-white px-6 py-2 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               Login
             </Link>
             <Link
-              href="/dashboard"
-              className="bg-white/30 backdrop-blur-sm text-[#0c272d] px-6 py-2 rounded-xl hover:bg-white/50 transition-all duration-300 border border-[#9fdbc2]/30 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              Support Application
-            </Link>
-            <Link
-              href="/dashboard"
-              className="bg-white/50 backdrop-blur-sm text-[#0c272d] px-6 py-2 rounded-xl hover:bg-white/70 transition-all duration-300 border border-[#9fdbc2]/30 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Show Demo
-            </Link>
-            <Link
               href="/register"
-              className="bg-[#14a67e] text-white px-6 py-2 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="bg-white/60 backdrop-blur-sm text-[#0c272d] px-6 py-2 rounded-xl hover:bg-white/80 transition-all duration-300 border border-[#9fdbc2]/40 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              Get Started
+              Register
             </Link>
           </div>
         </div>
