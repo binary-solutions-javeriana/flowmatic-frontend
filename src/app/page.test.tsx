@@ -1,21 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import Home from './page';
 
-vi.mock('@/lib/auth-store', () => ({
-  useAuth: () => ({
-    state: {
-      user: null,
-      tokens: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    },
-    logout: vi.fn(),
-  }),
-}));
-
-test('renders CTA links', () => {
+test('renders landing primary CTAs', () => {
   render(<Home />);
-  expect(screen.getByRole('link', { name: /create account/i })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: /start free trial/i })[0]).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: /schedule demo/i })[0]).toBeInTheDocument();
 });
