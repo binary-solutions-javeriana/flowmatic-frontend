@@ -241,7 +241,7 @@ function ProjectDetailContent() {
               <h3 className="text-lg font-medium text-gray-900 mt-3">Delete Project</h3>
               <div className="mt-2 px-7 py-3">
                 <p className="text-sm text-gray-500">
-                  Are you sure you want to delete "{project.name_proyect}"? This action cannot be undone.
+                  Are you sure you want to delete &quot;{project.name_proyect}&quot;? This action cannot be undone.
                 </p>
               </div>
               <div className="flex gap-3 mt-4 px-7">

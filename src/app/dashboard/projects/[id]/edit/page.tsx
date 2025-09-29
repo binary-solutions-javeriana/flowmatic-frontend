@@ -12,7 +12,7 @@ function EditProjectContent() {
   const router = useRouter();
   const projectId = parseInt(params.id as string);
   const { project, loading, error } = useProject(projectId);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [, setIsSubmitting] = useState(false);
 
   const handleSuccess = () => {
     setIsSubmitting(false);
@@ -64,7 +64,7 @@ function EditProjectContent() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Edit Project</h1>
-            <p className="text-gray-600">Update "{project.name_proyect}" project details</p>
+            <p className="text-gray-600">Update &quot;{project.name_proyect}&quot; project details</p>
           </div>
           <Link
             href={`/dashboard/projects/${projectId}`}
@@ -98,7 +98,7 @@ function EditProjectContent() {
             <li>• Changes to project dates may affect task schedules and team assignments</li>
             <li>• Budget modifications should be coordinated with finance team</li>
             <li>• Status changes will notify all project team members</li>
-            <li>• Please provide a reason for changes in the "Change Reason" field</li>
+            <li>• Please provide a reason for changes in the &quot;Change Reason&quot; field</li>
           </ul>
         </div>
       </div>

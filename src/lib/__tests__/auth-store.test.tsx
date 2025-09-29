@@ -114,7 +114,7 @@ describe('AuthStore', () => {
       await act(async () => {
         try {
           await result.current.login('test@example.com', 'wrongpassword');
-        } catch (error) {
+        } catch {
           // Expected to throw
         }
       });
@@ -205,7 +205,7 @@ describe('AuthStore', () => {
       await act(async () => {
         try {
           await result.current.register('existing@example.com', 'password');
-        } catch (error) {
+        } catch {
           // Expected to throw
         }
       });
@@ -257,7 +257,7 @@ describe('AuthStore', () => {
       await act(async () => {
         try {
           await result.current.login('test@example.com', 'password');
-        } catch (error) {
+        } catch {
           // Expected to throw
         }
       });

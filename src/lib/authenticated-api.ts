@@ -74,7 +74,7 @@ export class ProtectedApiService {
   }
 
   // Example: Update user profile
-  async updateUserProfile(profileData: any) {
+  async updateUserProfile(profileData: Record<string, unknown>) {
     return authApi.put('/user/profile', profileData);
   }
 
@@ -84,7 +84,7 @@ export class ProtectedApiService {
   }
 
   // Example: Update user settings
-  async updateUserSettings(settings: any) {
+  async updateUserSettings(settings: Record<string, unknown>) {
     return authApi.patch('/user/settings', settings);
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/lib/auth-store';
 import { useRouter } from 'next/navigation';
 
@@ -23,7 +23,7 @@ export default function ProtectedRoute({
     if (!state.isLoading && !state.isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [state.isLoading, state.isAuthenticated, redirectTo]); // Remove router from dependencies
+  }, [state.isLoading, state.isAuthenticated, redirectTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Show loading state while checking authentication
   if (state.isLoading) {
@@ -71,7 +71,7 @@ export function useAuthProtection(redirectTo: string = '/login') {
     if (!state.isLoading && !state.isAuthenticated) {
       router.push(redirectTo);
     }
-  }, [state.isLoading, state.isAuthenticated, redirectTo]); // Remove router from dependencies
+  }, [state.isLoading, state.isAuthenticated, redirectTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     isAuthenticated: state.isAuthenticated,

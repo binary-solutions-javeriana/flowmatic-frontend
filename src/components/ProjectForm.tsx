@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { projectsService } from '@/lib/services/projects-service';
-import { config } from '@/lib/config';
-import { getAccessToken, getUserIdFromToken } from '@/lib/auth-utils';
+// import { config } from '@/lib/config';
+// import { getAccessToken, getUserIdFromToken } from '@/lib/auth-utils';
 import type { Project } from '@/lib/types/project-types';
 import type { ProjectFormData, CreateProjectDto, UpdateProjectDto } from '@/lib/types/project-dto';
 import { cleanProjectData } from '@/lib/types/project-dto';
@@ -16,12 +16,12 @@ interface ProjectFormProps {
   onCancel?: () => void;
 }
 
-const getStoredToken = (): string | null => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem(config.auth.accessTokenKey);
-  }
-  return null;
-};
+// const getStoredToken = (): string | null => {
+//   if (typeof window !== 'undefined') {
+//     return localStorage.getItem(config.auth.accessTokenKey);
+//   }
+//   return null;
+// };
 
 export function ProjectForm({ project, isEdit = false, onSuccess, onCancel }: ProjectFormProps) {
   const router = useRouter();
@@ -66,7 +66,7 @@ export function ProjectForm({ project, isEdit = false, onSuccess, onCancel }: Pr
 
     try {
       const token = getAccessToken();
-      const userId = getUserIdFromToken(token || undefined);
+      // const userId = getUserIdFromToken(token || undefined);
       
       if (isEdit && project) {
         // Update existing project

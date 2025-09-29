@@ -67,9 +67,9 @@ export function useAuthenticatedApi() {
 // Hook for making authenticated API calls with loading states
 export function useAuthenticatedApiCall<T>() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<T | null>(null);
-  const { api } = useAuthenticatedApi();
+  const [, setError] = useState<string | null>(null);
+  const [, setData] = useState<T | null>(null);
+  const { } = useAuthenticatedApi();
 
   const execute = useCallback(async (
     apiCall: () => Promise<T>,

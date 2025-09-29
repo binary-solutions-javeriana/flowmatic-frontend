@@ -43,7 +43,7 @@ export function createMockFetch(responses: Record<string, unknown> = {}) {
   
   mockFetch.mockImplementation((url: string, options?: RequestInit) => {
     const responseKey = `${options?.method || 'GET'}:${url}`;
-    const response = (responses as Record<string, any>)[responseKey] || (responses as Record<string, any>)[url] || (responses as Record<string, any>)['default'];
+    const response = (responses as Record<string, unknown>)[responseKey] || (responses as Record<string, unknown>)[url] || (responses as Record<string, unknown>)['default'];
     
     if (response) {
       return Promise.resolve({

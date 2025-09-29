@@ -16,12 +16,12 @@ const statusColors: Record<string, string> = {
   Archived: 'bg-gray-100 text-gray-600'
 };
 
-const priorityColors: Record<string, string> = {
-  Low: 'bg-gray-100 text-gray-600',
-  Medium: 'bg-blue-100 text-blue-600',
-  High: 'bg-orange-100 text-orange-600',
-  Critical: 'bg-red-100 text-red-600'
-};
+// const priorityColors: Record<string, string> = {
+//   Low: 'bg-gray-100 text-gray-600',
+//   Medium: 'bg-blue-100 text-blue-600',
+//   High: 'bg-orange-100 text-orange-600',
+//   Critical: 'bg-red-100 text-red-600'
+// };
 
 export function ProjectCard({ project }: ProjectCardProps) {
   // Progress not available from backend - use default

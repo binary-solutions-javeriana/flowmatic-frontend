@@ -7,13 +7,13 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 
 // Status color mapping for project states
-const statusColors = {
-  'Planning': 'bg-blue-100 text-blue-800',
-  'In Progress': 'bg-yellow-100 text-yellow-800',
-  'Completed': 'bg-green-100 text-green-800',
-  'On Hold': 'bg-gray-100 text-gray-800',
-  'Cancelled': 'bg-red-100 text-red-800',
-};
+// const statusColors = {
+//   'Planning': 'bg-blue-100 text-blue-800',
+//   'In Progress': 'bg-yellow-100 text-yellow-800',
+//   'Completed': 'bg-green-100 text-green-800',
+//   'On Hold': 'bg-gray-100 text-gray-800',
+//   'Cancelled': 'bg-red-100 text-red-800',
+// };
 
 function ProjectDetailContent() {
   const params = useParams();
@@ -81,12 +81,12 @@ function ProjectDetailContent() {
     Archived: 'bg-gray-100 text-gray-600'
   };
 
-  const priorityColors: Record<string, string> = {
-    Low: 'bg-gray-100 text-gray-600',
-    Medium: 'bg-blue-100 text-blue-600',
-    High: 'bg-orange-100 text-orange-600',
-    Critical: 'bg-red-100 text-red-600'
-  };
+  // const priorityColors: Record<string, string> = {
+  //   Low: 'bg-gray-100 text-gray-600',
+  //   Medium: 'bg-blue-100 text-blue-600',
+  //   High: 'bg-orange-100 text-orange-600',
+  //   Critical: 'bg-red-100 text-red-600'
+  // };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -253,7 +253,7 @@ function ProjectDetailContent() {
               Confirm Delete Project
             </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{project.name_proyect}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{project.name_proyect}&quot;? This action cannot be undone.
             </p>
             <div className="flex space-x-4">
               <button

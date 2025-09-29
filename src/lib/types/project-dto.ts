@@ -9,9 +9,7 @@ export interface CreateProjectDto {
   created_by: number;  // Required field from backend
 }
 
-export interface UpdateProjectDto extends Partial<CreateProjectDto> {
-  // Update fields if needed - check with backend what update accepts
-}
+export type UpdateProjectDto = Partial<CreateProjectDto>;
 
 export interface ProjectFormData {
   name_proyect: string;
@@ -27,7 +25,7 @@ export const cleanProjectData = (
   data: Partial<ProjectFormData>,
   userId?: number
 ): CreateProjectDto | UpdateProjectDto => {
-  const cleaned: any = {};
+  const cleaned: Record<string, unknown> = {};
 
   // Required field
   if (data.name_proyect?.trim()) {
