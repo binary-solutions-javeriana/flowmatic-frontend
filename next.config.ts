@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  server: {
-    port: 4000,
-  },
-  experimental: {
+  compiler: {
     styledComponents: true,
   },
 };

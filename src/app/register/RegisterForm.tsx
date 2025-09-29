@@ -374,6 +374,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
                 aria-required="true"
                 aria-invalid={errors.email ? "true" : "false"}
                 aria-describedby={errors.email ? "email-error" : undefined}
@@ -402,6 +403,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
                 aria-required="true"
                 aria-invalid={errors.password ? "true" : "false"}
                 aria-describedby={errors.password ? "password-error" : undefined}
@@ -433,6 +435,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
                 aria-required="true"
                 aria-invalid={errors.confirmPassword ? "true" : "false"}
                 aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
