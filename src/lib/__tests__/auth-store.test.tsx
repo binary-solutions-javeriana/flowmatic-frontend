@@ -3,34 +3,41 @@ import { renderHook, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../auth-store';
 import { createMockLocalStorage, testData } from '../../test/test-utils';
 
-// Mock the HttpAuthService
-const mockLogin = vi.fn();
-const mockRegister = vi.fn();
-const mockLogout = vi.fn();
-const mockIsAuthenticated = vi.fn();
-const mockGetCurrentUser = vi.fn();
+// Mock the HttpAuthService — use hoisted factory to avoid TDZ issues
+const hoisted = vi.hoisted(() => {
+  return {
+    mockLogin: vi.fn(),
+    mockRegister: vi.fn(),
+    mockLogout: vi.fn(),
+    mockIsAuthenticated: vi.fn(),
+    mockGetCurrentUser: vi.fn(),
+    mockRefreshTokens: vi.fn(),
+  };
+});
 
 vi.mock('../http-auth-service', () => ({
   HttpAuthService: vi.fn().mockImplementation(() => ({
-    login: mockLogin,
-    register: mockRegister,
-    logout: mockLogout,
-    isAuthenticated: mockIsAuthenticated,
-    getCurrentUser: mockGetCurrentUser,
-    refreshTokens: vi.fn(),
+    login: hoisted.mockLogin,
+    register: hoisted.mockRegister,
+    logout: hoisted.mockLogout,
+    isAuthenticated: hoisted.mockIsAuthenticated,
+    getCurrentUser: hoisted.mockGetCurrentUser,
+    refreshTokens: hoisted.mockRefreshTokens,
   })),
   authService: {
-    login: mockLogin,
-    register: mockRegister,
-    logout: mockLogout,
-    isAuthenticated: mockIsAuthenticated,
-    getCurrentUser: mockGetCurrentUser,
-    refreshTokens: vi.fn(),
+    login: hoisted.mockLogin,
+    register: hoisted.mockRegister,
+    logout: hoisted.mockLogout,
+    isAuthenticated: hoisted.mockIsAuthenticated,
+    getCurrentUser: hoisted.mockGetCurrentUser,
+    refreshTokens: hoisted.mockRefreshTokens,
   }
 }));
 
 describe('AuthStore', () => {
   let mockLocalStorage: ReturnType<typeof createMockLocalStorage>;
+
+  const { mockLogin, mockRegister, mockLogout, mockIsAuthenticated, mockGetCurrentUser } = hoisted;
 
   beforeEach(() => {
     mockLocalStorage = createMockLocalStorage();

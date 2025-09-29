@@ -23,18 +23,18 @@ function customRender(
 export function createMockLocalStorage() {
   const store: Record<string, string> = {};
 
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      Object.keys(store).forEach(key => delete store[key]);
-    }
-  };
+  const getItem = vi.fn((key: string) => store[key] || null);
+  const setItem = vi.fn((key: string, value: string) => {
+    store[key] = value;
+  });
+  const removeItem = vi.fn((key: string) => {
+    delete store[key];
+  });
+  const clear = vi.fn(() => {
+    Object.keys(store).forEach(key => delete store[key]);
+  });
+
+  return { getItem, setItem, removeItem, clear };
 }
 
 // Mock fetch for API tests
@@ -171,8 +171,8 @@ export const testData = {
   }
 };
 
-// Helper to wait for async operations
-export const waitFor = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper to wait for async operations (avoid shadowing RTL's waitFor)
+export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Re-export everything from React Testing Library
 export * from '@testing-library/react';

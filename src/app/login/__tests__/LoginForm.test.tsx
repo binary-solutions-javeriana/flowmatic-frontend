@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '../../test/test-utils';
+import { render, screen, fireEvent, waitFor } from '@/test/test-utils';
 import LoginForm from '../LoginForm';
 import * as AuthStore from '@/lib/auth-store';
 
@@ -15,13 +15,19 @@ const mockAuthState = {
   error: null
 };
 
-vi.mock('@/lib/auth-store', () => ({
-  useAuth: () => ({
-    login: mockLogin,
-    state: mockAuthState,
-    clearError: mockClearError
-  })
-}));
+vi.mock('@/lib/auth-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/auth-store')>();
+  return {
+    ...actual,
+    useAuth: () => ({
+      login: mockLogin,
+      register: vi.fn(),
+      logout: vi.fn(),
+      state: mockAuthState,
+      clearError: mockClearError,
+    }),
+  };
+});
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -39,7 +45,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
     expect(screen.getByText(/login to your account/i)).toBeInTheDocument();
   });
@@ -74,7 +80,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -92,7 +98,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -110,7 +116,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -132,8 +138,10 @@ describe('LoginForm', () => {
       error: 'Invalid credentials'
     };
 
-    vi.mocked(AuthStore.useAuth).mockReturnValue({
+    vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
       login: mockLogin,
+      register: vi.fn(),
+      logout: vi.fn(),
       state: mockAuthStateWithError,
       clearError: mockClearError
     });
@@ -146,7 +154,7 @@ describe('LoginForm', () => {
   it('should toggle password visibility', () => {
     render(<LoginForm />);
 
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const toggleButton = screen.getByLabelText(/show password/i);
 
     expect(passwordInput).toHaveAttribute('type', 'password');
@@ -167,8 +175,10 @@ describe('LoginForm', () => {
       error: 'Invalid credentials'
     };
 
-    vi.mocked(AuthStore.useAuth).mockReturnValue({
+    vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
       login: mockLogin,
+      register: vi.fn(),
+      logout: vi.fn(),
       state: mockAuthStateWithError,
       clearError: mockClearError
     });
@@ -192,7 +202,7 @@ describe('LoginForm', () => {
     render(<LoginForm onSubmit={mockOnSubmit} />);
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
@@ -208,7 +218,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     const emailInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = screen.getByLabelText(/^password$/i);
 
     expect(emailInput).toHaveAttribute('aria-required', 'true');
     expect(passwordInput).toHaveAttribute('aria-required', 'true');

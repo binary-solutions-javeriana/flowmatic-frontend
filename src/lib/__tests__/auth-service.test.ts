@@ -7,11 +7,11 @@ global.fetch = vi.fn();
 
 describe('HttpAuthService', () => {
   let authService: HttpAuthService;
-  let mockFetch: ReturnType<typeof vi.mocked> & jest.Mock;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     authService = new HttpAuthService();
-    mockFetch = vi.mocked(fetch) as unknown as jest.Mock;
+    mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
     mockFetch.mockClear();
   });
 

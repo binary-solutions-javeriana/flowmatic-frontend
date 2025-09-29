@@ -128,6 +128,19 @@ const ERROR_MAPPINGS: Record<string, Omit<UserFriendlyError, 'code'>> = {
     retryable: true
   },
 
+  // Validation umbrella code used by status 400/422
+  'VALIDATION_ERROR': {
+    title: 'Required Information Missing',
+    message: 'Please fill in all required fields.',
+    severity: ErrorSeverity.LOW,
+    suggestions: [
+      'Complete all marked fields',
+      'Check for any empty inputs',
+      'Review the form requirements'
+    ],
+    retryable: true
+  },
+
   // Server errors
   'SERVER_ERROR': {
     title: 'Server Error',
@@ -223,7 +236,7 @@ function mapApiException(error: ApiException, _context?: string): UserFriendlyEr
   // Extract field name from message if it's a validation error
   let field: string | undefined;
   if (error.statusCode === 400 || error.statusCode === 422) {
-    field = extractFieldFromMessage(error.message);
+    field = extractFieldFromMessage(error.message) || 'request';
   }
 
   return {
@@ -255,7 +268,8 @@ function mapAuthError(error: AuthError, _context?: string): UserFriendlyError {
 // Map generic Error to user-friendly error
 function mapGenericError(error: Error, _context?: string): UserFriendlyError {
   // Check for network-related errors
-  if (error.message.includes('fetch') || error.message.includes('network')) {
+  const messageLower = error.message.toLowerCase();
+  if (messageLower.includes('fetch') || messageLower.includes('network')) {
     return {
       code: 'NETWORK_ERROR',
       ...ERROR_MAPPINGS['NETWORK_ERROR']
@@ -281,7 +295,9 @@ function mapGenericError(error: Error, _context?: string): UserFriendlyError {
   // Default to unknown error
   return {
     code: 'UNKNOWN_ERROR',
-    ...ERROR_MAPPINGS['UNKNOWN_ERROR']
+    ...ERROR_MAPPINGS['UNKNOWN_ERROR'],
+    // Preserve original message so UI can surface specific error details
+    message: error.message
   };
 }
 
