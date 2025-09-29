@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# performance testing
+performance-tests/results/
+performance-tests/reports/
+performance-tests/analysis/
+*.jtl
+*.log
+jmeter.log
