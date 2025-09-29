@@ -15,8 +15,21 @@ vi.mock('@/lib/auth-store', () => ({
   }),
 }));
 
-test('renderiza el CTA', () => {
+vi.mock('@/lib/auth-store', () => ({
+  useAuth: () => ({
+    state: {
+      user: null,
+      tokens: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    },
+    logout: vi.fn(),
+  }),
+}));
+
+test('renders CTA links', () => {
   render(<Home />);
-  expect(screen.getByText(/Create Account/i)).toBeInTheDocument();
-  expect(screen.getByText(/Sign In/i)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /create account/i })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
 });

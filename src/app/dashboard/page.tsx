@@ -5,6 +5,13 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuthenticatedApi } from "@/lib/use-authenticated-api";
 import { useAuth } from "@/lib/auth-store";
 import Link from "next/link";
+import { type AuthTokens } from "@/lib/auth-service";
+
+function getExpiresInMinutes(tokens: AuthTokens | { expires_in: number } | null): number | null {
+  if (!tokens) return null;
+  const seconds = 'expiresIn' in tokens ? tokens.expiresIn : tokens.expires_in;
+  return Math.floor(seconds / 60);
+}
 
 function DashboardContent() {
   const { state } = useAuth();
@@ -65,7 +72,7 @@ function DashboardContent() {
                 </div>
                 {state.tokens && (
                   <div className="text-xs text-gray-500">
-                    Token expires in: {Math.floor(state.tokens.expiresIn / 60)} minutes
+                    Token expires in: {getExpiresInMinutes(state.tokens)} minutes
                   </div>
                 )}
               </div>

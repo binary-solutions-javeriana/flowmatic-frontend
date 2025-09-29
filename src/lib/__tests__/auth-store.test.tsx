@@ -2,31 +2,34 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { createMockLocalStorage, testData } from '@/test/test-utils';
 
-// hoisted mock definitions must be declared using vi.hoisted for use inside vi.mock
-const { mockLogin, mockRegister, mockLogout, mockIsAuthenticated, mockGetCurrentUser } = vi.hoisted(() => ({
-  mockLogin: vi.fn(),
-  mockRegister: vi.fn(),
-  mockLogout: vi.fn(),
-  mockIsAuthenticated: vi.fn(),
-  mockGetCurrentUser: vi.fn(),
-}));
+// Mock the HttpAuthService — use hoisted factory to avoid TDZ issues
+const hoisted = vi.hoisted(() => {
+  return {
+    mockLogin: vi.fn(),
+    mockRegister: vi.fn(),
+    mockLogout: vi.fn(),
+    mockIsAuthenticated: vi.fn(),
+    mockGetCurrentUser: vi.fn(),
+    mockRefreshTokens: vi.fn(),
+  };
+});
 
 vi.mock('../http-auth-service', () => ({
   HttpAuthService: vi.fn().mockImplementation(() => ({
-    login: mockLogin,
-    register: mockRegister,
-    logout: mockLogout,
-    isAuthenticated: mockIsAuthenticated,
-    getCurrentUser: mockGetCurrentUser,
-    refreshTokens: vi.fn(),
+    login: hoisted.mockLogin,
+    register: hoisted.mockRegister,
+    logout: hoisted.mockLogout,
+    isAuthenticated: hoisted.mockIsAuthenticated,
+    getCurrentUser: hoisted.mockGetCurrentUser,
+    refreshTokens: hoisted.mockRefreshTokens,
   })),
   authService: {
-    login: mockLogin,
-    register: mockRegister,
-    logout: mockLogout,
-    isAuthenticated: mockIsAuthenticated,
-    getCurrentUser: mockGetCurrentUser,
-    refreshTokens: vi.fn(),
+    login: hoisted.mockLogin,
+    register: hoisted.mockRegister,
+    logout: hoisted.mockLogout,
+    isAuthenticated: hoisted.mockIsAuthenticated,
+    getCurrentUser: hoisted.mockGetCurrentUser,
+    refreshTokens: hoisted.mockRefreshTokens,
   }
 }));
 
@@ -36,6 +39,8 @@ import { AuthProvider, useAuth } from '../auth-store';
 
 describe('AuthStore', () => {
   let mockLocalStorage: ReturnType<typeof createMockLocalStorage>;
+
+  const { mockLogin, mockRegister, mockLogout, mockIsAuthenticated, mockGetCurrentUser } = hoisted;
 
   beforeEach(() => {
     mockLocalStorage = createMockLocalStorage();

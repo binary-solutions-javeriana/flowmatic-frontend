@@ -3,6 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-store";
+import { type AuthTokens } from "@/lib/auth-service";
+
+function getExpiresInMinutes(tokens: AuthTokens | { expires_in: number } | null): number | null {
+  if (!tokens) return null;
+  const seconds = 'expiresIn' in tokens ? tokens.expiresIn : tokens.expires_in;
+  return Math.floor(seconds / 60);
+}
 
 export default function AuthSuccessPage() {
   const { state, logout } = useAuth();
@@ -48,7 +55,7 @@ export default function AuthSuccessPage() {
                 <p><strong>User ID:</strong> {state.user.id}</p>
                 {state.tokens && (
                   <p className="mt-2 text-xs text-gray-500">
-                    Token expires in: {Math.floor(state.tokens.expiresIn / 60)} minutes
+                    Token expires in: {getExpiresInMinutes(state.tokens)} minutes
                   </p>
                 )}
               </div>

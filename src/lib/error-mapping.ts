@@ -128,7 +128,7 @@ const ERROR_MAPPINGS: Record<string, Omit<UserFriendlyError, 'code'>> = {
     retryable: true
   },
 
-  // General validation error
+  // Validation umbrella code used by status 400/422
   'VALIDATION_ERROR': {
     title: 'Required Information Missing',
     message: 'Please fill in all required fields.',
@@ -229,17 +229,14 @@ export function mapErrorToUserFriendly(error: unknown, context?: string): UserFr
 }
 
 // Map ApiException to user-friendly error
-function mapApiException(error: ApiException): UserFriendlyError {
+function mapApiException(error: ApiException, _context?: string): UserFriendlyError {
   const errorCode = HTTP_STATUS_MAPPINGS[error.statusCode] || 'UNKNOWN_ERROR';
   const baseError = ERROR_MAPPINGS[errorCode] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
   // Extract field name from message if it's a validation error
   let field: string | undefined;
   if (error.statusCode === 400 || error.statusCode === 422) {
-    field = extractFieldFromMessage(error.message);
-    if (!field) {
-      field = 'request';
-    }
+    field = extractFieldFromMessage(error.message) || 'request';
   }
 
   return {
@@ -254,7 +251,7 @@ function mapApiException(error: ApiException): UserFriendlyError {
 }
 
 // Map AuthError to user-friendly error
-function mapAuthError(error: AuthError): UserFriendlyError {
+function mapAuthError(error: AuthError, _context?: string): UserFriendlyError {
   const baseError = ERROR_MAPPINGS[error.code] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
   return {
@@ -269,9 +266,10 @@ function mapAuthError(error: AuthError): UserFriendlyError {
 }
 
 // Map generic Error to user-friendly error
-function mapGenericError(error: Error): UserFriendlyError {
+function mapGenericError(error: Error, _context?: string): UserFriendlyError {
   // Check for network-related errors
-  if (/fetch|network/i.test(error.message)) {
+  const messageLower = error.message.toLowerCase();
+  if (messageLower.includes('fetch') || messageLower.includes('network')) {
     return {
       code: 'NETWORK_ERROR',
       ...ERROR_MAPPINGS['NETWORK_ERROR']
@@ -298,11 +296,9 @@ function mapGenericError(error: Error): UserFriendlyError {
   const base = ERROR_MAPPINGS['UNKNOWN_ERROR'];
   return {
     code: 'UNKNOWN_ERROR',
-    title: base.title,
-    message: enhanceMessage(base.message, error.message),
-    severity: base.severity,
-    suggestions: base.suggestions,
-    retryable: base.retryable,
+    ...ERROR_MAPPINGS['UNKNOWN_ERROR'],
+    // Preserve original message so UI can surface specific error details
+    message: error.message
   };
 }
 

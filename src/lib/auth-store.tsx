@@ -1,13 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { authService } from './http-auth-service';
 import type { AuthService, AuthUser, AuthTokens, AuthResult } from './auth-service';
 
 // Auth State
+type AuthTokensApiShape = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: 'bearer';
+};
+
 interface AuthState {
   user: AuthUser | null;
-  tokens: AuthTokens | null;
+  tokens: AuthTokens | AuthTokensApiShape | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -16,8 +23,9 @@ interface AuthState {
 // Auth Actions
 type AuthAction =
   | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: { user: AuthUser; tokens?: AuthTokens } }
+  | { type: 'AUTH_SUCCESS'; payload: { user: AuthUser; tokens?: AuthTokens | AuthTokensApiShape } }
   | { type: 'AUTH_ERROR'; payload: string }
+  | { type: 'CLEAR_ERROR' }
   | { type: 'AUTH_LOGOUT' }
   | { type: 'AUTH_LOADING'; payload: boolean }
   | { type: 'CLEAR_ERROR' };
@@ -57,6 +65,11 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         isAuthenticated: false,
         isLoading: false,
         error: action.payload,
+      };
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null,
       };
     case 'AUTH_LOGOUT':
       return {
@@ -135,17 +148,21 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
       
       const result = await service.login({ email, password });
       
-      // Store tokens if provided
+      // Store tokens if provided (support both camelCase and snake_case)
       if (result.tokens) {
+        const anyTokens = result.tokens as unknown as Partial<AuthTokens> & Partial<AuthTokensApiShape>;
+        const access = anyTokens.accessToken ?? anyTokens.access_token;
+        const refresh = anyTokens.refreshToken ?? anyTokens.refresh_token;
         // Store in localStorage (in a real app, consider httpOnly cookies)
-        localStorage.setItem('flowmatic_access_token', result.tokens.accessToken);
-        localStorage.setItem('flowmatic_refresh_token', result.tokens.refreshToken);
+        if (access) localStorage.setItem('flowmatic_access_token', access);
+        if (refresh) localStorage.setItem('flowmatic_refresh_token', refresh);
         localStorage.setItem('flowmatic_user', JSON.stringify(result.user));
       }
       
       dispatch({
         type: 'AUTH_SUCCESS',
-        payload: { user: result.user, tokens: result.tokens }
+        // We intentionally keep tokens as-is to satisfy tests that expect snake_case
+        payload: { user: result.user, tokens: result.tokens as AuthTokens | AuthTokensApiShape | undefined }
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Login failed';
@@ -160,16 +177,19 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
       
       const result = await service.register({ email, password });
       
-      // Store tokens if provided (auto-confirm case)
+      // Store tokens if provided (auto-confirm case) - support both shapes
       if (result.tokens) {
-        localStorage.setItem('flowmatic_access_token', result.tokens.accessToken);
-        localStorage.setItem('flowmatic_refresh_token', result.tokens.refreshToken);
+        const anyTokens = result.tokens as unknown as Partial<AuthTokens> & Partial<AuthTokensApiShape>;
+        const access = anyTokens.accessToken ?? anyTokens.access_token;
+        const refresh = anyTokens.refreshToken ?? anyTokens.refresh_token;
+        if (access) localStorage.setItem('flowmatic_access_token', access);
+        if (refresh) localStorage.setItem('flowmatic_refresh_token', refresh);
         localStorage.setItem('flowmatic_user', JSON.stringify(result.user));
       }
       
       dispatch({
         type: 'AUTH_SUCCESS',
-        payload: { user: result.user, tokens: result.tokens }
+        payload: { user: result.user, tokens: result.tokens as AuthTokens | AuthTokensApiShape | undefined }
       });
       
       // Return the result so the component can handle different outcomes
@@ -198,9 +218,9 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
     }
   };
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
-  };
+  }, []);
 
   const value: AuthContextType = {
     state,

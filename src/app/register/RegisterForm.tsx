@@ -76,6 +76,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
 
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
+      // Keep first error per field to align with UX and tests
       result.error.issues.forEach((issue) => {
         const field = issue.path[0] as string | undefined;
         if (field && !fieldErrors[field]) {

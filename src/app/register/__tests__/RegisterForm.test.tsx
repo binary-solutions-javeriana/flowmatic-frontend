@@ -20,7 +20,9 @@ vi.mock('@/lib/auth-store', async (importOriginal) => {
   return {
     ...actual,
     useAuth: () => ({
+      login: vi.fn(),
       register: mockRegister,
+      logout: vi.fn(),
       state: mockAuthState,
       clearError: mockClearError,
     }),
@@ -212,7 +214,9 @@ describe('RegisterForm', () => {
     };
 
     vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
+      login: vi.fn(),
       register: mockRegister,
+      logout: vi.fn(),
       state: mockAuthStateWithError,
       clearError: mockClearError
     });
@@ -248,7 +252,9 @@ describe('RegisterForm', () => {
     };
 
     vi.spyOn(AuthStore, 'useAuth').mockReturnValue({
+      login: vi.fn(),
       register: mockRegister,
+      logout: vi.fn(),
       state: mockAuthStateWithError,
       clearError: mockClearError
     });
