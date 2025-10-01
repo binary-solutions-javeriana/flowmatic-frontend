@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation';
 
 interface HeaderProps {
   title: string;
+  onNavigate?: (view: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ title }) => {
+const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
   const { user } = useAuthState();
   const { logout } = useAuth();
   const router = useRouter();
@@ -92,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const initials = getUserInitials();
 
   return (
-    <header className="bg-white/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 p-6">
+    <header className="bg-white/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 p-6 relative z-20">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0c272d]">{title}</h1>
@@ -123,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
 
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 shadow-xl overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 shadow-xl overflow-hidden z-[9999]">
                 {/* User Info */}
                 <div className="px-4 py-3 border-b border-[#9fdbc2]/20">
                   <p className="text-sm font-medium text-[#0c272d]">{displayName}</p>
@@ -145,7 +146,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      // Navigate to settings
+                      if (onNavigate) {
+                        onNavigate('settings');
+                      }
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 hover:bg-[#9fdbc2]/10 hover:text-[#0c272d] transition-colors flex items-center space-x-2"
                   >

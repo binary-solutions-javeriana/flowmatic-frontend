@@ -20,7 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
   };
 
   return (
-    <div className={`${isOpen ? 'w-64' : 'w-16'} transition-all duration-500 ease-in-out bg-white/60 backdrop-blur-lg border-r border-[#9fdbc2]/20 flex flex-col shadow-lg`}>
+    <div className={`${isOpen ? 'w-64' : 'w-16'} transition-all duration-500 ease-in-out bg-white/60 backdrop-blur-lg border-r border-[#9fdbc2]/20 flex flex-col shadow-lg relative z-10`}>
       <div className="h-[106px] flex items-center justify-center border-b border-[#9fdbc2]/20 transition-all duration-500 ease-in-out px-4">
         {isOpen ? (
           /* Open state - horizontal layout */

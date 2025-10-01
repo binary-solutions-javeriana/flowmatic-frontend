@@ -6,6 +6,7 @@ export { default as ProjectsGrid } from './ProjectsGrid';
 export { default as ProjectsList } from './ProjectsList';
 export { default as Settings } from './Settings';
 export { default as ProjectModal } from './ProjectModal';
+export { default as ProjectDetailsModal } from './ProjectDetailsModal';
 export * from './types';
 export * from './utils';
 

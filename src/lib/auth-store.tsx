@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { authService } from './http-auth-service';
 import type { AuthService, AuthUser, AuthTokens, AuthResult } from './auth-service';
+import { getAccessToken, getStoredUser } from './auth-utils';
 
 // Auth State
 type AuthTokensApiShape = {
@@ -115,19 +116,35 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
       try {
         dispatch({ type: 'AUTH_LOADING', payload: true });
         
-        const isAuth = await service.isAuthenticated();
-        if (isAuth) {
-          const user = await service.getCurrentUser();
-          if (user) {
+        // Check if we have a valid token in localStorage
+        const token = getAccessToken();
+        if (token) {
+          // Recover user data from localStorage
+          const storedUser = getStoredUser();
+          if (storedUser) {
+            // Cast stored user to AuthUser type
+            const user: AuthUser = {
+              id: storedUser.id as number | string,
+              email: storedUser.email as string,
+              name: storedUser.name as string | undefined,
+            };
+            
             dispatch({
               type: 'AUTH_SUCCESS',
               payload: { user }
             });
+          } else {
+            // Token exists but no user data - clear invalid state
+            dispatch({ type: 'AUTH_LOGOUT' });
           }
+        } else {
+          // No token - user is not authenticated
+          dispatch({ type: 'AUTH_LOADING', payload: false });
         }
       } catch (error) {
         // Silently handle initialization errors
         console.warn('Auth initialization failed:', error);
+        dispatch({ type: 'AUTH_LOGOUT' });
       } finally {
         dispatch({ type: 'AUTH_LOADING', payload: false });
       }
