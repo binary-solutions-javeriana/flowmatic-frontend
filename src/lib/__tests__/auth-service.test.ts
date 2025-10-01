@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { HttpAuthService } from '../http-auth-service';
+import { config } from '../config';
 import { testData } from '../../test/test-utils';
 
 // Mock fetch globally
@@ -37,7 +38,7 @@ describe('HttpAuthService', () => {
       const result = await authService.login(testData.loginRequest);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/v1/auth/login',
+        `${config.api.apiUrl}/auth/login`,
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -126,7 +127,7 @@ describe('HttpAuthService', () => {
       const result = await authService.register(testData.registerRequest);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/v1/auth/register',
+        `${config.api.apiUrl}/auth/register`,
         expect.objectContaining({
           method: 'POST',
           headers: {
