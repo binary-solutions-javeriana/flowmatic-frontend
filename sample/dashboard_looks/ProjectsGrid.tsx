@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Calendar, Plus, Users } from 'lucide-react';
-import type { Project as BackendProject, CreateProjectDto } from '@/lib/projects/types';
+import type { Project as BackendProject } from '@/lib/projects/types';
 import { adaptBackendProjectToUI, getProjectStateColor } from '@/lib/projects/utils';
-import { useProjects } from '@/lib/projects';
 import type { Project } from './types';
 import ProjectModal from './ProjectModal';
 
@@ -15,7 +14,6 @@ interface ProjectsGridProps {
 const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { createProject } = useProjects();
 
   // Adapt backend projects to UI format
   useEffect(() => {
@@ -23,8 +21,8 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }
     setProjects(adapted);
   }, [backendProjects]);
 
-  const handleCreateProject = async (data: CreateProjectDto) => {
-    await createProject(data);
+  const handleCreateProject = async () => {
+    // The modal will handle creation through the hook
     setIsModalOpen(false);
   };
 

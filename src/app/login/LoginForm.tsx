@@ -50,7 +50,7 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
   // Display auth store errors
   React.useEffect(() => {
     if (state.error) {
-      setGlobalErrorFromException(new Error(state.error), 'login');
+      setGlobalErrorFromException(new Error(state.error));
     }
   }, [state.error, setGlobalErrorFromException]);
 

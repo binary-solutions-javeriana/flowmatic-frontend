@@ -205,20 +205,20 @@ const FIELD_ERROR_MAPPINGS: Record<string, string> = {
 };
 
 // Main error mapping function
-export function mapErrorToUserFriendly(error: unknown, context?: string): UserFriendlyError {
+export function mapErrorToUserFriendly(error: unknown): UserFriendlyError {
   // Handle ApiException (from backend)
   if (error instanceof ApiException) {
-    return mapApiException(error, context);
+    return mapApiException(error);
   }
 
   // Handle AuthError types
   if (error instanceof AuthError) {
-    return mapAuthError(error, context);
+    return mapAuthError(error);
   }
 
   // Handle generic Error
   if (error instanceof Error) {
-    return mapGenericError(error, context);
+    return mapGenericError(error);
   }
 
   // Fallback for unknown error types

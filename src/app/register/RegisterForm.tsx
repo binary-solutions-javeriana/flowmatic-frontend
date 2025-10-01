@@ -281,7 +281,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
   // Display auth store errors
   React.useEffect(() => {
     if (state.error) {
-      setGlobalErrorFromException(new Error(state.error), 'register');
+      setGlobalErrorFromException(new Error(state.error));
     }
   }, [state.error, setGlobalErrorFromException]);
 

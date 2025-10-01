@@ -124,9 +124,11 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
           if (storedUser) {
             // Cast stored user to AuthUser type
             const user: AuthUser = {
-              id: storedUser.id as number | string,
+              id: String(storedUser.id),
               email: storedUser.email as string,
-              name: storedUser.name as string | undefined,
+              app_metadata: (storedUser.app_metadata as Record<string, unknown>) || ({} as Record<string, unknown>),
+              user_metadata: (storedUser.user_metadata as Record<string, unknown>) || ({} as Record<string, unknown>),
+              aud: String(storedUser.aud || 'authenticated'),
             };
             
             dispatch({

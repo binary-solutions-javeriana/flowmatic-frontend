@@ -37,7 +37,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSubmit, 
         type: project.type || '',
         start_date: project.start_date || '',
         end_date: project.end_date || '',
-        state: project.state || 'Planning',
+        state: (project.state || 'Planning') as ProjectState,
       });
     } else if (mode === 'create') {
       setFormData({

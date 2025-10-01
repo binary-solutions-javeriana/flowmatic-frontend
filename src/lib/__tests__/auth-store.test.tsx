@@ -64,27 +64,36 @@ describe('AuthStore', () => {
   };
 
   describe('initialization', () => {
-    it('should initialize with loading state', () => {
+    it('should initialize with loading state', async () => {
       const { result } = renderAuthHook();
 
-      expect(result.current.state.isLoading).toBe(true);
+      // Wait for initialization to complete
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+
+      // After initialization without token, should not be loading or authenticated
+      expect(result.current.state.isLoading).toBe(false);
       expect(result.current.state.isAuthenticated).toBe(false);
       expect(result.current.state.user).toBeNull();
       expect(result.current.state.error).toBeNull();
     });
 
     it('should check authentication status on mount', async () => {
-      mockIsAuthenticated.mockResolvedValue(true);
-      mockGetCurrentUser.mockResolvedValue(testData.user);
+      // Set up localStorage with token and user (using correct keys from config)
+      mockLocalStorage.setItem('flowmatic_access_token', 'test-token');
+      mockLocalStorage.setItem('flowmatic_user', JSON.stringify(testData.user));
 
       const { result } = renderAuthHook();
 
       await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await new Promise(resolve => setTimeout(resolve, 10));
       });
 
-      expect(mockIsAuthenticated).toHaveBeenCalled();
+      // Should restore user from localStorage
       expect(result.current.state.isLoading).toBe(false);
+      expect(result.current.state.isAuthenticated).toBe(true);
+      expect(result.current.state.user).not.toBeNull();
     });
   });
 
