@@ -233,7 +233,7 @@ export default function StyledLoginForm() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      router.push("/auth/success");
+      router.push("/dashboard/projects");
     } finally {
       setIsSubmitting(false);
     }

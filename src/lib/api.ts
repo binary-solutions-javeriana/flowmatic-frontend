@@ -70,7 +70,19 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     );
   }
 
-  return response.json() as Promise<T>;
+  // Handle responses without content (like 204 No Content)
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return undefined as T;
+  }
+
+  // Check if response has JSON content
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json() as Promise<T>;
+  }
+
+  // If no JSON content, return empty object
+  return {} as T;
 }
 
 // Helper to add Authorization header
