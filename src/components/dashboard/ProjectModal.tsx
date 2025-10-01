@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, CalendarCheck } from 'lucide-react';
 import type { Project, CreateProjectDto, UpdateProjectDto, ProjectState } from '@/lib/projects/types';
-import { prepareCreateProjectData, prepareUpdateProjectData, parseUserId, validateDateRange } from '@/lib/projects/validation';
+import { prepareCreateProjectData, prepareUpdateProjectData, parseUserId } from '@/lib/projects/validation';
 import { useAuthState } from '@/lib/auth-store';
 import { useCreateProject, useUpdateProject } from '@/lib/projects';
 

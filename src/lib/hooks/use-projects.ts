@@ -7,7 +7,6 @@ import type {
   ProjectFilters, 
   ProjectsResponse,
   CreateProjectRequest,
-  UpdateProjectRequest,
   ProjectPagination
 } from '../types/project-types';
 

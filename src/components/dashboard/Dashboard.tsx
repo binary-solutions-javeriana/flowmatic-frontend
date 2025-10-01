@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Overview from './Overview';
@@ -17,7 +17,7 @@ import {
 const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<string>('overview');
-  const { projects, loading, error, fetchProjects } = useProjects({ 
+  const { projects, loading, error } = useProjects({ 
     page: 1, 
     limit: 100, 
     orderBy: 'created_at', 

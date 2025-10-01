@@ -63,7 +63,7 @@ export class HttpAuthService implements AuthService {
     }
   }
 
-  async refreshTokens(_refreshToken: string): Promise<AuthTokens> {
+  async refreshTokens(): Promise<AuthTokens> {
     try {
       // Note: This endpoint isn't documented in the API spec yet
       // We'll implement it when the backend provides the endpoint

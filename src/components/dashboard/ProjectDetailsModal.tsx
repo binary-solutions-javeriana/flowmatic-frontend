@@ -218,7 +218,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       {deleteConfirmText && !isDeleteConfirmValid && (
                         <p className="text-xs text-red-600 flex items-center space-x-1 mt-1">
                           <AlertCircle className="w-3 h-3" />
-                          <span>The text doesn't match. Please try again.</span>
+                          <span>The text doesn&apos;t match. Please try again.</span>
                         </p>
                       )}
                     </div>

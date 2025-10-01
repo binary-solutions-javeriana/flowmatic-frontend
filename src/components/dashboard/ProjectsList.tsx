@@ -6,7 +6,6 @@ import { useProjects } from '@/lib/hooks/use-projects';
 import type { ProjectFilters, Project } from '@/lib/types/project-types';
 import ProjectModal from './ProjectModal';
 import ProjectDetailsModal from './ProjectDetailsModal';
-import type { CreateProjectDto } from '@/lib/projects/types';
 import { getProjectStateColor } from '@/lib/projects/utils';
 
 const ProjectsList: React.FC = () => {
@@ -71,7 +70,7 @@ const ProjectsList: React.FC = () => {
     fetchProjects(newFilters);
   };
 
-  const handleCreateProject = async (data: CreateProjectDto) => {
+  const handleCreateProject = async () => {
     // The modal will handle creation through the hook
     setIsModalOpen(false);
     // Refresh projects list
@@ -227,7 +226,7 @@ const ProjectsList: React.FC = () => {
             {searchTerm && (
               <span className="inline-flex items-center space-x-1 px-3 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-lg text-sm">
                 <Search className="w-3 h-3" />
-                <span>Search: "{searchTerm}"</span>
+                <span>Search: &quot;{searchTerm}&quot;</span>
                 <button onClick={() => setSearchTerm('')} className="hover:text-[#14a67e]/70">
                   <X className="w-3 h-3" />
                 </button>
