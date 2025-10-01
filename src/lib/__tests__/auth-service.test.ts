@@ -23,6 +23,14 @@ describe('HttpAuthService', () => {
     it('should successfully login with valid credentials', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 200,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            if (name === 'content-length') return '100';
+            return null;
+          }
+        },
         json: () => Promise.resolve(testData.loginResponse)
       });
 
@@ -55,6 +63,12 @@ describe('HttpAuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            return null;
+          }
+        },
         json: () => Promise.resolve(testData.apiError)
       });
 
@@ -67,6 +81,12 @@ describe('HttpAuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            return null;
+          }
+        },
         json: () => Promise.resolve({
           ...testData.apiError,
           statusCode: 400,
@@ -92,6 +112,14 @@ describe('HttpAuthService', () => {
     it('should successfully register with email confirmation', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 201,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            if (name === 'content-length') return '100';
+            return null;
+          }
+        },
         json: () => Promise.resolve(testData.registerResponse)
       });
 
@@ -119,6 +147,14 @@ describe('HttpAuthService', () => {
     it('should successfully register with auto-confirm', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
+        status: 201,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            if (name === 'content-length') return '100';
+            return null;
+          }
+        },
         json: () => Promise.resolve(testData.registerResponseWithTokens)
       });
 
@@ -140,6 +176,12 @@ describe('HttpAuthService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 409,
+        headers: {
+          get: (name: string) => {
+            if (name === 'content-type') return 'application/json';
+            return null;
+          }
+        },
         json: () => Promise.resolve({
           ...testData.apiError,
           statusCode: 409,
@@ -201,7 +243,7 @@ describe('HttpAuthService', () => {
 
   describe('refreshTokens', () => {
     it('should throw not implemented error', async () => {
-      await expect(authService.refreshTokens('refresh-token'))
+      await expect(authService.refreshTokens())
         .rejects
         .toThrow('Token refresh not yet implemented');
     });

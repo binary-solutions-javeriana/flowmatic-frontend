@@ -7,8 +7,8 @@ import { mapErrorToUserFriendly, UserFriendlyError } from './error-mapping';
 export function useErrorHandler() {
   const [error, setError] = useState<UserFriendlyError | null>(null);
 
-  const handleError = useCallback((err: unknown, context?: string) => {
-    const userFriendlyError = mapErrorToUserFriendly(err, context);
+  const handleError = useCallback((err: unknown) => {
+    const userFriendlyError = mapErrorToUserFriendly(err);
     setError(userFriendlyError);
     return userFriendlyError;
   }, []);
@@ -36,10 +36,9 @@ export function useAsyncErrorHandler<T>() {
     options: {
       onSuccess?: (data: T) => void;
       onError?: (error: UserFriendlyError) => void;
-      context?: string;
     } = {}
   ) => {
-    const { onSuccess, onError, context } = options;
+    const { onSuccess, onError } = options;
     
     setLoading(true);
     setError(null);
@@ -50,7 +49,7 @@ export function useAsyncErrorHandler<T>() {
       onSuccess?.(result);
       return result;
     } catch (err) {
-      const userFriendlyError = mapErrorToUserFriendly(err, context);
+      const userFriendlyError = mapErrorToUserFriendly(err);
       setError(userFriendlyError);
       onError?.(userFriendlyError);
       throw userFriendlyError;
@@ -85,7 +84,7 @@ export function useFormErrorHandler() {
   }, []);
 
   const setFieldErrorFromException = useCallback((field: string, err: unknown) => {
-    const userFriendlyError = mapErrorToUserFriendly(err, `field:${field}`);
+    const userFriendlyError = mapErrorToUserFriendly(err);
     setFieldError(field, userFriendlyError);
   }, [setFieldError]);
 
@@ -102,8 +101,8 @@ export function useFormErrorHandler() {
     setGlobalError(null);
   }, []);
 
-  const setGlobalErrorFromException = useCallback((err: unknown, context?: string) => {
-    const userFriendlyError = mapErrorToUserFriendly(err, context);
+  const setGlobalErrorFromException = useCallback((err: unknown) => {
+    const userFriendlyError = mapErrorToUserFriendly(err);
     setGlobalError(userFriendlyError);
   }, []);
 
@@ -137,8 +136,8 @@ export function useApiErrorHandler() {
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
 
-  const handleError = useCallback((err: unknown, context?: string) => {
-    const userFriendlyError = mapErrorToUserFriendly(err, context);
+  const handleError = useCallback((err: unknown) => {
+    const userFriendlyError = mapErrorToUserFriendly(err);
     setError(userFriendlyError);
     return userFriendlyError;
   }, []);

@@ -50,7 +50,7 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
   // Display auth store errors
   React.useEffect(() => {
     if (state.error) {
-      setGlobalErrorFromException(new Error(state.error), 'login');
+      setGlobalErrorFromException(new Error(state.error));
     }
   }, [state.error, setGlobalErrorFromException]);
 
@@ -84,8 +84,8 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
       // Call optional onSubmit callback
       onSubmit?.(email, password);
       
-      // Redirect to success page
-      router.push('/auth/success');
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (error) {
       // Error is already handled by auth store and error handler
       console.error('Login failed:', error);

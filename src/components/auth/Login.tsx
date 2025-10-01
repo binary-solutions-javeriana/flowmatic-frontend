@@ -1,10 +1,39 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-store";
 import StyledLoginForm from "./LoginForm";
 
 export default function Login() {
+  const { state } = useAuth();
+  const router = useRouter();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!state.isLoading && state.isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [state.isLoading, state.isAuthenticated, router]);
+
+  // Show loading while checking authentication
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#9fdbc2]/5 to-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#14a67e] mx-auto"></div>
+          <p className="mt-4 text-[#0c272d]/60">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render login form if already authenticated (will redirect)
+  if (state.isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center relative">
       <div 
