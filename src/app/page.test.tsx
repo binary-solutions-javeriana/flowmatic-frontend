@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import Home from './page';
-import * as AuthStore from '@/lib/auth-store';
 
 vi.mock('@/lib/auth-store', () => ({
   useAuth: () => ({

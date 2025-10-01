@@ -63,6 +63,7 @@ export class HttpAuthService implements AuthService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async refreshTokens(_refreshToken: string): Promise<AuthTokens> {
     try {
       // Note: This endpoint isn't documented in the API spec yet

@@ -81,7 +81,7 @@ export function createAuthFetchOptions(
 export function withAuth<TArgs extends unknown[], TResult>(
   apiFunction: (...args: TArgs) => Promise<TResult>
 ): (...args: TArgs) => Promise<TResult> {
-  return async (...args: T): Promise<R> => {
+  return async (...args: TArgs): Promise<TResult> => {
     if (!isAuthenticated()) {
       throw new Error('Authentication required');
     }

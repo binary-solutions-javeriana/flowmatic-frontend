@@ -27,7 +27,8 @@ const statusBadgeColors: Record<string, string> = {
 };
 
 export function ProjectListItem({ project }: ProjectListItemProps) {
-  const progressPercentage = project.completion_percentage || 0;
+  // Use default values since these properties don't exist in the current Project type
+  const progressPercentage = 0; // This would come from project stats in real implementation
   const totalTasks = 24; // This would come from API in real implementation
   const completedTasks = Math.floor((totalTasks * progressPercentage) / 100);
 
@@ -54,8 +55,8 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
               <h3 className="text-sm font-medium text-gray-900 truncate">
                 {project.name_proyect}
               </h3>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeColors[project.status] || 'bg-gray-100 text-gray-800'}`}>
-                {project.status}
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeColors[project.state] || 'bg-gray-100 text-gray-800'}`}>
+                {project.state}
               </span>
             </div>
             <p className="text-sm text-gray-600 truncate mt-1">
@@ -81,8 +82,8 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
 
           {/* Status Indicator */}
           <div className="text-right">
-            <div className={`text-xs font-medium ${statusColors[project.status] || 'text-gray-600'}`}>
-              {project.status}
+            <div className={`text-xs font-medium ${statusColors[project.state] || 'text-gray-600'}`}>
+              {project.state}
             </div>
             <div className="text-xs text-gray-500 mt-0.5">
               {new Date(project.updated_at).toLocaleDateString()}

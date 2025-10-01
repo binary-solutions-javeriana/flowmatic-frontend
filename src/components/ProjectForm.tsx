@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { projectsService } from '@/lib/services/projects-service';
 // import { config } from '@/lib/config';
-// import { getAccessToken, getUserIdFromToken } from '@/lib/auth-utils';
+import { getAccessToken } from '@/lib/auth-utils';
 import type { Project } from '@/lib/types/project-types';
 import type { ProjectFormData, CreateProjectDto, UpdateProjectDto } from '@/lib/types/project-dto';
 import { cleanProjectData } from '@/lib/types/project-dto';

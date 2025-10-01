@@ -148,20 +148,18 @@ function ProjectDetailContent() {
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-3">Project Information</h3>
               <dl className="space-y-2 text-sm">
-                <div>
-                  <dt className="text-gray-500">Start Date</dt>
-                  <dd className="text-gray-900">{new Date(project.start_date).toLocaleDateString()}</dd>
-                </div>
+                {project.start_date && (
+                  <div>
+                    <dt className="text-gray-500">Start Date</dt>
+                    <dd className="text-gray-900">{new Date(project.start_date).toLocaleDateString()}</dd>
+                  </div>
+                )}
                 {project.end_date && (
                   <div>
                     <dt className="text-gray-500">End Date</dt>
                     <dd className="text-gray-900">{new Date(project.end_date).toLocaleDateString()}</dd>
                   </div>
                 )}
-                <div>
-                  <dt className="text-gray-500">Risk Level</dt>
-                  <dd className="text-gray-900">{project.risk_level}</dd>
-                </div>
                 {project.type && (
                   <div>
                     <dt className="text-gray-500">Type</dt>
@@ -172,26 +170,8 @@ function ProjectDetailContent() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Financial Information</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Timeline Information</h3>
               <dl className="space-y-2 text-sm">
-                {project.budget && (
-                  <div>
-                    <dt className="text-gray-500">Budget</dt>
-                    <dd className="text-gray-900">
-                      {project.currency && `${project.currency} `}
-                      {project.budget.toLocaleString()}
-                    </dd>
-                  </div>
-                )}
-                {project.actual_cost && (
-                  <div>
-                    <dt className="text-gray-500">Actual Cost</dt>
-                    <dd className="text-gray-900">
-                      {project.currency && `${project.currency} `}
-                      {project.actual_cost.toLocaleString()}
-                    </dd>
-                  </div>
-                )}
                 <div>
                   <dt className="text-gray-500">Created</dt>
                   <dd className="text-gray-900">{new Date(project.created_at).toLocaleDateString()}</dd>
@@ -203,23 +183,6 @@ function ProjectDetailContent() {
               </dl>
             </div>
           </div>
-
-          {/* Tags */}
-          {project.tags && project.tags.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {project.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Action Buttons */}

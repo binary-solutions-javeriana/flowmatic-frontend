@@ -205,20 +205,21 @@ const FIELD_ERROR_MAPPINGS: Record<string, string> = {
 };
 
 // Main error mapping function
-export function mapErrorToUserFriendly(error: unknown, context?: string): UserFriendlyError {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function mapErrorToUserFriendly(error: unknown, _context?: string): UserFriendlyError {
   // Handle ApiException (from backend)
   if (error instanceof ApiException) {
-    return mapApiException(error, context);
+    return mapApiException(error);
   }
 
   // Handle AuthError types
   if (error instanceof AuthError) {
-    return mapAuthError(error, context);
+    return mapAuthError(error);
   }
 
   // Handle generic Error
   if (error instanceof Error) {
-    return mapGenericError(error, context);
+    return mapGenericError(error);
   }
 
   // Fallback for unknown error types
@@ -229,7 +230,7 @@ export function mapErrorToUserFriendly(error: unknown, context?: string): UserFr
 }
 
 // Map ApiException to user-friendly error
-function mapApiException(error: ApiException, _context?: string): UserFriendlyError {
+function mapApiException(error: ApiException): UserFriendlyError {
   const errorCode = HTTP_STATUS_MAPPINGS[error.statusCode] || 'UNKNOWN_ERROR';
   const baseError = ERROR_MAPPINGS[errorCode] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
@@ -251,7 +252,7 @@ function mapApiException(error: ApiException, _context?: string): UserFriendlyEr
 }
 
 // Map AuthError to user-friendly error
-function mapAuthError(error: AuthError, _context?: string): UserFriendlyError {
+function mapAuthError(error: AuthError): UserFriendlyError {
   const baseError = ERROR_MAPPINGS[error.code] || ERROR_MAPPINGS['UNKNOWN_ERROR'];
 
   return {
@@ -266,7 +267,7 @@ function mapAuthError(error: AuthError, _context?: string): UserFriendlyError {
 }
 
 // Map generic Error to user-friendly error
-function mapGenericError(error: Error, _context?: string): UserFriendlyError {
+function mapGenericError(error: Error): UserFriendlyError {
   // Check for network-related errors
   const messageLower = error.message.toLowerCase();
   if (messageLower.includes('fetch') || messageLower.includes('network')) {
@@ -293,7 +294,6 @@ function mapGenericError(error: Error, _context?: string): UserFriendlyError {
   }
 
   // Default to unknown error
-  const base = ERROR_MAPPINGS['UNKNOWN_ERROR'];
   return {
     code: 'UNKNOWN_ERROR',
     ...ERROR_MAPPINGS['UNKNOWN_ERROR'],
@@ -304,7 +304,8 @@ function mapGenericError(error: Error, _context?: string): UserFriendlyError {
 
 // Extract field name from error message
 function extractFieldFromMessage(message: string): string | undefined {
-  const fieldMatch = message.match(/(\w+)\s+(is|must be|should be)/i);
+  const regex = /(\w+)\s+(is|must be|should be)/i;
+  const fieldMatch = regex.exec(message);
   return fieldMatch ? fieldMatch[1] : undefined;
 }
 
