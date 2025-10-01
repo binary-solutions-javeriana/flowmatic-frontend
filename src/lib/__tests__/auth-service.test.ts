@@ -37,7 +37,7 @@ describe('HttpAuthService', () => {
       const result = await authService.login(testData.loginRequest);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/v1/auth/login',
+        'http://10.43.103.86:3000/v1/auth/login',
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -126,7 +126,7 @@ describe('HttpAuthService', () => {
       const result = await authService.register(testData.registerRequest);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3000/v1/auth/register',
+        'http://10.43.103.86:3000/v1/auth/register',
         expect.objectContaining({
           method: 'POST',
           headers: {
