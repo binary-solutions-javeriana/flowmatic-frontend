@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowmatic - Debug Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #9fdbc2 0%, #14a67e 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0c272d;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .check-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ccc;
+            background: #f5f5f5;
+        }
+        .check-item.success {
+            border-left-color: #14a67e;
+            background: #e8f5f1;
+        }
+        .check-item.error {
+            border-left-color: #e74c3c;
+            background: #fde8e8;
+        }
+        .check-item.warning {
+            border-left-color: #f39c12;
+            background: #fef5e7;
+        }
+        .check-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .check-details {
+            font-size: 14px;
+            color: #666;
+            font-family: monospace;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+            word-break: break-all;
+        }
+        button {
+            background: #14a67e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #0f8a68;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(20, 166, 126, 0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #14a67e;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+        }
+        .summary h2 {
+            color: #0c272d;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        .summary ul {
+            list-style-position: inside;
+            color: #666;
+        }
+        .summary li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Flowmatic Debug Check</h1>
+        <p class="subtitle">Herramienta de diagnóstico para verificar la configuración de la aplicación</p>
+        
+        <div id="checks"></div>
+        
+        <button id="runTestBtn" onclick="runTests()">Ejecutar Diagnóstico</button>
+        
+        <div id="summary" class="summary" style="display: none;">
+            <h2>📋 Resumen</h2>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const checks = [];
+        
+        function addCheck(title, status, details) {
+            checks.push({ title, status, details });
+            const checksDiv = document.getElementById('checks');
+            const checkDiv = document.createElement('div');
+            checkDiv.className = `check-item ${status}`;
+            
+            const icon = status === 'success' ? '✅' : status === 'error' ? '❌' : '⚠️';
+            
+            checkDiv.innerHTML = `
+                <div class="check-title">${icon} ${title}</div>
+                ${details ? `<div class="check-details">${details}</div>` : ''}
+            `;
+            
+            checksDiv.appendChild(checkDiv);
+        }
+        
+        async function runTests() {
+            const btn = document.getElementById('runTestBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Ejecutando...';
+            
+            document.getElementById('checks').innerHTML = '';
+            checks.length = 0;
+            
+            // Check 1: Environment Variables
+            checkEnvironmentVariables();
+            
+            // Check 2: Local Storage
+            checkLocalStorage();
+            
+            // Check 3: API Connectivity
+            await checkApiConnectivity();
+            
+            // Check 4: CORS
+            await checkCORS();
+            
+            // Show summary
+            showSummary();
+            
+            btn.disabled = false;
+            btn.innerHTML = '🔄 Ejecutar Diagnóstico Nuevamente';
+        }
+        
+        function checkEnvironmentVariables() {
+            // En el navegador, solo podemos verificar si están configuradas por el build
+            const apiUrl = window.location.origin;
+            
+            if (apiUrl.includes('localhost')) {
+                addCheck(
+                    'Entorno de Desarrollo Detectado',
+                    'warning',
+                    `URL: ${apiUrl}`
+                );
+            } else if (apiUrl.includes('vercel.app')) {
+                addCheck(
+                    'Entorno de Producción (Vercel) Detectado',
+                    'success',
+                    `URL: ${apiUrl}`
+                );
+            }
+            
+            addCheck(
+                'Variables de Entorno',
+                'warning',
+                'Las variables NEXT_PUBLIC_ se verificarán mediante llamadas a la API'
+            );
+        }
+        
+        function checkLocalStorage() {
+            try {
+                const hasAccessToken = !!localStorage.getItem('flowmatic_access_token');
+                const hasRefreshToken = !!localStorage.getItem('flowmatic_refresh_token');
+                const hasUser = !!localStorage.getItem('flowmatic_user');
+                
+                if (hasAccessToken && hasRefreshToken && hasUser) {
+                    addCheck(
+                        'Tokens de Autenticación',
+                        'success',
+                        'Access token, refresh token y usuario encontrados en localStorage'
+                    );
+                } else {
+                    const missing = [];
+                    if (!hasAccessToken) missing.push('access_token');
+                    if (!hasRefreshToken) missing.push('refresh_token');
+                    if (!hasUser) missing.push('user');
+                    
+                    addCheck(
+                        'Tokens de Autenticación',
+                        'error',
+                        `Faltantes: ${missing.join(', ')}. Necesitas hacer login.`
+                    );
+                }
+            } catch (err) {
+                addCheck(
+                    'Local Storage',
+                    'error',
+                    `Error: ${err.message}`
+                );
+            }
+        }
+        
+        async function checkApiConnectivity() {
+            try {
+                // Intentar hacer una llamada al health endpoint
+                // Nota: Esta URL debe ser configurada según tu backend
+                const apiBaseUrl = 'http://localhost:3000'; // Fallback por defecto
+                
+                addCheck(
+                    'Conectividad API',
+                    'warning',
+                    'Verifica la consola del navegador para logs de la API real. URL base esperada debe estar en NEXT_PUBLIC_API_BASE_URL'
+                );
+                
+            } catch (err) {
+                addCheck(
+                    'Conectividad API',
+                    'error',
+                    `Error: ${err.message}`
+                );
+            }
+        }
+        
+        async function checkCORS() {
+            addCheck(
+                'CORS',
+                'warning',
+                'Verifica el Network tab para errores CORS. Si ves errores "blocked by CORS policy", necesitas configurar CORS en el backend.'
+            );
+        }
+        
+        function showSummary() {
+            const successCount = checks.filter(c => c.status === 'success').length;
+            const errorCount = checks.filter(c => c.status === 'error').length;
+            const warningCount = checks.filter(c => c.status === 'warning').length;
+            
+            const summaryDiv = document.getElementById('summary');
+            const summaryContent = document.getElementById('summaryContent');
+            
+            let html = `
+                <p><strong>Total de verificaciones:</strong> ${checks.length}</p>
+                <ul>
+                    <li>✅ Éxitos: ${successCount}</li>
+                    <li>❌ Errores: ${errorCount}</li>
+                    <li>⚠️ Advertencias: ${warningCount}</li>
+                </ul>
+            `;
+            
+            if (errorCount > 0) {
+                html += `
+                    <p style="margin-top: 15px; color: #e74c3c; font-weight: 600;">
+                        ⚠️ Se encontraron ${errorCount} error(es). Por favor revisa los items marcados con ❌
+                    </p>
+                `;
+            }
+            
+            if (errorCount === 0 && warningCount === 0) {
+                html += `
+                    <p style="margin-top: 15px; color: #14a67e; font-weight: 600;">
+                        ✅ Todo parece estar configurado correctamente!
+                    </p>
+                `;
+            }
+            
+            html += `
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                    Para más detalles, abre las <strong>Developer Tools</strong> (F12) y revisa la consola.
+                </p>
+            `;
+            
+            summaryContent.innerHTML = html;
+            summaryDiv.style.display = 'block';
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>
+
+
+

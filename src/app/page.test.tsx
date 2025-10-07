@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import Home from './page';
 
-test('renderiza el CTA', () => {
+test('renders landing primary CTAs', () => {
   render(<Home />);
-  expect(screen.getByText(/Get Started/i)).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: /start free trial/i })[0]).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: /schedule demo/i })[0]).toBeInTheDocument();
 });
