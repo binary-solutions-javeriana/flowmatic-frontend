@@ -81,8 +81,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     return response.json() as Promise<T>;
   }
 
-  // If no JSON content, return empty object
-  return {} as T;
+  // If content is not JSON, throw to surface the real upstream response type
+  throw new Error(`Unexpected content-type from API: ${contentType || 'none'}`);
 }
 
 // Helper to add Authorization header
