@@ -41,17 +41,40 @@ export function useProjects(initialFilters?: ProjectFilters) {
       const queryString = params.toString();
       const url = `/projects?${queryString}`;
 
-      console.log('Fetching projects with URL:', url);
-      console.log('Filters:', filters);
+      console.log('[useProjects] Fetching projects with URL:', url);
+      console.log('[useProjects] Filters:', filters);
+      console.log('[useProjects] API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
       const response = await authApi.get<ProjectsResponse>(url);
       
-      setProjects(response.data || []);
+      console.log('[useProjects] Response received:', response);
+      console.log('[useProjects] Response data:', response?.data);
+      console.log('[useProjects] Response meta:', response?.meta);
+      console.log('[useProjects] Number of projects:', response?.data?.length || 0);
+      
+      // Validate response structure
+      if (!response || typeof response !== 'object') {
+        throw new Error('Invalid response format: response is not an object');
+      }
+      
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('[useProjects] Invalid data structure. Expected { data: [], meta: {} }, got:', response);
+        throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
+      }
+      
+      setProjects(response.data);
       setPagination(response.meta || null);
+      
+      console.log('[useProjects] Projects state updated with', response.data.length, 'projects');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects';
       setError(errorMessage);
-      console.error('Error fetching projects:', err);
+      console.error('[useProjects] Error fetching projects:', err);
+      console.error('[useProjects] Error details:', {
+        message: errorMessage,
+        error: err,
+        stack: err instanceof Error ? err.stack : undefined
+      });
     } finally {
       setLoading(false);
     }

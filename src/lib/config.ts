@@ -1,11 +1,34 @@
 // Application configuration
 export const config = {
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
+    // Original backend URL (used server-side and for logging)
+    backendUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
     version: process.env.NEXT_PUBLIC_API_VERSION || 'v1',
-    get apiUrl() {
-      return `${this.baseUrl}/${this.version}`;
+    
+    // Base URL for API calls
+    // Client-side: use proxy to avoid ngrok warning page
+    // Server-side: use direct backend URL
+    get baseUrl() {
+      // Check if we're in browser
+      if (typeof window !== 'undefined') {
+        // Use Next.js proxy to bypass ngrok warning
+        return '/api/backend';
+      }
+      // Server-side: use direct backend URL
+      return this.backendUrl;
     },
+    
+    get apiUrl() {
+      const url = `${this.baseUrl}/${this.version}`;
+      if (typeof window !== 'undefined') {
+        console.log('[CONFIG] Using API proxy to bypass ngrok warning');
+        console.log('[CONFIG] API URL:', url);
+        console.log('[CONFIG] Proxying to:', this.backendUrl);
+        console.log('[CONFIG] Version:', this.version);
+      }
+      return url;
+    },
+    
     get healthUrl() {
       return `${this.baseUrl}/health`;
     }
@@ -28,9 +51,15 @@ export function validateEnvironment() {
   
   if (missing.length > 0) {
     console.warn(
-      `Missing environment variables: ${missing.join(', ')}. ` +
-      'Using fallback values. Please set these in your .env.local file.'
+      `⚠️ [CONFIG] Missing environment variables: ${missing.join(', ')}. ` +
+      'Using fallback values. Please set these in your .env.local file or Vercel environment variables.'
     );
+    console.warn(
+      `⚠️ [CONFIG] Current NEXT_PUBLIC_API_BASE_URL: ${process.env.NEXT_PUBLIC_API_BASE_URL || 'NOT SET (using fallback: http://localhost:3000)'}`
+    );
+  } else {
+    console.log('✅ [CONFIG] All required environment variables are set');
+    console.log(`✅ [CONFIG] NEXT_PUBLIC_API_BASE_URL: ${process.env.NEXT_PUBLIC_API_BASE_URL}`);
   }
 }
 

@@ -22,6 +22,18 @@ const ProjectsList: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[ProjectsList] Component state:', {
+      projectsCount: projects?.length || 0,
+      projects,
+      pagination,
+      loading,
+      error,
+      filters
+    });
+  }, [projects, pagination, loading, error, filters]);
+
   // Debounced search
   useEffect(() => {
     if (searchTerm === '' && statusFilter === '') {
@@ -124,9 +136,16 @@ const ProjectsList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
-        <h3 className="font-medium">Error loading projects</h3>
-        <p className="text-sm mt-1">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
+        <h3 className="font-medium text-lg mb-2">❌ Error loading projects</h3>
+        <p className="text-sm mt-1 mb-4">{error}</p>
+        <div className="bg-white rounded p-3 text-xs mb-4">
+          <p className="font-mono text-gray-700">Debug Info:</p>
+          <ul className="list-disc list-inside text-gray-600 mt-2">
+            <li>API URL: {process.env.NEXT_PUBLIC_API_BASE_URL || 'NOT SET (usando localhost:3000)'}</li>
+            <li>Filters: {JSON.stringify(filters)}</li>
+          </ul>
+        </div>
         <button
           onClick={() => fetchProjects()}
           className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm transition"
