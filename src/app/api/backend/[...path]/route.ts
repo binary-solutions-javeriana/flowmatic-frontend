@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { config } from '@/src/lib/config';
+import { config } from '@/lib/config';
 
 // Proxy only GET requests. Other verbs can be added similarly if needed.
-export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const backendBaseUrl = config.api.backendUrl; // e.g., ngrok or production URL
 
   // Build target URL by joining catch-all path and original query string
-  const pathSegments = context.params?.path ?? [];
+  const params = await context.params;
+  const pathSegments = params?.path ?? [];
   const joinedPath = pathSegments.join('/');
   const search = request.nextUrl.search; // includes leading '?', or empty string
   const targetUrl = `${backendBaseUrl}/${joinedPath}${search}`;
