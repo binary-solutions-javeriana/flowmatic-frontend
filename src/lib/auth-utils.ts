@@ -30,7 +30,9 @@ export function getStoredUser(): Record<string, unknown> | null {
 // Check if user is authenticated (has valid token)
 export function isAuthenticated(): boolean {
   const token = getAccessToken();
-  return token !== null && token.length > 20; // Basic validation
+  // Consider authenticated if there is any non-empty token present.
+  // Some environments issue short tokens; length checks can cause false negatives.
+  return typeof token === 'string' && token.trim().length > 0;
 }
 
 // Clear all auth data
