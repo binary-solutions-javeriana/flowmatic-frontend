@@ -7,7 +7,6 @@ import About from './About';
 import Features from './Features';
 import Benefits from './Benefits';
 import Pricing from './Pricing';
-import CTA from './CTA';
 import Footer from './Footer';
 
 const Landing: React.FC = () => {
@@ -19,7 +18,6 @@ const Landing: React.FC = () => {
       <Features />
       <Benefits />
       <Pricing />
-      <CTA />
       <Footer />
     </div>
   );

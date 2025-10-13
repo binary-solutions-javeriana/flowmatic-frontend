@@ -37,27 +37,27 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      setErrorMessage('El nombre es requerido');
+      setErrorMessage('Name is required');
       return false;
     }
     if (!formData.email.trim()) {
-      setErrorMessage('El email es requerido');
+      setErrorMessage('Email is required');
       return false;
     }
     if (!formData.institution.trim()) {
-      setErrorMessage('La institución educativa es requerida');
+      setErrorMessage('Educational institution is required');
       return false;
     }
     if (!formData.position.trim()) {
-      setErrorMessage('El cargo es requerido');
+      setErrorMessage('Position is required');
       return false;
     }
     if (!formData.message.trim()) {
-      setErrorMessage('El mensaje es requerido');
+      setErrorMessage('Message is required');
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setErrorMessage('Por favor ingresa un email válido');
+      setErrorMessage('Please enter a valid email');
       return false;
     }
     return true;
@@ -119,7 +119,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
       setErrorMessage(
         error instanceof Error 
           ? error.message 
-          : 'Hubo un error al enviar el mensaje. Por favor intenta de nuevo.'
+          : 'There was an error sending the message. Please try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -129,18 +129,18 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 max-w-2xl mx-auto">
       <div className="text-center mb-8">
-        <h3 className="text-2xl font-bold text-[#0c272d] mb-2">Contáctanos</h3>
+        <h3 className="text-2xl font-bold text-[#0c272d] mb-2">Contact Us</h3>
         <p className="text-gray-600">
-          Completa el formulario y nos pondremos en contacto contigo pronto
+          Complete the form and we'll get in touch with you soon
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name Field */}
         <div className="space-y-2">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Nombre Completo *
-          </label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Full Name *
+            </label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -150,7 +150,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
               value={formData.name}
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14a67e] focus:border-transparent transition-all duration-200"
-              placeholder="Juan Pérez"
+              placeholder="John Doe"
               disabled={isSubmitting}
             />
           </div>
@@ -171,7 +171,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14a67e] focus:border-transparent transition-all duration-200"
-                placeholder="tu@institucion.edu"
+                placeholder="your@institution.edu"
                 disabled={isSubmitting}
               />
             </div>
@@ -180,7 +180,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
           {/* Institution Field */}
           <div className="space-y-2">
             <label htmlFor="institution" className="block text-sm font-medium text-gray-700">
-              Institución Educativa *
+              Educational Institution *
             </label>
             <div className="relative">
               <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -191,7 +191,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
                 value={formData.institution}
                 onChange={handleInputChange}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14a67e] focus:border-transparent transition-all duration-200"
-                placeholder="Universidad Nacional"
+                placeholder="National University"
                 disabled={isSubmitting}
               />
             </div>
@@ -201,7 +201,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
         {/* Position Field */}
         <div className="space-y-2">
           <label htmlFor="position" className="block text-sm font-medium text-gray-700">
-            Cargo en la Institución *
+            Position at Institution *
           </label>
           <div className="relative">
             <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -212,7 +212,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
               value={formData.position}
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14a67e] focus:border-transparent transition-all duration-200"
-              placeholder="Decano, Director, Coordinador, etc."
+              placeholder="Dean, Director, Coordinator, etc."
               disabled={isSubmitting}
             />
           </div>
@@ -221,7 +221,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
         {/* Message Field */}
         <div className="space-y-2">
           <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-            Mensaje *
+            Message *
           </label>
           <div className="relative">
             <MessageSquare className="absolute left-3 top-4 w-5 h-5 text-gray-400" />
@@ -232,7 +232,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
               onChange={handleInputChange}
               rows={4}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14a67e] focus:border-transparent transition-all duration-200 resize-none"
-              placeholder="Cuéntanos sobre tu proyecto, necesidades específicas, número de usuarios, etc."
+              placeholder="Tell us about your project, specific needs, number of users, etc."
               disabled={isSubmitting}
             />
           </div>
@@ -250,7 +250,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
           <div className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-xl">
             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
             <p className="text-green-700 text-sm">
-              ¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.
+              Message sent successfully! We'll get in touch with you soon.
             </p>
           </div>
         )}
@@ -264,12 +264,12 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
           {isSubmitting ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Enviando...</span>
+              <span>Sending...</span>
             </>
           ) : (
             <>
               <Send className="w-5 h-5" />
-              <span>Enviar Mensaje</span>
+              <span>Send Message</span>
             </>
           )}
         </button>

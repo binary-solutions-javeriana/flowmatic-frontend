@@ -25,8 +25,8 @@ const Hero: React.FC = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/register" className="group bg-[#14a67e] text-white px-8 py-4 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2">
-                <span className="font-semibold">Start Free Trial</span>
+              <Link href="#pricing" className="group bg-[#14a67e] text-white px-8 py-4 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center space-x-2">
+                <span className="font-semibold">See Pricings</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link href="/dashboard" className="bg-white/50 backdrop-blur-sm text-[#0c272d] px-8 py-4 rounded-xl hover:bg-white/70 transition-all duration-300 border border-[#9fdbc2]/30 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
