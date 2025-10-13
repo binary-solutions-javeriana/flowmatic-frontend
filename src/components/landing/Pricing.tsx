@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Star, Zap, Crown, Shield, Users, Globe, BookOpen } from 'lucide-react';
+import ContactForm from './ContactForm';
 
 const Pricing: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -267,15 +268,21 @@ const Pricing: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-[#9fdbc2]/10 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-[#0c272d] mb-4">¿Necesitas un plan personalizado?</h3>
-            <p className="text-gray-700 mb-6">
-              Para universidades con más de 1000 usuarios o requisitos especiales, 
-              ofrecemos soluciones completamente personalizadas.
-            </p>
-            <button className="bg-[#14a67e] text-white px-8 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-              Contactar Especialista
-            </button>
+          <div className="space-y-8">
+            {/* Contact Form */}
+            <ContactForm />
+            
+            {/* Custom Plan Section */}
+            <div className="bg-[#9fdbc2]/10 rounded-2xl p-8 max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-[#0c272d] mb-4">¿Necesitas un plan personalizado?</h3>
+              <p className="text-gray-700 mb-6">
+                Para universidades con más de 1000 usuarios o requisitos especiales, 
+                ofrecemos soluciones completamente personalizadas.
+              </p>
+              <button className="bg-[#14a67e] text-white px-8 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                Contactanos
+              </button>
+            </div>
           </div>
         </div>
       </div>
