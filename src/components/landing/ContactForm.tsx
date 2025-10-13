@@ -131,7 +131,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
       <div className="text-center mb-8">
         <h3 className="text-2xl font-bold text-[#0c272d] mb-2">Contact Us</h3>
         <p className="text-gray-600">
-          Complete the form and we'll get in touch with you soon
+          Complete the form and we&apos;ll get in touch with you soon
         </p>
       </div>
 
@@ -250,7 +250,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ onSuccess }) => {
           <div className="flex items-center space-x-2 p-4 bg-green-50 border border-green-200 rounded-xl">
             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
             <p className="text-green-700 text-sm">
-              Message sent successfully! We'll get in touch with you soon.
+              Message sent successfully! We&apos;ll get in touch with you soon.
             </p>
           </div>
         )}

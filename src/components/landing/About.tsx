@@ -37,28 +37,6 @@ const About: React.FC = () => {
     }
   ];
 
-  const values = [
-    {
-      icon: Heart,
-      title: 'Passion for Education',
-      description: 'We believe technology should serve the educational mission, not complicate it.'
-    },
-    {
-      icon: Shield,
-      title: 'Security First',
-      description: 'The privacy and security of academic data is our top priority.'
-    },
-    {
-      icon: Lightbulb,
-      title: 'Constant Innovation',
-      description: 'We develop solutions that evolve with educational needs.'
-    },
-    {
-      icon: Users,
-      title: 'Effective Collaboration',
-      description: 'We facilitate communication and teamwork in academic environments.'
-    }
-  ];
 
   const achievements = [
     {
