@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Check, Star, Zap, Crown, Shield, Users, Globe, BookOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
 import ContactForm from './ContactForm';
 
 const Pricing: React.FC = () => {
@@ -109,61 +112,102 @@ const Pricing: React.FC = () => {
   ];
 
   return (
-    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#9fdbc2]/5">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center space-y-4 mb-16">
+    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#9fdbc2]/5 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute top-20 right-0 w-96 h-96 bg-[#9fdbc2]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 left-0 w-96 h-96 bg-[#14a67e]/10 rounded-full blur-3xl" />
+
+      <div className="max-w-7xl mx-auto relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center space-y-4 mb-16"
+        >
           <h2 className="text-4xl font-bold text-[#0c272d]">Plans Designed for Educational Institutions</h2>
           <p className="text-xl text-[#0c272d]/70 max-w-3xl mx-auto">
             From basic academic projects to enterprise management of multiple campuses. 
             Find the perfect plan for your institution.
           </p>
-          <div className="flex items-center justify-center space-x-4 mt-8">
-            <span className={`text-sm font-medium ${!isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Monthly</span>
-            <button
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex items-center justify-center space-x-4 mt-8"
+          >
+            <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Monthly</span>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsAnnual(!isAnnual)}
               className="relative inline-flex h-6 w-12 items-center rounded-full bg-[#14a67e]/20 transition-colors focus:outline-none focus:ring-2 focus:ring-[#14a67e] focus:ring-offset-2"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-[#14a67e] transition-transform ${
+              <motion.span
+                layout
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`inline-block h-4 w-4 transform rounded-full bg-[#14a67e] ${
                   isAnnual ? 'translate-x-7' : 'translate-x-1'
                 }`}
               />
-            </button>
+            </motion.button>
             <div className="flex items-center space-x-2">
-              <span className={`text-sm font-medium ${isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Annual</span>
+              <span className={`text-sm font-medium transition-colors ${isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Annual</span>
               {isAnnual && (
-                <span className="inline-flex items-center space-x-1 bg-[#14a67e]/10 text-[#14a67e] px-2 py-1 rounded-full text-xs font-medium">
+                <motion.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="inline-flex items-center space-x-1 bg-[#14a67e]/10 text-[#14a67e] px-2 py-1 rounded-full text-xs font-medium"
+                >
                   <Star className="w-3 h-3" />
                   <span>Save ${monthlySavings.toLocaleString('es-CO')} COP</span>
-                </span>
+                </motion.span>
               )}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {tiers.map((tier, index) => {
             const IconComponent = tier.icon;
             return (
-              <div
+              <motion.div
                 key={tier.name}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ y: -10, scale: tier.popular ? 1.02 : 1.05 }}
                 className={`relative ${tier.bgColor} rounded-3xl p-8 border-2 ${tier.borderColor} ${
                   tier.popular ? 'ring-4 ring-[#14a67e]/20 scale-105' : ''
-                } hover:shadow-2xl transition-all duration-500 hover:-translate-y-2`}
+                } hover:shadow-2xl transition-all duration-500`}
               >
                 {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-gradient-to-r from-[#14a67e] to-[#9fdbc2] text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-1">
-                      <Star className="w-4 h-4" />
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, type: "spring" }}
+                    className="absolute -top-4 left-1/2 transform -translate-x-1/2"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="bg-gradient-to-r from-[#14a67e] to-[#9fdbc2] text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-1 shadow-lg"
+                    >
+                      <Star className="w-4 h-4 fill-white" />
                       <span>Most Popular</span>
-                    </div>
-                  </div>
+                    </motion.div>
+                  </motion.div>
                 )}
 
                 <div className="text-center space-y-4 mb-8">
-                  <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${tier.color} flex items-center justify-center`}>
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                    className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${tier.color} flex items-center justify-center shadow-lg`}
+                  >
                     <IconComponent className="w-8 h-8 text-white" />
-                  </div>
+                  </motion.div>
                   <div>
                     <h3 className={`text-2xl font-bold ${tier.textColor}`}>{tier.name}</h3>
                     <p className="text-sm text-gray-600 mt-1">{tier.subtitle}</p>
@@ -226,17 +270,19 @@ const Pricing: React.FC = () => {
                 </div>
 
                 <div className="mt-8">
-                  <button
-                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg ${
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
                       tier.popular
-                        ? 'bg-[#14a67e] text-white hover:bg-[#14a67e]/90 shadow-lg'
+                        ? 'bg-[#14a67e] text-white hover:bg-[#14a67e]/90 shadow-lg hover:shadow-xl'
                         : index === 0
                         ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                         : 'bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     {index === 0 ? 'Start Free' : index === 1 ? 'Start Free Trial' : 'Contact Sales'}
-                  </button>
+                  </motion.button>
                 </div>
 
                 {index === 1 && (
@@ -244,36 +290,77 @@ const Pricing: React.FC = () => {
                     30 days free • No credit card required
                   </p>
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
-        <div className="mt-16 text-center space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-16 text-center space-y-8"
+        >
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="flex flex-col items-center space-y-3">
-              <Shield className="w-8 h-8 text-[#14a67e]" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              whileHover={{ y: -5 }}
+              className="flex flex-col items-center space-y-3 p-6 rounded-xl hover:bg-white/50 transition-all cursor-pointer"
+            >
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Shield className="w-8 h-8 text-[#14a67e]" />
+              </motion.div>
               <h4 className="font-semibold text-[#0c272d]">Guaranteed Security</h4>
               <p className="text-sm text-gray-600 text-center">FERPA compliance and end-to-end encryption</p>
-            </div>
-            <div className="flex flex-col items-center space-y-3">
-              <Users className="w-8 h-8 text-[#14a67e]" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              whileHover={{ y: -5 }}
+              className="flex flex-col items-center space-y-3 p-6 rounded-xl hover:bg-white/50 transition-all cursor-pointer"
+            >
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Users className="w-8 h-8 text-[#14a67e]" />
+              </motion.div>
               <h4 className="font-semibold text-[#0c272d]">Specialized Support</h4>
               <p className="text-sm text-gray-600 text-center">Expert team in educational institutions</p>
-            </div>
-            <div className="flex flex-col items-center space-y-3">
-              <Globe className="w-8 h-8 text-[#14a67e]" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              whileHover={{ y: -5 }}
+              className="flex flex-col items-center space-y-3 p-6 rounded-xl hover:bg-white/50 transition-all cursor-pointer"
+            >
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Globe className="w-8 h-8 text-[#14a67e]" />
+              </motion.div>
               <h4 className="font-semibold text-[#0c272d]">Total Scalability</h4>
               <p className="text-sm text-gray-600 text-center">Grow with your institution without limits</p>
-            </div>
+            </motion.div>
           </div>
 
           <div className="space-y-8">
             {/* Contact Form */}
             <ContactForm />
-            
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
