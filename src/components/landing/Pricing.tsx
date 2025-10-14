@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Star, Zap, Crown, Shield, Users, Globe, BookOpen } from 'lucide-react';
+import ContactForm from './ContactForm';
 
 const Pricing: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -11,11 +12,11 @@ const Pricing: React.FC = () => {
 
   const tiers = [
     {
-      name: 'Gratuito',
-      subtitle: 'Perfecto para empezar',
+      name: 'Free',
+      subtitle: 'Perfect to get started',
       price: 0,
-      period: 'Siempre gratis',
-      description: 'Ideal para equipos pequeños y proyectos académicos básicos',
+      period: 'Always free',
+      description: 'Ideal for small teams and basic academic projects',
       icon: BookOpen,
       color: 'from-gray-500 to-gray-600',
       bgColor: 'bg-white',
@@ -23,28 +24,28 @@ const Pricing: React.FC = () => {
       textColor: 'text-gray-900',
       popular: false,
       features: [
-        'Hasta 3 proyectos activos',
-        'Máximo 10 usuarios',
-        'Tableros Kanban básicos',
-        'Chat interno limitado',
-        'Almacenamiento: 1GB',
-        'Reportes básicos',
-        'Soporte por email',
-        'Integración con Google Workspace'
+        'Up to 3 active projects',
+        'Maximum 10 users',
+        'Basic Kanban boards',
+        'Limited internal chat',
+        'Storage: 1GB',
+        'Basic reports',
+        'Email support',
+        'Google Workspace integration'
       ],
       limitations: [
-        'Sin autenticación SSO/LDAP',
-        'Sin exportación de reportes',
-        'Sin análisis avanzados'
+        'No SSO/LDAP authentication',
+        'No report export',
+        'No advanced analytics'
       ]
     },
     {
-      name: 'Profesional',
-      subtitle: 'Para instituciones en crecimiento',
+      name: 'Professional',
+      subtitle: 'For growing institutions',
       price: isAnnual ? monthlyEquivalent : monthlyPrice,
       originalPrice: isAnnual ? monthlyPrice : null,
-      period: isAnnual ? '/mes (facturado anualmente)' : '/mes',
-      description: 'Solución completa para departamentos y facultades',
+      period: isAnnual ? '/month (billed annually)' : '/month',
+      description: 'Complete solution for departments and faculties',
       icon: Zap,
       color: 'from-[#14a67e] to-[#9fdbc2]',
       bgColor: 'bg-gradient-to-br from-[#14a67e]/5 to-[#9fdbc2]/5',
@@ -52,32 +53,32 @@ const Pricing: React.FC = () => {
       textColor: 'text-[#0c272d]',
       popular: true,
       features: [
-        'Proyectos ilimitados',
-        'Hasta 100 usuarios',
-        'Autenticación SSO/LDAP completa',
-        'Tableros Kanban + Gantt avanzados',
-        'Chat interno con menciones',
-        'Almacenamiento: 50GB',
-        'Reportes avanzados con exportación',
-        'Análisis y métricas detalladas',
-        'Gestión de roles granular',
-        'Integraciones múltiples',
-        'Soporte prioritario 24/7',
-        'Backup automático diario'
+        'Unlimited projects',
+        'Up to 100 users',
+        'Complete SSO/LDAP authentication',
+        'Advanced Kanban + Gantt boards',
+        'Internal chat with mentions',
+        'Storage: 50GB',
+        'Advanced reports with export',
+        'Detailed analytics and metrics',
+        'Granular role management',
+        'Multiple integrations',
+        'Priority 24/7 support',
+        'Daily automatic backup'
       ],
       bonusFeatures: [
-        'Vista de calendario integrada',
-        'Notificaciones personalizadas',
-        'API REST completa'
+        'Integrated calendar view',
+        'Custom notifications',
+        'Complete REST API'
       ]
     },
     {
-      name: 'Empresarial',
-      subtitle: 'Para universidades completas',
+      name: 'Enterprise',
+      subtitle: 'For complete universities',
       price: isAnnual ? Math.round(monthlyEquivalent * 1.8) : Math.round(monthlyPrice * 1.8),
       originalPrice: isAnnual ? Math.round(monthlyPrice * 1.8) : null,
-      period: isAnnual ? '/mes (facturado anualmente)' : '/mes',
-      description: 'Solución enterprise para múltiples campus',
+      period: isAnnual ? '/month (billed annually)' : '/month',
+      description: 'Enterprise solution for multiple campuses',
       icon: Crown,
       color: 'from-purple-600 to-blue-600',
       bgColor: 'bg-gradient-to-br from-purple-50 to-blue-50',
@@ -85,24 +86,24 @@ const Pricing: React.FC = () => {
       textColor: 'text-purple-900',
       popular: false,
       features: [
-        'Todo lo de Profesional, más:',
-        'Usuarios ilimitados',
-        'Múltiples campus/sedes',
-        'Almacenamiento: 500GB',
-        'Panel de soporte integrado',
-        'SLA garantizado 99.9%',
-        'Monitoreo de sistemas',
-        'Gestión de incidentes',
-        'Cumplimiento FERPA avanzado',
-        'Auditoría completa',
-        'Onboarding personalizado',
-        'Gerente de cuenta dedicado'
+        'Everything from Professional, plus:',
+        'Unlimited users',
+        'Multiple campuses/locations',
+        'Storage: 500GB',
+        'Integrated support panel',
+        '99.9% guaranteed SLA',
+        'System monitoring',
+        'Incident management',
+        'Advanced FERPA compliance',
+        'Complete audit',
+        'Custom onboarding',
+        'Dedicated account manager'
       ],
       bonusFeatures: [
-        'Integración con ERP institucional',
-        'Dashboards ejecutivos personalizados',
-        'Análisis predictivo con IA',
-        'Migración de datos asistida'
+        'Institutional ERP integration',
+        'Custom executive dashboards',
+        'AI-powered predictive analytics',
+        'Assisted data migration'
       ]
     }
   ];
@@ -111,13 +112,13 @@ const Pricing: React.FC = () => {
     <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#9fdbc2]/5">
       <div className="max-w-7xl mx-auto">
         <div className="text-center space-y-4 mb-16">
-          <h2 className="text-4xl font-bold text-[#0c272d]">Planes Diseñados para Instituciones Educativas</h2>
+          <h2 className="text-4xl font-bold text-[#0c272d]">Plans Designed for Educational Institutions</h2>
           <p className="text-xl text-[#0c272d]/70 max-w-3xl mx-auto">
-            Desde proyectos académicos básicos hasta gestión enterprise de múltiples campus. 
-            Encuentra el plan perfecto para tu institución.
+            From basic academic projects to enterprise management of multiple campuses. 
+            Find the perfect plan for your institution.
           </p>
           <div className="flex items-center justify-center space-x-4 mt-8">
-            <span className={`text-sm font-medium ${!isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Mensual</span>
+            <span className={`text-sm font-medium ${!isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Monthly</span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
               className="relative inline-flex h-6 w-12 items-center rounded-full bg-[#14a67e]/20 transition-colors focus:outline-none focus:ring-2 focus:ring-[#14a67e] focus:ring-offset-2"
@@ -129,11 +130,11 @@ const Pricing: React.FC = () => {
               />
             </button>
             <div className="flex items-center space-x-2">
-              <span className={`text-sm font-medium ${isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Anual</span>
+              <span className={`text-sm font-medium ${isAnnual ? 'text-[#14a67e]' : 'text-[#0c272d]/60'}`}>Annual</span>
               {isAnnual && (
                 <span className="inline-flex items-center space-x-1 bg-[#14a67e]/10 text-[#14a67e] px-2 py-1 rounded-full text-xs font-medium">
                   <Star className="w-3 h-3" />
-                  <span>Ahorra ${monthlySavings.toLocaleString('es-CO')} COP</span>
+                  <span>Save ${monthlySavings.toLocaleString('es-CO')} COP</span>
                 </span>
               )}
             </div>
@@ -154,7 +155,7 @@ const Pricing: React.FC = () => {
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <div className="bg-gradient-to-r from-[#14a67e] to-[#9fdbc2] text-white px-6 py-2 rounded-full text-sm font-semibold flex items-center space-x-1">
                       <Star className="w-4 h-4" />
-                      <span>Más Popular</span>
+                      <span>Most Popular</span>
                     </div>
                   </div>
                 )}
@@ -175,7 +176,7 @@ const Pricing: React.FC = () => {
                         </span>
                       )}
                       <span className={`text-4xl font-bold ${tier.textColor}`}>
-                        {tier.price === 0 ? 'Gratis' : `$${tier.price.toLocaleString('es-CO')}`}
+                        {tier.price === 0 ? 'Free' : `$${tier.price.toLocaleString('es-CO')}`}
                       </span>
                       {tier.price > 0 && (
                         <span className="text-gray-600 text-sm">{tier.period}</span>
@@ -197,7 +198,7 @@ const Pricing: React.FC = () => {
 
                   {tier.bonusFeatures && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Características Premium:</h4>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">Premium Features:</h4>
                       <ul className="space-y-2">
                         {tier.bonusFeatures.map((feature, featureIndex) => (
                           <li key={featureIndex} className="flex items-start space-x-2">
@@ -211,7 +212,7 @@ const Pricing: React.FC = () => {
 
                   {tier.limitations && (
                     <div className="pt-4 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-600 mb-3">Limitaciones:</h4>
+                      <h4 className="text-sm font-semibold text-gray-600 mb-3">Limitations:</h4>
                       <ul className="space-y-2">
                         {tier.limitations.map((limitation, limitIndex) => (
                           <li key={limitIndex} className="flex items-start space-x-2">
@@ -234,13 +235,13 @@ const Pricing: React.FC = () => {
                         : 'bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {index === 0 ? 'Empezar Gratis' : index === 1 ? 'Iniciar Prueba Gratuita' : 'Contactar Ventas'}
+                    {index === 0 ? 'Start Free' : index === 1 ? 'Start Free Trial' : 'Contact Sales'}
                   </button>
                 </div>
 
                 {index === 1 && (
                   <p className="text-center text-xs text-gray-500 mt-3">
-                    30 días gratis • Sin tarjeta de crédito
+                    30 days free • No credit card required
                   </p>
                 )}
               </div>
@@ -252,30 +253,25 @@ const Pricing: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="flex flex-col items-center space-y-3">
               <Shield className="w-8 h-8 text-[#14a67e]" />
-              <h4 className="font-semibold text-[#0c272d]">Seguridad Garantizada</h4>
-              <p className="text-sm text-gray-600 text-center">Cumplimiento FERPA y encriptación de extremo a extremo</p>
+              <h4 className="font-semibold text-[#0c272d]">Guaranteed Security</h4>
+              <p className="text-sm text-gray-600 text-center">FERPA compliance and end-to-end encryption</p>
             </div>
             <div className="flex flex-col items-center space-y-3">
               <Users className="w-8 h-8 text-[#14a67e]" />
-              <h4 className="font-semibold text-[#0c272d]">Soporte Especializado</h4>
-              <p className="text-sm text-gray-600 text-center">Equipo experto en instituciones educativas</p>
+              <h4 className="font-semibold text-[#0c272d]">Specialized Support</h4>
+              <p className="text-sm text-gray-600 text-center">Expert team in educational institutions</p>
             </div>
             <div className="flex flex-col items-center space-y-3">
               <Globe className="w-8 h-8 text-[#14a67e]" />
-              <h4 className="font-semibold text-[#0c272d]">Escalabilidad Total</h4>
-              <p className="text-sm text-gray-600 text-center">Crece con tu institución sin límites</p>
+              <h4 className="font-semibold text-[#0c272d]">Total Scalability</h4>
+              <p className="text-sm text-gray-600 text-center">Grow with your institution without limits</p>
             </div>
           </div>
 
-          <div className="bg-[#9fdbc2]/10 rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-[#0c272d] mb-4">¿Necesitas un plan personalizado?</h3>
-            <p className="text-gray-700 mb-6">
-              Para universidades con más de 1000 usuarios o requisitos especiales, 
-              ofrecemos soluciones completamente personalizadas.
-            </p>
-            <button className="bg-[#14a67e] text-white px-8 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-              Contactar Especialista
-            </button>
+          <div className="space-y-8">
+            {/* Contact Form */}
+            <ContactForm />
+            
           </div>
         </div>
       </div>

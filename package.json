@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@types/styled-components": "^5.1.34",
     "lucide-react": "^0.544.0",
     "next": "15.5.3",
