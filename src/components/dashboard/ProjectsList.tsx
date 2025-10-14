@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Search, Calendar, X, Filter } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Search, Calendar, X, Filter, CheckSquare } from 'lucide-react';
 import { useProjects } from '@/lib/hooks/use-projects';
 import type { ProjectFilters, Project } from '@/lib/types/project-types';
 import ProjectModal from './ProjectModal';
@@ -9,6 +10,7 @@ import ProjectDetailsModal from './ProjectDetailsModal';
 import { getProjectStateColor } from '@/lib/projects/utils';
 
 const ProjectsList: React.FC = () => {
+  const router = useRouter();
   const [filters, setFilters] = useState<ProjectFilters>({
     page: 1,
     limit: 12
@@ -102,6 +104,11 @@ const ProjectsList: React.FC = () => {
   const handleProjectUpdate = () => {
     // Refresh projects list after update or delete
     fetchProjects(filters);
+  };
+
+  const handleViewTasks = (projectId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/dashboard/projects/${projectId}/tasks`);
   };
 
   // Filter projects on the client side to ensure accurate search results
@@ -290,6 +297,7 @@ const ProjectsList: React.FC = () => {
                 key={project.proyect_id} 
                 project={project} 
                 onClick={() => handleProjectClick(project)}
+                onViewTasks={(e) => handleViewTasks(project.proyect_id, e)}
               />
             ))}
           </div>
@@ -355,7 +363,11 @@ const ProjectsList: React.FC = () => {
 };
 
 // Project Card Component adapted to new design
-const ProjectCard: React.FC<{ project: Project; onClick: () => void }> = ({ project, onClick }) => {
+const ProjectCard: React.FC<{ 
+  project: Project; 
+  onClick: () => void;
+  onViewTasks: (e: React.MouseEvent) => void;
+}> = ({ project, onClick, onViewTasks }) => {
   const statusColors = getProjectStateColor(project.state);
   
   return (
@@ -389,20 +401,30 @@ const ProjectCard: React.FC<{ project: Project; onClick: () => void }> = ({ proj
           {project.start_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Start: {new Date(project.start_date).toLocaleDateString()}</span>
+              <span>Start: {new Date(project.start_date).toISOString().split('T')[0]}</span>
             </div>
           )}
           {project.end_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Due: {new Date(project.end_date).toLocaleDateString()}</span>
+              <span>Due: {new Date(project.end_date).toISOString().split('T')[0]}</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-        Updated {new Date(project.updated_at).toLocaleDateString()}
+      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 flex items-center justify-between">
+        <span className="text-xs text-[#0c272d]/60">
+          Updated {new Date(project.updated_at).toISOString().split('T')[0]}
+        </span>
+        <button
+          onClick={onViewTasks}
+          className="flex items-center space-x-1 px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-lg hover:bg-[#14a67e]/20 transition-colors text-xs"
+          title="View tasks"
+        >
+          <CheckSquare className="w-3 h-3" />
+          <span>Tasks</span>
+        </button>
       </div>
     </div>
   );
