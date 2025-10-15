@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Kanban, 
   List, 
@@ -15,6 +15,17 @@ import { useProjects } from '@/lib/projects';
 import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
+
+// Type declaration for canvas-confetti
+declare module 'canvas-confetti' {
+  interface ConfettiOptions {
+    particleCount?: number;
+    spread?: number;
+    origin?: { x?: number; y?: number };
+    angle?: number;
+  }
+  function confetti(options?: ConfettiOptions): void;
+}
 
 type ViewMode = 'kanban' | 'list';
 type ProjectFilter = 'all' | number;
@@ -48,6 +59,45 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   // Hook for updating task status
   const { updateTaskStatus } = useUpdateTaskStatus();
+
+  const triggerConfetti = useCallback(async (dropPosition?: { x: number; y: number }) => {
+    const confetti = (await import("canvas-confetti")).default;
+    
+    if (dropPosition) {
+      // Calculate relative position (0-1) from absolute coordinates
+      const relativeX = dropPosition.x / window.innerWidth;
+      const relativeY = dropPosition.y / window.innerHeight;
+      
+      // Main confetti from the drop position
+      confetti({ 
+        particleCount: 80, 
+        spread: 50, 
+        origin: { x: relativeX, y: relativeY },
+        gravity: 1.2,
+        ticks: 150,
+        decay: 0.95,
+        startVelocity: 15,
+        scalar: 0.8
+      });
+      
+      // Additional smaller bursts from the same position
+      setTimeout(() => {
+        confetti({ 
+          particleCount: 40, 
+          spread: 35, 
+          origin: { x: relativeX, y: relativeY },
+          gravity: 1.2,
+          ticks: 100,
+          decay: 0.96,
+          startVelocity: 12,
+          scalar: 0.6
+        });
+      }, 200);
+    } else {
+      // Fallback to center if no position provided
+      confetti({ particleCount: 120, spread: 70, origin: { y: 0.3 } });
+    }
+  }, []);
 
   // Ensure client-side rendering
   useEffect(() => {
@@ -134,6 +184,17 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         task.task_id === draggedTask.task_id ? updatedTask : task
       )
     );
+
+    // Show celebration if task is moved to "Done"
+    if (targetState === 'Done') {
+      // Capture the exact drop position
+      const rect = e.currentTarget.getBoundingClientRect();
+      const dropPosition = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+      triggerConfetti(dropPosition);
+    }
 
     // Clear dragged task immediately
     setDraggedTask(null);
@@ -488,6 +549,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         mode="create"
         projectId={projectId || (selectedProject !== 'all' ? selectedProject : undefined)}
       />
+
     </div>
   );
 };
