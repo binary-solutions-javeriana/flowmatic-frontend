@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Calendar, User, AlertCircle, Plus } from 'lucide-react';
 import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskState, TaskPriority } from '@/lib/types/task-types';
 import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
+import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
 
 interface TaskModalProps {
@@ -33,13 +34,15 @@ const TaskModal: React.FC<TaskModalProps> = ({
     state: 'To Do' as TaskState,
     priority: 'Medium' as TaskPriority,
     assigned_to_ids: '',
-    limit_date: ''
+    limit_date: '',
+    project_id: ''
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { createTask, loading: creating, error: createError } = useCreateTask();
   const { updateTask, loading: updating, error: updateError } = useUpdateTask();
+  const { projects, loading: projectsLoading } = useProjects({ page: 1, limit: 100 });
 
   // Initialize form data
   useEffect(() => {
@@ -50,7 +53,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
         state: task.state,
         priority: task.priority,
         assigned_to_ids: task.assigned_to_ids || '',
-        limit_date: task.limit_date ? new Date(task.limit_date).toISOString().split('T')[0] : ''
+        limit_date: task.limit_date ? new Date(task.limit_date).toISOString().split('T')[0] : '',
+        project_id: projectId ? projectId.toString() : ''
       });
     } else {
       setFormData({
@@ -59,11 +63,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
         state: initialState || 'To Do',
         priority: 'Medium',
         assigned_to_ids: '',
-        limit_date: ''
+        limit_date: '',
+        project_id: projectId ? projectId.toString() : ''
       });
     }
     setErrors([]);
-  }, [mode, task, isOpen, initialState]);
+  }, [mode, task, isOpen, initialState, projectId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -89,6 +94,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
       let result: Task | null = null;
 
       if (mode === 'create') {
+        const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
         const createData: CreateTaskRequest = {
           title: formData.title,
           description: formData.description || undefined,
@@ -97,7 +103,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           created_by: 1, // TODO: Get from auth context
           assigned_to_ids: formData.assigned_to_ids || undefined,
           limit_date: formData.limit_date || undefined,
-          ...(projectId && { proyect_id: projectId }),
+          ...(selectedProjectId && { proyect_id: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId })
         };
 
@@ -207,6 +213,30 @@ const TaskModal: React.FC<TaskModalProps> = ({
               disabled={isSubmitting}
             />
           </div>
+
+          {/* Project Selection - Only show when no specific projectId is provided */}
+          {!projectId && mode === 'create' && (
+            <div>
+              <label htmlFor="project_id" className="block text-sm font-medium text-[#0c272d] mb-2">
+                Project *
+              </label>
+              <select
+                id="project_id"
+                value={formData.project_id}
+                onChange={(e) => handleInputChange('project_id', e.target.value)}
+                className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
+                disabled={isSubmitting || projectsLoading}
+                required
+              >
+                <option value="">Select a project...</option>
+                {projects?.map((project) => (
+                  <option key={project.proyect_id} value={project.proyect_id}>
+                    {project.name_proyect}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* State and Priority */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

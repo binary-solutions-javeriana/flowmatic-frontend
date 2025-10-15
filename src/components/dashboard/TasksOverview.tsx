@@ -19,7 +19,11 @@ import TaskModal from '../tasks/TaskModal';
 type ViewMode = 'kanban' | 'list';
 type ProjectFilter = 'all' | number;
 
-const TasksOverview: React.FC = () => {
+interface TasksOverviewProps {
+  projectId?: number;
+}
+
+const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [selectedProject, setSelectedProject] = useState<ProjectFilter>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -56,6 +60,15 @@ const TasksOverview: React.FC = () => {
       setOptimisticTasks(tasks);
     }
   }, [tasks]);
+
+  // Sync selectedProject with projectId prop
+  useEffect(() => {
+    if (projectId) {
+      setSelectedProject(projectId);
+    } else {
+      setSelectedProject('all');
+    }
+  }, [projectId]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -146,9 +159,14 @@ const TasksOverview: React.FC = () => {
 
   // Filter tasks by selected project (use optimistic tasks if available)
   const tasksToUse = optimisticTasks.length > 0 ? optimisticTasks : tasks;
-  const filteredTasks = selectedProject === 'all' 
-    ? tasksToUse 
-    : tasksToUse.filter(task => task.proyect_id === selectedProject);
+  
+  // If we have a specific projectId (from URL), filter by that project
+  // Otherwise, use the selectedProject filter
+  const filteredTasks = projectId 
+    ? tasksToUse.filter(task => task.proyect_id === projectId)
+    : selectedProject === 'all' 
+      ? tasksToUse 
+      : tasksToUse.filter(task => task.proyect_id === selectedProject);
 
   const getTaskStats = () => {
     if (!filteredTasks || filteredTasks.length === 0) return { total: 0, completed: 0, inProgress: 0, pending: 0 };
@@ -468,7 +486,7 @@ const TasksOverview: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
         mode="create"
-        projectId={selectedProject !== 'all' ? selectedProject : undefined}
+        projectId={projectId || (selectedProject !== 'all' ? selectedProject : undefined)}
       />
     </div>
   );

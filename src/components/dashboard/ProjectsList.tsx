@@ -9,7 +9,11 @@ import ProjectModal from './ProjectModal';
 import ProjectDetailsModal from './ProjectDetailsModal';
 import { getProjectStateColor } from '@/lib/projects/utils';
 
-const ProjectsList: React.FC = () => {
+interface ProjectsListProps {
+  onViewTasks?: (projectId: number) => void;
+}
+
+const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
   const router = useRouter();
   const [filters, setFilters] = useState<ProjectFilters>({
     page: 1,
@@ -108,8 +112,11 @@ const ProjectsList: React.FC = () => {
 
   const handleViewTasks = (projectId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/dashboard/projects/${projectId}/tasks`);
+    if (onViewTasks) {
+      onViewTasks(projectId);
+    }
   };
+
 
   // Filter projects on the client side to ensure accurate search results
   const filteredProjects = useMemo(() => {
@@ -189,6 +196,7 @@ const ProjectsList: React.FC = () => {
         onClose={handleDetailsModalClose}
         project={selectedProject}
         onUpdate={handleProjectUpdate}
+        onViewTasks={onViewTasks}
       />
 
       {/* Search and Filters */}

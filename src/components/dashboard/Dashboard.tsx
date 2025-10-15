@@ -19,6 +19,7 @@ import {
 const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<string>('overview');
+  const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>(undefined);
   const { projects, loading, error } = useProjects({ 
     page: 1, 
     limit: 100, 
@@ -45,6 +46,11 @@ const Dashboard: React.FC = () => {
       default: return activeView.charAt(0).toUpperCase() + activeView.slice(1);
     }
   }, [activeView]);
+
+  const handleViewTasks = (projectId: number) => {
+    setSelectedProjectId(projectId);
+    setActiveView('tasks');
+  };
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white flex">
@@ -71,8 +77,8 @@ const Dashboard: React.FC = () => {
           {!loading && !error && (
             <>
               {activeView === 'overview' && <Overview projects={projects} />}
-              {activeView === 'projects' && <ProjectsList />}
-              {activeView === 'tasks' && <TasksOverview />}
+              {activeView === 'projects' && <ProjectsList onViewTasks={handleViewTasks} />}
+              {activeView === 'tasks' && <TasksOverview projectId={selectedProjectId} />}
               {activeView === 'settings' && <Settings />}
             </>
           )}

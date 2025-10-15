@@ -13,13 +13,15 @@ interface ProjectDetailsModalProps {
   onClose: () => void;
   project: Project | null;
   onUpdate?: () => void;
+  onViewTasks?: (projectId: number) => void;
 }
 
 const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ 
   isOpen, 
   onClose, 
   project,
-  onUpdate 
+  onUpdate,
+  onViewTasks
 }) => {
   const router = useRouter();
   const { deleteProject, loading: deleting } = useDeleteProject();
@@ -69,7 +71,12 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
 
   const handleViewTasks = () => {
     onClose();
-    router.push(`/dashboard/projects/${project.proyect_id}/tasks`);
+    if (onViewTasks) {
+      onViewTasks(project.proyect_id);
+    } else {
+      // Fallback to router if onViewTasks is not provided
+      router.push(`/dashboard/projects/${project.proyect_id}/tasks`);
+    }
   };
 
   return (

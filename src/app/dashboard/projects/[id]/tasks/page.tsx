@@ -3,7 +3,7 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import TasksView from "@/components/tasks/TasksView";
+import TasksOverview from "@/components/dashboard/TasksOverview";
 
 function ProjectTasksPage() {
   const params = useParams();
@@ -23,7 +23,7 @@ function ProjectTasksPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white p-6">
-        <TasksView projectId={projectId} />
+        <TasksOverview projectId={projectId} />
       </div>
     </ProtectedRoute>
   );
