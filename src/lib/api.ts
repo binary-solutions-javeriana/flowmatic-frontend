@@ -31,13 +31,26 @@ export class ApiException extends Error {
 // Enhanced API client with proper error handling
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${API_CONFIG.apiUrl}${path}`;
-  
+
+  // Build default headers and add ngrok-skip header when targeting ngrok
+  const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  try {
+    if (API_CONFIG.backendUrl && API_CONFIG.backendUrl.includes('ngrok')) {
+      defaultHeaders['ngrok-skip-browser-warning'] = 'true';
+    }
+  } catch {
+    // If parsing fails or env missing, proceed without special header
+  }
+
   const response = await fetch(url, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...(init?.headers || {})
+      ...defaultHeaders,
+      ...(init?.headers || {}),
     },
     cache: 'no-store'
   });
@@ -81,8 +94,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     return response.json() as Promise<T>;
   }
 
-  // If no JSON content, return empty object
-  return {} as T;
+  // If content is not JSON, throw to surface the real upstream response type
+  throw new Error(`Unexpected content-type from API: ${contentType || 'none'}`);
 }
 
 // Helper to add Authorization header

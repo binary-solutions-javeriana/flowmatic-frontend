@@ -4,6 +4,7 @@ export { default as Sidebar } from './Sidebar';
 export { default as Overview } from './Overview';
 export { default as ProjectsGrid } from './ProjectsGrid';
 export { default as ProjectsList } from './ProjectsList';
+export { default as TasksOverview } from './TasksOverview';
 export { default as Settings } from './Settings';
 export { default as ProjectModal } from './ProjectModal';
 export { default as ProjectDetailsModal } from './ProjectDetailsModal';

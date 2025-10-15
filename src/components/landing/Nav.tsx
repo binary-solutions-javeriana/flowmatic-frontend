@@ -30,12 +30,6 @@ const Nav: React.FC = () => {
             >
               Login
             </Link>
-            <Link
-              href="/register"
-              className="bg-white/60 backdrop-blur-sm text-[#0c272d] px-6 py-2 rounded-xl hover:bg-white/80 transition-all duration-300 border border-[#9fdbc2]/40 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              Register
-            </Link>
           </div>
         </div>
       </div>

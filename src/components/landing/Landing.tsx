@@ -6,8 +6,8 @@ import Hero from './Hero';
 import About from './About';
 import Features from './Features';
 import Benefits from './Benefits';
+import Testimonials from './Testimonials';
 import Pricing from './Pricing';
-import CTA from './CTA';
 import Footer from './Footer';
 
 const Landing: React.FC = () => {
@@ -18,8 +18,8 @@ const Landing: React.FC = () => {
       <About />
       <Features />
       <Benefits />
+      <Testimonials />
       <Pricing />
-      <CTA />
       <Footer />
     </div>
   );

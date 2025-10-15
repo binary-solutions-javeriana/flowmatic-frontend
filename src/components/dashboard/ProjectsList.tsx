@@ -1,14 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Search, Calendar, X, Filter } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Search, Calendar, X, Filter, CheckSquare } from 'lucide-react';
 import { useProjects } from '@/lib/hooks/use-projects';
 import type { ProjectFilters, Project } from '@/lib/types/project-types';
 import ProjectModal from './ProjectModal';
 import ProjectDetailsModal from './ProjectDetailsModal';
 import { getProjectStateColor } from '@/lib/projects/utils';
 
-const ProjectsList: React.FC = () => {
+interface ProjectsListProps {
+  onViewTasks?: (projectId: number) => void;
+}
+
+const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
+  const router = useRouter();
   const [filters, setFilters] = useState<ProjectFilters>({
     page: 1,
     limit: 12
@@ -21,6 +27,18 @@ const ProjectsList: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('[ProjectsList] Component state:', {
+      projectsCount: projects?.length || 0,
+      projects,
+      pagination,
+      loading,
+      error,
+      filters
+    });
+  }, [projects, pagination, loading, error, filters]);
 
   // Debounced search
   useEffect(() => {
@@ -92,6 +110,14 @@ const ProjectsList: React.FC = () => {
     fetchProjects(filters);
   };
 
+  const handleViewTasks = (projectId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onViewTasks) {
+      onViewTasks(projectId);
+    }
+  };
+
+
   // Filter projects on the client side to ensure accurate search results
   const filteredProjects = useMemo(() => {
     let filtered = [...projects];
@@ -124,9 +150,16 @@ const ProjectsList: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
-        <h3 className="font-medium">Error loading projects</h3>
-        <p className="text-sm mt-1">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
+        <h3 className="font-medium text-lg mb-2">❌ Error loading projects</h3>
+        <p className="text-sm mt-1 mb-4">{error}</p>
+        <div className="bg-white rounded p-3 text-xs mb-4">
+          <p className="font-mono text-gray-700">Debug Info:</p>
+          <ul className="list-disc list-inside text-gray-600 mt-2">
+            <li>API URL: {process.env.NEXT_PUBLIC_API_BASE_URL || 'NOT SET (usando localhost:3000)'}</li>
+            <li>Filters: {JSON.stringify(filters)}</li>
+          </ul>
+        </div>
         <button
           onClick={() => fetchProjects()}
           className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm transition"
@@ -163,6 +196,7 @@ const ProjectsList: React.FC = () => {
         onClose={handleDetailsModalClose}
         project={selectedProject}
         onUpdate={handleProjectUpdate}
+        onViewTasks={onViewTasks}
       />
 
       {/* Search and Filters */}
@@ -271,6 +305,7 @@ const ProjectsList: React.FC = () => {
                 key={project.proyect_id} 
                 project={project} 
                 onClick={() => handleProjectClick(project)}
+                onViewTasks={(e) => handleViewTasks(project.proyect_id, e)}
               />
             ))}
           </div>
@@ -336,7 +371,11 @@ const ProjectsList: React.FC = () => {
 };
 
 // Project Card Component adapted to new design
-const ProjectCard: React.FC<{ project: Project; onClick: () => void }> = ({ project, onClick }) => {
+const ProjectCard: React.FC<{ 
+  project: Project; 
+  onClick: () => void;
+  onViewTasks: (e: React.MouseEvent) => void;
+}> = ({ project, onClick, onViewTasks }) => {
   const statusColors = getProjectStateColor(project.state);
   
   return (
@@ -370,20 +409,30 @@ const ProjectCard: React.FC<{ project: Project; onClick: () => void }> = ({ proj
           {project.start_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Start: {new Date(project.start_date).toLocaleDateString()}</span>
+              <span>Start: {new Date(project.start_date).toISOString().split('T')[0]}</span>
             </div>
           )}
           {project.end_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Due: {new Date(project.end_date).toLocaleDateString()}</span>
+              <span>Due: {new Date(project.end_date).toISOString().split('T')[0]}</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-        Updated {new Date(project.updated_at).toLocaleDateString()}
+      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 flex items-center justify-between">
+        <span className="text-xs text-[#0c272d]/60">
+          Updated {new Date(project.updated_at).toISOString().split('T')[0]}
+        </span>
+        <button
+          onClick={onViewTasks}
+          className="flex items-center space-x-1 px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-lg hover:bg-[#14a67e]/20 transition-colors text-xs"
+          title="View tasks"
+        >
+          <CheckSquare className="w-3 h-3" />
+          <span>Tasks</span>
+        </button>
       </div>
     </div>
   );
