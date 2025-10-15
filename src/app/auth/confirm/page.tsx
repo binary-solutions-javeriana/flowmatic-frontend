@@ -51,12 +51,6 @@ export default function EmailConfirmPage() {
               >
                 Go to Login
               </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center px-4 py-2 border border-blue-300 bg-white text-blue-800 rounded-md hover:bg-blue-50 transition"
-              >
-                Try Different Email
-              </Link>
             </div>
             
             <div className="mt-6">

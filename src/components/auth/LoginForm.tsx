@@ -308,9 +308,6 @@ export default function StyledLoginForm() {
           </svg>
           <span>Log in with LMS</span>
         </button>
-        <button type="button" className="cta_orange" onClick={() => router.push('/register')}>
-          Register
-        </button>
         <p className="note">Terms of use &amp; Conditions</p>
       </form>
     </StyledWrapper>
