@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { Task } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
-import { useTasks } from '@/lib/hooks/use-tasks';
+import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
 
@@ -26,6 +26,8 @@ const TasksOverview: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
 
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
     page: 1, 
@@ -40,10 +42,20 @@ const TasksOverview: React.FC = () => {
     limit: 100
   });
 
+  // Hook for updating task status
+  const { updateTaskStatus } = useUpdateTaskStatus();
+
   // Ensure client-side rendering
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Sync optimistic tasks with real tasks
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      setOptimisticTasks(tasks);
+    }
+  }, [tasks]);
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -70,10 +82,73 @@ const TasksOverview: React.FC = () => {
     refetchTasks();
   };
 
-  // Filter tasks by selected project
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, task: Task) => {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Add visual feedback for dragged element
+    const target = e.target as HTMLElement;
+    target.style.opacity = '0.5';
+    target.style.transform = 'rotate(5deg)';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    // Reset visual styles
+    const target = e.target as HTMLElement;
+    target.style.opacity = '1';
+    target.style.transform = 'rotate(0deg)';
+    setDraggedTask(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetState: string) => {
+    e.preventDefault();
+    
+    if (!draggedTask || draggedTask.state === targetState) {
+      setDraggedTask(null);
+      return;
+    }
+
+    // Optimistic update - move task immediately in UI
+    const updatedTask = { ...draggedTask, state: targetState as any };
+    setOptimisticTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.task_id === draggedTask.task_id ? updatedTask : task
+      )
+    );
+
+    // Clear dragged task immediately
+    setDraggedTask(null);
+
+    // Update backend in background (no await to prevent blocking)
+    updateTaskStatus(draggedTask.task_id, targetState as any)
+      .then(() => {
+        // Success - no need to refresh, optimistic update is already applied
+        console.log('Task status updated successfully');
+      })
+      .catch((error) => {
+        console.error('Error updating task status:', error);
+        // Revert optimistic update on error
+        setOptimisticTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.task_id === draggedTask.task_id ? draggedTask : task
+          )
+        );
+        // Show error notification (optional)
+        console.warn('Task status update failed, reverted to original state');
+      });
+  };
+
+  // Filter tasks by selected project (use optimistic tasks if available)
+  const tasksToUse = optimisticTasks.length > 0 ? optimisticTasks : tasks;
   const filteredTasks = selectedProject === 'all' 
-    ? tasks 
-    : tasks.filter(task => task.proyect_id === selectedProject);
+    ? tasksToUse 
+    : tasksToUse.filter(task => task.proyect_id === selectedProject);
 
   const getTaskStats = () => {
     if (!filteredTasks || filteredTasks.length === 0) return { total: 0, completed: 0, inProgress: 0, pending: 0 };
@@ -245,12 +320,18 @@ const TasksOverview: React.FC = () => {
               return (
                 <div
                   key={state}
-                  className={`rounded-2xl border-2 border-dashed transition-all duration-300 ${
+                  className={`rounded-2xl border-2 border-dashed transition-all duration-200 ease-in-out ${
                     state === 'To Do' ? 'bg-gray-50 border-gray-200' :
                     state === 'In Progress' ? 'bg-blue-50 border-blue-200' :
                     state === 'Done' ? 'bg-green-50 border-green-200' :
                     'bg-red-50 border-red-200'
+                  } ${
+                    draggedTask && draggedTask.state !== state
+                      ? 'border-[#14a67e] bg-[#14a67e]/10 scale-105 shadow-lg'
+                      : 'hover:shadow-md'
                   }`}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, state)}
                 >
                   {/* Column Header */}
                   <div className="p-4 border-b border-gray-200">
@@ -277,7 +358,10 @@ const TasksOverview: React.FC = () => {
                       stateTasks.map((task) => (
                         <div
                           key={task.task_id}
-                          className="cursor-pointer"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
+                          onDragEnd={handleDragEnd}
+                          className="cursor-move transition-all duration-200 ease-in-out"
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="bg-white/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-200">
