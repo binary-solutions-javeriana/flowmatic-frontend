@@ -7,12 +7,14 @@ import {
   ArrowRight,
   CheckSquare,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from 'lucide-react';
 import type { Task } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
 import { useTasks } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
+import TaskModal from '../tasks/TaskModal';
 
 type ViewMode = 'kanban' | 'list';
 type ProjectFilter = 'all' | number;
@@ -22,6 +24,7 @@ const TasksOverview: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectFilter>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
@@ -58,6 +61,13 @@ const TasksOverview: React.FC = () => {
 
   const handleTaskDelete = () => {
     // Handle task deletion if needed
+  };
+
+  const handleCreateTask = (task: Task) => {
+    // Task creation will be handled by the modal
+    setIsCreateModalOpen(false);
+    // Refresh tasks
+    refetchTasks();
   };
 
   // Filter tasks by selected project
@@ -116,81 +126,93 @@ const TasksOverview: React.FC = () => {
   return (
     <div className="space-y-6">
 
-      {/* Stats Cards with View Toggle */}
+      {/* Stats Cards with Controls */}
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <CheckSquare className="w-5 h-5 text-blue-600" />
+          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <CheckSquare className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-[#0c272d]/60 mb-1">Total Tasks</p>
+                <p className="text-2xl font-bold text-[#0c272d]">{stats.total}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-[#0c272d]/60">Total Tasks</p>
-              <p className="text-xl font-bold text-[#0c272d]">{stats.total}</p>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-50 rounded-xl">
+                <CheckSquare className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-[#0c272d]/60 mb-1">Completed</p>
+                <p className="text-2xl font-bold text-[#0c272d]">{stats.completed}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-yellow-50 rounded-xl">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-[#0c272d]/60 mb-1">In Progress</p>
+                <p className="text-2xl font-bold text-[#0c272d]">{stats.inProgress}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-gray-50 rounded-xl">
+                <AlertCircle className="w-6 h-6 text-gray-600" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-[#0c272d]/60 mb-1">Pending</p>
+                <p className="text-2xl font-bold text-[#0c272d]">{stats.pending}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-50 rounded-lg">
-              <CheckSquare className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-[#0c272d]/60">Completed</p>
-              <p className="text-xl font-bold text-[#0c272d]">{stats.completed}</p>
-            </div>
+        {/* Controls - Triangle Layout */}
+        <div className="flex flex-col items-center space-y-3 ml-6">
+          {/* View Mode Toggle */}
+          <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-lg rounded-xl p-1 border border-[#9fdbc2]/20">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                viewMode === 'kanban'
+                  ? 'bg-[#14a67e] text-white shadow-md'
+                  : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
+              }`}
+            >
+              <Kanban className="w-4 h-4" />
+              <span className="hidden sm:inline">Kanban</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                viewMode === 'list'
+                  ? 'bg-[#14a67e] text-white shadow-md'
+                  : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
           </div>
-        </div>
-
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-yellow-50 rounded-lg">
-              <Clock className="w-5 h-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-[#0c272d]/60">In Progress</p>
-              <p className="text-xl font-bold text-[#0c272d]">{stats.inProgress}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gray-50 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-gray-600" />
-            </div>
-            <div>
-              <p className="text-sm text-[#0c272d]/60">Pending</p>
-              <p className="text-xl font-bold text-[#0c272d]">{stats.pending}</p>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        {/* View Mode Toggle */}
-        <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-lg rounded-xl p-1 border border-[#9fdbc2]/20 ml-4">
+          
+          {/* Create Task Button */}
           <button
-            onClick={() => setViewMode('kanban')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              viewMode === 'kanban'
-                ? 'bg-[#14a67e] text-white shadow-md'
-                : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
-            }`}
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-[#14a67e] text-white px-6 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2 shadow-lg"
           >
-            <Kanban className="w-4 h-4" />
-            <span className="hidden sm:inline">Kanban</span>
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              viewMode === 'list'
-                ? 'bg-[#14a67e] text-white shadow-md'
-                : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            <span className="hidden sm:inline">List</span>
+            <Plus className="w-4 h-4" />
+            <span>Create Task</span>
           </button>
         </div>
       </div>
@@ -269,9 +291,9 @@ const TasksOverview: React.FC = () => {
                               <span className="text-xs px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full">
                                 {task.priority || 'Medium'}
                               </span>
-                              {task.due_date && (
+                              {task.limit_date && (
                                 <span className="text-xs text-[#0c272d]/60">
-                                  {new Date(task.due_date).toLocaleDateString()}
+                                  {new Date(task.limit_date).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -327,9 +349,9 @@ const TasksOverview: React.FC = () => {
                                 <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
                                   {task.priority || 'Medium'}
                                 </span>
-                                {task.due_date && (
+                                {task.limit_date && (
                                   <span className="text-xs text-[#0c272d]/60">
-                                    Due: {new Date(task.due_date).toLocaleDateString()}
+                                    Due: {new Date(task.limit_date).toLocaleDateString()}
                                   </span>
                                 )}
                               </div>
@@ -354,6 +376,15 @@ const TasksOverview: React.FC = () => {
         task={selectedTask}
         onUpdate={handleTaskUpdate}
         onDelete={handleTaskDelete}
+      />
+
+      {/* Create Task Modal */}
+      <TaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateTask}
+        mode="create"
+        projectId={selectedProject !== 'all' ? selectedProject : undefined}
       />
     </div>
   );
