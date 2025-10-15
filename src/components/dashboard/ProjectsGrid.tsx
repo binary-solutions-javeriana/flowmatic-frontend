@@ -6,6 +6,7 @@ import type { Project as BackendProject } from '@/lib/projects/types';
 import { adaptBackendProjectToUI, getProjectStateColor } from '@/lib/projects/utils';
 import type { Project } from './types';
 import ProjectModal from './ProjectModal';
+import { useTasks } from '@/lib/hooks/use-tasks';
 
 interface ProjectsGridProps {
   projects: BackendProject[];
@@ -14,12 +15,39 @@ interface ProjectsGridProps {
 const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projectStats, setProjectStats] = useState<Record<number, { total: number; completed: number }>>({});
+  
+  // Fetch all tasks to calculate project statistics
+  const { tasks } = useTasks({ page: 1, limit: 100 });
 
-  // Adapt backend projects to UI format
+  // Calculate task statistics for each project
   useEffect(() => {
-    const adapted = backendProjects.map(p => adaptBackendProjectToUI(p));
+    if (tasks && tasks.length > 0) {
+      const stats: Record<number, { total: number; completed: number }> = {};
+      
+      tasks.forEach(task => {
+        const projectId = task.proyect_id;
+        if (!stats[projectId]) {
+          stats[projectId] = { total: 0, completed: 0 };
+        }
+        stats[projectId].total += 1;
+        if (task.state === 'Done') {
+          stats[projectId].completed += 1;
+        }
+      });
+      
+      setProjectStats(stats);
+    }
+  }, [tasks]);
+
+  // Adapt backend projects to UI format with real task statistics
+  useEffect(() => {
+    const adapted = backendProjects.map(p => {
+      const stats = projectStats[p.proyect_id] || { total: 0, completed: 0 };
+      return adaptBackendProjectToUI(p, stats);
+    });
     setProjects(adapted);
-  }, [backendProjects]);
+  }, [backendProjects, projectStats]);
 
   const handleCreateProject = async () => {
     // The modal will handle creation through the hook

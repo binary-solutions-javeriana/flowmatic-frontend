@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import Overview from './Overview';
 import ProjectsList from './ProjectsList';
+import TasksOverview from './TasksOverview';
 import Settings from './Settings';
 import type { SidebarItem } from './types';
 import { useProjects } from '@/lib/projects';
@@ -12,11 +13,13 @@ import {
   FolderOpen,
   Home,
   Settings as SettingsIcon,
+  CheckSquare,
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<string>('overview');
+  const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>(undefined);
   const { projects, loading, error } = useProjects({ 
     page: 1, 
     limit: 100, 
@@ -28,6 +31,7 @@ const Dashboard: React.FC = () => {
     () => [
       { id: 'overview', icon: Home, label: 'Overview', active: activeView === 'overview' },
       { id: 'projects', icon: FolderOpen, label: 'Projects', active: activeView === 'projects' },
+      { id: 'tasks', icon: CheckSquare, label: 'Tasks', active: activeView === 'tasks' },
       { id: 'settings', icon: SettingsIcon, label: 'Settings', active: activeView === 'settings' },
     ],
     [activeView]
@@ -37,10 +41,16 @@ const Dashboard: React.FC = () => {
     switch (activeView) {
       case 'overview': return 'Dashboard Overview';
       case 'projects': return 'Projects';
+      case 'tasks': return 'Task Management';
       case 'settings': return 'Settings & Preferences';
       default: return activeView.charAt(0).toUpperCase() + activeView.slice(1);
     }
   }, [activeView]);
+
+  const handleViewTasks = (projectId: number) => {
+    setSelectedProjectId(projectId);
+    setActiveView('tasks');
+  };
     
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white flex">
@@ -67,7 +77,8 @@ const Dashboard: React.FC = () => {
           {!loading && !error && (
             <>
               {activeView === 'overview' && <Overview projects={projects} />}
-              {activeView === 'projects' && <ProjectsList />}
+              {activeView === 'projects' && <ProjectsList onViewTasks={handleViewTasks} />}
+              {activeView === 'tasks' && <TasksOverview projectId={selectedProjectId} />}
               {activeView === 'settings' && <Settings />}
             </>
           )}
