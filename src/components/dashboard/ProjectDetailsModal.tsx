@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Calendar, User, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { X, Calendar, User, Edit2, Trash2, AlertCircle, CheckSquare } from 'lucide-react';
 import type { Project } from '@/lib/types/project-types';
 import { getProjectStateColor } from '@/lib/projects/utils';
 import { useDeleteProject } from '@/lib/projects';
@@ -12,14 +13,17 @@ interface ProjectDetailsModalProps {
   onClose: () => void;
   project: Project | null;
   onUpdate?: () => void;
+  onViewTasks?: (projectId: number) => void;
 }
 
 const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({ 
   isOpen, 
   onClose, 
   project,
-  onUpdate 
+  onUpdate,
+  onViewTasks
 }) => {
+  const router = useRouter();
   const { deleteProject, loading: deleting } = useDeleteProject();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -63,6 +67,16 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   const handleEditClose = () => {
     setShowEditModal(false);
     if (onUpdate) onUpdate();
+  };
+
+  const handleViewTasks = () => {
+    onClose();
+    if (onViewTasks) {
+      onViewTasks(project.proyect_id);
+    } else {
+      // Fallback to router if onViewTasks is not provided
+      router.push(`/dashboard/projects/${project.proyect_id}/tasks`);
+    }
   };
 
   return (
@@ -127,22 +141,14 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
                         <span className="font-medium">Start:</span>
-                        <span>{new Date(project.start_date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}</span>
+                        <span>{new Date(project.start_date).toISOString().split('T')[0]}</span>
                       </div>
                     )}
                     {project.end_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
                         <span className="font-medium">End:</span>
-                        <span>{new Date(project.end_date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}</span>
+                        <span>{new Date(project.end_date).toISOString().split('T')[0]}</span>
                       </div>
                     )}
                   </div>
@@ -163,20 +169,12 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Created:</span>
-                    <span>{new Date(project.created_at).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
+                    <span>{new Date(project.created_at).toISOString().split('T')[0]}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Updated:</span>
-                    <span>{new Date(project.updated_at).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}</span>
+                    <span>{new Date(project.updated_at).toISOString().split('T')[0]}</span>
                   </div>
                 </div>
               </div>
@@ -264,6 +262,13 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 className="px-6 py-3 text-[#0c272d] hover:bg-[#9fdbc2]/10 rounded-xl transition-all duration-200 font-medium"
               >
                 Close
+              </button>
+              <button
+                onClick={handleViewTasks}
+                className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 flex items-center space-x-2 font-medium"
+              >
+                <CheckSquare className="w-4 h-4" />
+                <span>View Tasks</span>
               </button>
               <button
                 onClick={handleEdit}
