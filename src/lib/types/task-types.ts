@@ -1,6 +1,6 @@
 // Task-related types based on the API documentation
 
-export type TaskState = 'To Do' | 'In Progress' | 'Done' | 'Blocked';
+export type TaskState = 'To Do' | 'In Progress' | 'Done' | 'Cancelled';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface Task {
@@ -69,7 +69,7 @@ export interface KanbanBoard {
     'To Do': Task[];
     'In Progress': Task[];
     'Done': Task[];
-    'Blocked': Task[];
+    'Cancelled': Task[];
   };
 }
 

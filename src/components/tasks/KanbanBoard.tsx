@@ -26,7 +26,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
     { id: 'To Do', title: 'To Do', color: 'bg-gray-50 border-gray-200' },
     { id: 'In Progress', title: 'In Progress', color: 'bg-blue-50 border-blue-200' },
     { id: 'Done', title: 'Done', color: 'bg-green-50 border-green-200' },
-    { id: 'Blocked', title: 'Blocked', color: 'bg-red-50 border-red-200' }
+    { id: 'Cancelled', title: 'Cancelled', color: 'bg-red-50 border-red-200' }
   ];
 
   const handleTaskClick = useCallback((task: Task) => {

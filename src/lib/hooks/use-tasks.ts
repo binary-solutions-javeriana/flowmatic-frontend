@@ -407,7 +407,7 @@ export function useKanbanBoard(projectId: number) {
             'To Do': tasks.filter(task => task.state === 'To Do'),
             'In Progress': tasks.filter(task => task.state === 'In Progress'),
             'Done': tasks.filter(task => task.state === 'Done'),
-            'Blocked': tasks.filter(task => task.state === 'Blocked')
+            'Cancelled': tasks.filter(task => task.state === 'Cancelled')
           }
         };
         console.log('[useKanbanBoard] Created kanban data:', kanbanData);
@@ -429,7 +429,7 @@ export function useKanbanBoard(projectId: number) {
             'To Do': [],
             'In Progress': [],
             'Done': [],
-            'Blocked': []
+            'Cancelled': []
           }
         };
         setKanbanBoard(emptyKanbanData);
