@@ -45,8 +45,6 @@ export function useTasks(initialFilters?: TaskFilters) {
       if (filters?.priority) params.append('priority', filters.priority);
       if (filters?.assigned_to) params.append('assigned_to', filters.assigned_to);
       if (filters?.project_id) params.append('project_id', filters.project_id.toString());
-      if (filters?.orderBy) params.append('orderBy', filters.orderBy);
-      if (filters?.order) params.append('order', filters.order);
 
       const queryString = params.toString();
       const url = `/tasks?${queryString}`;
@@ -126,8 +124,6 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
       if (filters?.state) params.append('state', filters.state);
       if (filters?.priority) params.append('priority', filters.priority);
       if (filters?.assigned_to) params.append('assigned_to', filters.assigned_to);
-      if (filters?.orderBy) params.append('orderBy', filters.orderBy);
-      if (filters?.order) params.append('order', filters.order);
 
       const queryString = params.toString();
       const url = `/projects/${projectId}/tasks?${queryString}`;
