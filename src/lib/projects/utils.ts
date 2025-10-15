@@ -7,9 +7,12 @@ import type { Project as UIProject } from '@/components/dashboard/types';
 export function adaptBackendProjectToUI(backendProject: Project, stats?: {
   totalTasks?: number;
   completedTasks?: number;
+  total?: number;
+  completed?: number;
 }): UIProject {
-  const totalTasks = stats?.totalTasks || 0;
-  const completedTasks = stats?.completedTasks || 0;
+  // Support both old and new stats format
+  const totalTasks = stats?.totalTasks || stats?.total || 0;
+  const completedTasks = stats?.completedTasks || stats?.completed || 0;
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return {

@@ -6,6 +6,7 @@ import type { Project as BackendProject } from '@/lib/projects/types';
 import { adaptBackendProjectToUI } from '@/lib/projects/utils';
 import type { Project } from './types';
 import { getStatusColor } from './utils';
+import { useTasks } from '@/lib/hooks/use-tasks';
 
 interface OverviewProps {
   projects: BackendProject[];
@@ -13,18 +14,51 @@ interface OverviewProps {
 
 const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectStats, setProjectStats] = useState<Record<number, { total: number; completed: number }>>({});
+  
+  // Fetch all tasks to calculate project statistics
+  const { tasks } = useTasks({ page: 1, limit: 100 });
 
-  // Adapt backend projects to UI format
+  // Calculate task statistics for each project
   useEffect(() => {
-    // For now, convert without stats. In a full implementation, 
-    // you would fetch stats for each project
-    const adapted = backendProjects.slice(0, 5).map(p => adaptBackendProjectToUI(p));
-    setProjects(adapted);
-  }, [backendProjects]);
+    if (tasks && tasks.length > 0) {
+      const stats: Record<number, { total: number; completed: number }> = {};
+      
+      tasks.forEach(task => {
+        const projectId = task.proyect_id;
+        if (!stats[projectId]) {
+          stats[projectId] = { total: 0, completed: 0 };
+        }
+        stats[projectId].total += 1;
+        if (task.state === 'Done') {
+          stats[projectId].completed += 1;
+        }
+      });
+      
+      setProjectStats(stats);
+    }
+  }, [tasks]);
 
+  // Adapt backend projects to UI format with real task statistics
+  useEffect(() => {
+    const adapted = backendProjects.slice(0, 5).map(p => {
+      const stats = projectStats[p.proyect_id] || { total: 0, completed: 0 };
+      return adaptBackendProjectToUI(p, stats);
+    });
+    setProjects(adapted);
+  }, [backendProjects, projectStats]);
+
+  // Calculate real project statistics
   const totalProjects = backendProjects.length;
   const completedProjects = backendProjects.filter(p => p.state === 'Completed').length;
   const inProgressProjects = backendProjects.filter(p => p.state === 'In Progress').length;
+  const planningProjects = backendProjects.filter(p => p.state === 'Planning').length;
+  const onHoldProjects = backendProjects.filter(p => p.state === 'On Hold').length;
+  
+  // Calculate overall task statistics
+  const totalTasks = tasks?.length || 0;
+  const completedTasks = tasks?.filter(task => task.state === 'Done').length || 0;
+  const inProgressTasks = tasks?.filter(task => task.state === 'In Progress').length || 0;
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -64,7 +98,7 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-[#0c272d]/60">Planning</p>
-              <p className="text-3xl font-bold text-[#0c272d]">{backendProjects.filter(p => p.state === 'Planning').length}</p>
+              <p className="text-3xl font-bold text-[#0c272d]">{planningProjects}</p>
             </div>
             <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
               <Target className="w-6 h-6 text-[#14a67e]" />
@@ -79,9 +113,9 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
         <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#0c272d]/60">Success Rate</p>
+              <p className="text-sm text-[#0c272d]/60">Task Completion</p>
               <p className="text-3xl font-bold text-[#0c272d]">
-                {totalProjects > 0 ? Math.round((completedProjects / totalProjects) * 100) : 0}%
+                {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
               </p>
             </div>
             <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
@@ -90,7 +124,7 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           </div>
           <div className="mt-4 flex items-center text-sm">
             <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-            <span className="text-green-600">Completion rate</span>
+            <span className="text-green-600">{completedTasks}/{totalTasks} tasks done</span>
           </div>
         </div>
       </div>
@@ -109,7 +143,12 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
                 </div>
                 <div>
                   <h3 className="font-medium text-[#0c272d]">{project.name}</h3>
-                  <p className="text-sm text-[#0c272d]/60">{project.tasks.completed}/{project.tasks.total} tasks completed</p>
+                  <p className="text-sm text-[#0c272d]/60">
+                    {project.tasks.total === 0 
+                      ? 'No tasks assigned yet' 
+                      : `${project.tasks.completed}/${project.tasks.total} tasks completed`
+                    }
+                  </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
