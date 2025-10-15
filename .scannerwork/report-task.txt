@@ -2,5 +2,5 @@ projectKey=flowmatic-frontend
 serverUrl=http://localhost:9000
 serverVersion=25.10.0.114319
 dashboardUrl=http://localhost:9000/dashboard?id=flowmatic-frontend
-ceTaskId=e8863bd8-d2a6-41fa-b100-419c62ba3d5c
-ceTaskUrl=http://localhost:9000/api/ce/task?id=e8863bd8-d2a6-41fa-b100-419c62ba3d5c
+ceTaskId=b6262c40-589d-45a9-8ca2-888c1d23c009
+ceTaskUrl=http://localhost:9000/api/ce/task?id=b6262c40-589d-45a9-8ca2-888c1d23c009
