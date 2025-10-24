@@ -7,6 +7,7 @@ import type { Project } from '@/lib/types/project-types';
 import { getProjectStateColor } from '@/lib/projects/utils';
 import { useDeleteProject } from '@/lib/projects';
 import ProjectModal from './ProjectModal';
+import { formatDateSafe } from './utils';
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -141,14 +142,14 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
                         <span className="font-medium">Start:</span>
-                        <span>{new Date(project.start_date).toISOString().split('T')[0]}</span>
+                        <span>{formatDateSafe(project.start_date)}</span>
                       </div>
                     )}
                     {project.end_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
                         <span className="font-medium">End:</span>
-                        <span>{new Date(project.end_date).toISOString().split('T')[0]}</span>
+                        <span>{formatDateSafe(project.end_date)}</span>
                       </div>
                     )}
                   </div>
@@ -169,12 +170,12 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Created:</span>
-                    <span>{new Date(project.created_at).toISOString().split('T')[0]}</span>
+                    <span>{formatDateSafe(project.created_at)}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Updated:</span>
-                    <span>{new Date(project.updated_at).toISOString().split('T')[0]}</span>
+                    <span>{formatDateSafe(project.updated_at)}</span>
                   </div>
                 </div>
               </div>

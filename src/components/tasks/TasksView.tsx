@@ -15,6 +15,7 @@ import { useProject } from '@/lib/hooks/use-projects';
 import KanbanBoard from './KanbanBoard';
 import TaskList from './TaskList';
 import TaskDetailModal from './TaskDetailModal';
+import { formatDateSafe } from '../dashboard/utils';
 
 interface TasksViewProps {
   projectId: number;
@@ -192,7 +193,7 @@ const TasksView: React.FC<TasksViewProps> = ({ projectId }) => {
             {project.start_date && (
               <div className="flex items-center space-x-2 text-sm text-[#0c272d]/60">
                 <Calendar className="w-4 h-4" />
-                <span>Started: {new Date(project.start_date).toISOString().split('T')[0]}</span>
+                <span>Started: {formatDateSafe(project.start_date)}</span>
               </div>
             )}
           </div>

@@ -34,6 +34,7 @@ import {
   parseAssignedUserIds
 } from '@/lib/tasks/utils';
 import TaskModal from './TaskModal';
+import { formatDateSafe } from '../dashboard/utils';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -337,7 +338,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                           {formatDuration(entry.duration_hours || 0)}
                         </span>
                         <span className="text-[#0c272d]/60">
-                          {new Date(entry.start_time).toISOString().split('T')[0]}
+                          {formatDateSafe(entry.start_time)}
                         </span>
                       </div>
                       {entry.description && (
@@ -378,8 +379,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Created/Updated Info */}
           <div className="pt-4 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-            <p>Created: {new Date(task.created_at).toISOString().split('T')[0]}</p>
-            <p>Updated: {new Date(task.updated_at).toISOString().split('T')[0]}</p>
+            <p>Created: {formatDateSafe(task.created_at)}</p>
+            <p>Updated: {formatDateSafe(task.updated_at)}</p>
           </div>
         </div>
       </div>
