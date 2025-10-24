@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Project } from '@/lib/types/project-types';
+import { formatDateSafe } from './dashboard/utils';
 
 interface ProjectCardProps {
   project: Project;
@@ -44,19 +45,19 @@ export function ProjectCard({ project }: ProjectCardProps) {
             )}
             {project.start_date && (
               <span>
-                Start: {new Date(project.start_date).toLocaleDateString()}
+                Start: {formatDateSafe(project.start_date)}
               </span>
             )}
           </div>
           {project.end_date && (
             <span>
-              End: {new Date(project.end_date).toLocaleDateString()}
+              End: {formatDateSafe(project.end_date)}
             </span>
           )}
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-          Updated {new Date(project.updated_at).toLocaleDateString()}
+          Updated {formatDateSafe(project.updated_at)}
         </div>
       </div>
     </Link>

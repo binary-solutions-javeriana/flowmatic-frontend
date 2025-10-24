@@ -30,3 +30,20 @@ export const getStatusColor = (status: Status): string => {
   }
 };
 
+// Safe date formatting utility
+/**
+ * Safely formats a date string to YYYY-MM-DD format
+ * Returns 'Unknown' if the date is invalid or null/undefined
+ */
+export const formatDateSafe = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'Unknown';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Unknown';
+    return date.toISOString().split('T')[0];
+  } catch {
+    return 'Unknown';
+  }
+};
+

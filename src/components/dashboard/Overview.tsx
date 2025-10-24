@@ -135,8 +135,8 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           <button className="text-[#14a67e] hover:text-[#14a67e]/80 text-sm font-medium">View All</button>
         </div>
         <div className="space-y-4">
-          {projects.map((project) => (
-            <div key={project.id} className="flex items-center justify-between p-4 bg-white/40 rounded-xl border border-[#9fdbc2]/10">
+          {projects.map((project, index) => (
+            <div key={project.id || `project-${index}`} className="flex items-center justify-between p-4 bg-white/40 rounded-xl border border-[#9fdbc2]/10">
               <div className="flex items-center space-x-4">
                 <div className="w-10 h-10 bg-[#14a67e]/10 rounded-lg flex items-center justify-center">
                   <FolderOpen className="w-5 h-5 text-[#14a67e]" />
