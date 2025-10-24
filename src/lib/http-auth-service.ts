@@ -8,7 +8,8 @@ import type {
   LoginRequest,
   RegisterRequest,
   LoginResponse,
-  RegisterApiResponse
+  RegisterApiResponse,
+  ApiUser
 } from './auth-types';
 import { hasTokens, requiresEmailConfirmation } from './auth-types';
 import {
@@ -24,14 +25,55 @@ export class HttpAuthService implements AuthService {
 
   async login(credentials: LoginRequest): Promise<AuthResult> {
     try {
-      const response = await api<LoginResponse>(`${this.basePath}/login`, {
+      const url = 'http://localhost:3000/v1/auth/login';
+      const requestBody = JSON.stringify(credentials);
+      
+      console.log(`[HttpAuthService] POST ${url}`, {
+        url,
+        body: requestBody,
+        credentials: credentials
+      });
+      
+      // Direct fetch call to bypass config and proxy
+      const response = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify(credentials)
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: requestBody,
+        cache: 'no-store'
       });
 
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {
+            statusCode: response.status,
+            message: `HTTP ${response.status}: ${response.statusText}`,
+            path: '/v1/auth/login',
+            method: 'POST',
+            timestamp: new Date().toISOString(),
+            requestId: 'unknown'
+          };
+        }
+        throw new ApiException(
+          errorData.statusCode,
+          errorData.message,
+          errorData.path,
+          errorData.method,
+          errorData.timestamp,
+          errorData.requestId
+        );
+      }
+
+      const responseData = await response.json() as LoginResponse;
+
       return {
-        user: this.mapUser(response.user),
-        tokens: this.mapTokens(response)
+        user: this.mapUser(responseData.user),
+        tokens: this.mapTokens(responseData)
       };
     } catch (error) {
       throw this.mapError(error);
@@ -40,20 +82,61 @@ export class HttpAuthService implements AuthService {
 
   async register(credentials: RegisterRequest): Promise<AuthResult> {
     try {
-      const response = await api<RegisterApiResponse>(`${this.basePath}/register`, {
+      const url = 'http://localhost:3000/v1/auth/register';
+      const requestBody = JSON.stringify(credentials);
+      
+      console.log(`[HttpAuthService] POST ${url}`, {
+        url,
+        body: requestBody,
+        credentials: credentials
+      });
+      
+      // Direct fetch call to bypass config and proxy
+      const response = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify(credentials)
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: requestBody,
+        cache: 'no-store'
       });
 
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = {
+            statusCode: response.status,
+            message: `HTTP ${response.status}: ${response.statusText}`,
+            path: '/v1/auth/register',
+            method: 'POST',
+            timestamp: new Date().toISOString(),
+            requestId: 'unknown'
+          };
+        }
+        throw new ApiException(
+          errorData.statusCode,
+          errorData.message,
+          errorData.path,
+          errorData.method,
+          errorData.timestamp,
+          errorData.requestId
+        );
+      }
+
+      const responseData = await response.json() as RegisterApiResponse;
+
       const result: AuthResult = {
-        user: this.mapUser(response.user),
-        message: response.message
+        user: this.mapUser(responseData.user),
+        message: responseData.message
       };
 
       // Check if registration includes tokens (auto-confirm) or requires email confirmation
-      if (hasTokens(response)) {
-        result.tokens = this.mapTokens(response);
-      } else if (requiresEmailConfirmation(response)) {
+      if (hasTokens(responseData)) {
+        result.tokens = this.mapTokens(responseData);
+      } else if (requiresEmailConfirmation(responseData)) {
         result.requiresEmailConfirmation = true;
       }
 
@@ -113,19 +196,52 @@ export class HttpAuthService implements AuthService {
 
   // Private helper methods
 
-  private mapUser(user: {
-    id: string;
-    email: string;
-    app_metadata?: Record<string, unknown>;
-    user_metadata?: Record<string, unknown>;
-    aud: string;
-  }): AuthUser {
+  private mapUser(user: ApiUser): AuthUser {
+    // If response already has Supabase-like shape, pass through safely
+    if (
+      (user as any).aud !== undefined ||
+      (user as any).app_metadata !== undefined ||
+      (user as any).user_metadata !== undefined
+    ) {
+      const u = user as unknown as {
+        id: string;
+        email: string;
+        app_metadata?: Record<string, unknown>;
+        user_metadata?: Record<string, unknown>;
+        aud?: string;
+      };
+      return {
+        id: u.id,
+        email: u.email,
+        app_metadata: u.app_metadata || {},
+        user_metadata: u.user_metadata || {},
+        aud: u.aud || 'authenticated'
+      };
+    }
+
+    // Backend shape → normalize to our canonical AuthUser
+    const backend = user as unknown as {
+      id: string;
+      email: string;
+      name?: string;
+      role?: string;
+      tenantId?: number;
+      auth_provider_id?: string;
+    };
+
+    const derivedName = backend.name || (backend.email ? backend.email.split('@')[0] : 'User');
+
     return {
-      id: user.id,
-      email: user.email,
-      app_metadata: user.app_metadata || {},
-      user_metadata: user.user_metadata || {},
-      aud: user.aud
+      id: backend.id,
+      email: backend.email,
+      app_metadata: { provider: 'email' },
+      user_metadata: {
+        name: derivedName,
+        role: backend.role,
+        tenantId: backend.tenantId,
+        auth_provider_id: backend.auth_provider_id
+      },
+      aud: 'authenticated'
     };
   }
 

@@ -12,8 +12,10 @@ export const config = {
     get baseUrl() {
       // Check if we're in browser
       if (typeof window !== 'undefined') {
-        // Use Next.js proxy to bypass ngrok warning
-        return '/api/backend';
+        // Allow toggling proxy usage from the browser via env var
+        // Default: use proxy (true). Set NEXT_PUBLIC_API_USE_PROXY=false to call backend directly.
+        const useProxy = (process.env.NEXT_PUBLIC_API_USE_PROXY ?? 'true') !== 'false';
+        return useProxy ? '/api/backend' : this.backendUrl;
       }
       // Server-side: use direct backend URL
       return this.backendUrl;
