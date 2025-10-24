@@ -14,7 +14,7 @@ export async function authenticatedApi<T>(
   }
 
   const authHeaders = createAuthHeaders();
-  const url = `http://localhost:3000/v1${path}`;
+  const url = `http://10.43.103.86:3000/v1${path}`;
   
   console.log(`[AuthenticatedApi] ${init?.method || 'GET'} ${url}`, {
     url,
