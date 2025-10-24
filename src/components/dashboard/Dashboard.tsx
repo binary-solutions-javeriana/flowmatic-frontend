@@ -20,11 +20,10 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<string>('overview');
   const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>(undefined);
+  // Fetch projects without orderBy since created_at column doesn't exist in database
   const { projects, loading, error } = useProjects({ 
     page: 1, 
-    limit: 100, 
-    orderBy: 'created_at', 
-    order: 'desc' 
+    limit: 100
   });
 
   const sidebarItems: SidebarItem[] = useMemo(

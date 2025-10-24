@@ -116,16 +116,18 @@ export class HttpAuthService implements AuthService {
   private mapUser(user: {
     id: string;
     email: string;
-    app_metadata?: Record<string, unknown>;
-    user_metadata?: Record<string, unknown>;
-    aud: string;
+    name: string;
+    role: string;
+    tenantId: number;
+    auth_provider_id: string;
   }): AuthUser {
     return {
       id: user.id,
       email: user.email,
-      app_metadata: user.app_metadata || {},
-      user_metadata: user.user_metadata || {},
-      aud: user.aud
+      name: user.name,
+      role: user.role,
+      tenantId: user.tenantId,
+      auth_provider_id: user.auth_provider_id
     };
   }
 

@@ -55,7 +55,9 @@ function DashboardContent() {
               <div className="text-sm text-green-800 space-y-1">
                 <p><strong>Email:</strong> {state.user.email}</p>
                 <p><strong>User ID:</strong> {state.user.id}</p>
-                <p><strong>Audience:</strong> {state.user.aud}</p>
+                <p><strong>Name:</strong> {state.user.name}</p>
+                <p><strong>Role:</strong> {state.user.role}</p>
+                <p><strong>Tenant ID:</strong> {state.user.tenantId}</p>
               </div>
             </div>
           )}

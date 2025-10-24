@@ -174,11 +174,11 @@ function ProjectDetailContent() {
               <dl className="space-y-2 text-sm">
                 <div>
                   <dt className="text-gray-500">Created</dt>
-                  <dd className="text-gray-900">{new Date(project.created_at).toLocaleDateString()}</dd>
+                  <dd className="text-gray-900">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</dd>
                 </div>
                 <div>
                   <dt className="text-gray-500">Last Updated</dt>
-                  <dd className="text-gray-900">{new Date(project.updated_at).toLocaleDateString()}</dd>
+                  <dd className="text-gray-900">{project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'N/A'}</dd>
                 </div>
               </dl>
             </div>

@@ -9,7 +9,7 @@ export function getTaskStateColor(state: TaskState): string {
       return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'Done':
       return 'bg-green-100 text-green-800 border-green-200';
-    case 'Blocked':
+    case 'Cancelled':
       return 'bg-red-100 text-red-800 border-red-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -112,7 +112,7 @@ export function getTaskProgress(task: Task, subtasks: Task[] = []): number {
       case 'To Do': return 0;
       case 'In Progress': return 50;
       case 'Done': return 100;
-      case 'Blocked': return 25;
+      case 'Cancelled': return 0;
       default: return 0;
     }
   }
@@ -122,7 +122,7 @@ export function getTaskProgress(task: Task, subtasks: Task[] = []): number {
 }
 
 // Calculate total time worked on task
-export function calculateTotalTime(timeEntries: any[]): number {
+export function calculateTotalTime(timeEntries: { duration_hours?: number }[]): number {
   return timeEntries.reduce((total, entry) => {
     return total + (entry.duration_hours || 0);
   }, 0);
@@ -190,7 +190,7 @@ export function getTaskStats(tasks: Task[]): {
       'To Do': 0,
       'In Progress': 0,
       'Done': 0,
-      'Blocked': 0
+      'Cancelled': 0
     },
     byPriority: {
       'Low': 0,

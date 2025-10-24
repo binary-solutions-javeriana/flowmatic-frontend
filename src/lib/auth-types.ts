@@ -2,11 +2,12 @@
 // Based on the API documentation provided
 
 export interface User {
-  id: string;
+  id: string;         
   email: string;
-  app_metadata: Record<string, unknown>;
-  user_metadata: Record<string, unknown>;
-  aud: string;
+  name: string;
+  role: string;
+  tenantId: number;
+  auth_provider_id: string;  // UUID of Supabase Auth
 }
 
 export interface AuthTokens {

@@ -61,6 +61,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     
     try {
       errorData = await response.json();
+      console.error('[API] Error response:', errorData);
     } catch {
       // Fallback if response isn't JSON
       errorData = {
@@ -71,6 +72,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
         timestamp: new Date().toISOString(),
         requestId: 'unknown'
       };
+      console.error('[API] Non-JSON error response:', response.status, response.statusText);
     }
 
     throw new ApiException(

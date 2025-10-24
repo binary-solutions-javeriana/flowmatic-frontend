@@ -56,7 +56,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-          Updated {new Date(project.updated_at).toLocaleDateString()}
+          Updated {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'N/A'}
         </div>
       </div>
     </Link>

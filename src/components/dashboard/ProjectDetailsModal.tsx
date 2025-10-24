@@ -169,12 +169,12 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Created:</span>
-                    <span>{new Date(project.created_at).toISOString().split('T')[0]}</span>
+                    <span>{project.created_at ? new Date(project.created_at).toISOString().split('T')[0] : 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Updated:</span>
-                    <span>{new Date(project.updated_at).toISOString().split('T')[0]}</span>
+                    <span>{project.updated_at ? new Date(project.updated_at).toISOString().split('T')[0] : 'N/A'}</span>
                   </div>
                 </div>
               </div>

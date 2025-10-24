@@ -154,11 +154,11 @@ function ProjectDetailContent() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Created:</dt>
-                  <dd className="text-gray-900">{new Date(project.created_at).toLocaleDateString()}</dd>
+                  <dd className="text-gray-900">{project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-600">Last Updated:</dt>
-                  <dd className="text-gray-900">{new Date(project.updated_at).toLocaleDateString()}</dd>
+                  <dd className="text-gray-900">{project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'N/A'}</dd>
                 </div>
               </dl>
             </div>

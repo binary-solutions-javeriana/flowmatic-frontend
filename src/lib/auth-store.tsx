@@ -122,13 +122,14 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
           // Recover user data from localStorage
           const storedUser = getStoredUser();
           if (storedUser) {
-            // Cast stored user to AuthUser type
+            // Cast stored user to AuthUser type with new backend structure
             const user: AuthUser = {
               id: String(storedUser.id),
               email: storedUser.email as string,
-              app_metadata: (storedUser.app_metadata as Record<string, unknown>) || ({} as Record<string, unknown>),
-              user_metadata: (storedUser.user_metadata as Record<string, unknown>) || ({} as Record<string, unknown>),
-              aud: String(storedUser.aud || 'authenticated'),
+              name: storedUser.name as string,
+              role: storedUser.role as string,
+              tenantId: Number(storedUser.tenantId),
+              auth_provider_id: String(storedUser.auth_provider_id),
             };
             
             dispatch({

@@ -233,7 +233,8 @@ export function useRecentProjects(limit: number = 5) {
     setError(null);
 
     try {
-      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}&orderBy=updated_at&order=desc`);
+      // Removed orderBy since updated_at column doesn't exist in database
+      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}`);
       setProjects(response.data || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recent projects';

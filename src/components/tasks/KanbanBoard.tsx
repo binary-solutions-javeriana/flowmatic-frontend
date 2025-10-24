@@ -2,7 +2,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { Plus, MoreHorizontal } from 'lucide-react';
-import type { Task, TaskState, KanbanBoard } from '@/lib/types/task-types';
+import type { Task, TaskState } from '@/lib/types/task-types';
+import type { KanbanBoard as KanbanBoardType } from '@/lib/types/task-types';
 import { useKanbanBoard, useUpdateTaskStatus, useCreateTask } from '@/lib/hooks/use-tasks';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';
@@ -35,7 +36,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
     }
   }, [onTaskClick]);
 
-  const handleCreateTask = useCallback(async (taskData: any) => {
+  const handleCreateTask = useCallback(async (_taskData: Task) => {
     // TaskModal already created the task, we just need to refresh the view
     setIsCreateModalOpen(false);
     setSelectedColumn(null);

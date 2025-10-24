@@ -46,9 +46,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
     page: 1, 
-    limit: 100, 
-    orderBy: 'created_at', 
-    order: 'desc' 
+    limit: 100
   });
 
   // Fetch all tasks across all projects
@@ -178,7 +176,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     }
 
     // Optimistic update - move task immediately in UI
-    const updatedTask = { ...draggedTask, state: targetState as any };
+    const updatedTask = { ...draggedTask, state: targetState as Task['state'] };
     setOptimisticTasks(prevTasks => 
       prevTasks.map(task => 
         task.task_id === draggedTask.task_id ? updatedTask : task
@@ -200,7 +198,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     setDraggedTask(null);
 
     // Update backend in background (no await to prevent blocking)
-    updateTaskStatus(draggedTask.task_id, targetState as any)
+    updateTaskStatus(draggedTask.task_id, targetState as Task['state'])
       .then(() => {
         // Success - no need to refresh, optimistic update is already applied
         console.log('Task status updated successfully');

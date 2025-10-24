@@ -423,7 +423,7 @@ const ProjectCard: React.FC<{
 
       <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 flex items-center justify-between">
         <span className="text-xs text-[#0c272d]/60">
-          Updated {new Date(project.updated_at).toISOString().split('T')[0]}
+          Updated {project.updated_at ? new Date(project.updated_at).toISOString().split('T')[0] : 'N/A'}
         </span>
         <button
           onClick={onViewTasks}

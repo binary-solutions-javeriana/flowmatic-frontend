@@ -49,7 +49,7 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
               {project.end_date && (
                 <span>End: {new Date(project.end_date).toLocaleDateString()}</span>
               )}
-              <span>Updated: {new Date(project.updated_at).toLocaleDateString()}</span>
+              <span>Updated: {project.updated_at ? new Date(project.updated_at).toLocaleDateString() : 'N/A'}</span>
             </div>
           </div>
           <div className="ml-4">

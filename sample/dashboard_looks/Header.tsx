@@ -46,11 +46,9 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const getUserDisplayName = (): string => {
     if (!user) return 'User';
     
-    // Check if there's a name in user_metadata
-    if (user.user_metadata && typeof user.user_metadata === 'object') {
-      const metadata = user.user_metadata as Record<string, unknown>;
-      if (metadata.full_name) return String(metadata.full_name);
-      if (metadata.name) return String(metadata.name);
+    // Check if there's a name field (new backend structure)
+    if (user.name) {
+      return user.name;
     }
     
     // Fall back to email username (part before @)
@@ -67,17 +65,13 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   const getUserInitials = (): string => {
     if (!user) return 'U';
     
-    // Try to get initials from metadata name
-    if (user.user_metadata && typeof user.user_metadata === 'object') {
-      const metadata = user.user_metadata as Record<string, unknown>;
-      const name = (metadata.full_name || metadata.name) as string | undefined;
-      if (name) {
-        const nameParts = name.trim().split(' ');
-        if (nameParts.length >= 2) {
-          return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-        }
-        return name.slice(0, 2).toUpperCase();
+    // Try to get initials from name field
+    if (user.name) {
+      const nameParts = user.name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
       }
+      return user.name.slice(0, 2).toUpperCase();
     }
     
     // Fall back to email initials
