@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import type { Project } from '@/lib/types/project-types';
+import { formatDateSafe } from './dashboard/utils';
 
 interface ProjectListItemProps {
   project: Project;
@@ -44,12 +45,12 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
             )}
             <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
               {project.start_date && (
-                <span>Start: {new Date(project.start_date).toLocaleDateString()}</span>
+                <span>Start: {formatDateSafe(project.start_date)}</span>
               )}
               {project.end_date && (
-                <span>End: {new Date(project.end_date).toLocaleDateString()}</span>
+                <span>End: {formatDateSafe(project.end_date)}</span>
               )}
-              <span>Updated: {new Date(project.updated_at).toLocaleDateString()}</span>
+              <span>Updated: {formatDateSafe(project.updated_at)}</span>
             </div>
           </div>
           <div className="ml-4">

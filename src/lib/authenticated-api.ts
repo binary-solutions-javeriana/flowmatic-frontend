@@ -1,7 +1,7 @@
 // Authenticated API client for protected routes
-// Extends the base API client with automatic auth header injection
+// Direct localhost:3000 calls to bypass proxy system
 
-import { api } from './api';
+import { ApiException } from './api';
 import { createAuthHeaders, isAuthenticated } from './auth-utils';
 
 // Authenticated API client that automatically adds auth headers
@@ -14,15 +14,63 @@ export async function authenticatedApi<T>(
   }
 
   const authHeaders = createAuthHeaders();
-  const headers = {
-    ...authHeaders,
-    ...(init?.headers || {})
-  };
-
-  return api<T>(path, {
-    ...init,
-    headers
+  const url = `http://localhost:3000/v1${path}`;
+  
+  console.log(`[AuthenticatedApi] ${init?.method || 'GET'} ${url}`, {
+    url,
+    path,
+    method: init?.method || 'GET',
+    headers: authHeaders
   });
+
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...authHeaders,
+      ...(init?.headers || {})
+    },
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = {
+        statusCode: response.status,
+        message: `HTTP ${response.status}: ${response.statusText}`,
+        path: path,
+        method: init?.method || 'GET',
+        timestamp: new Date().toISOString(),
+        requestId: 'unknown'
+      };
+    }
+    throw new ApiException(
+      errorData.statusCode,
+      errorData.message,
+      errorData.path,
+      errorData.method,
+      errorData.timestamp,
+      errorData.requestId
+    );
+  }
+
+  // Handle responses without content (like 204 No Content)
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return undefined as T;
+  }
+
+  // Check if response has JSON content
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json() as Promise<T>;
+  }
+
+  // If content is not JSON, throw to surface the real upstream response type
+  throw new Error(`Unexpected content-type from API: ${contentType || 'none'}`);
 }
 
 // Convenience methods for common HTTP verbs with auth

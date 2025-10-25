@@ -11,6 +11,7 @@ import {
   isTaskOverdue,
   parseAssignedUserIds
 } from '@/lib/tasks/utils';
+import { formatDateSafe } from '../dashboard/utils';
 
 interface TaskCardProps {
   task: Task;
@@ -169,7 +170,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
       {/* Created/Updated Info */}
       <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-        Updated {new Date(task.updated_at).toISOString().split('T')[0]}
+        Updated {formatDateSafe(task.updated_at)}
       </div>
     </div>
   );

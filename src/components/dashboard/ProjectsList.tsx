@@ -8,6 +8,7 @@ import type { ProjectFilters, Project } from '@/lib/types/project-types';
 import ProjectModal from './ProjectModal';
 import ProjectDetailsModal from './ProjectDetailsModal';
 import { getProjectStateColor } from '@/lib/projects/utils';
+import { formatDateSafe } from './utils';
 
 interface ProjectsListProps {
   onViewTasks?: (projectId: number) => void;
@@ -300,9 +301,9 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project: Project) => (
+            {filteredProjects.map((project: Project, index) => (
               <ProjectCard 
-                key={project.proyect_id} 
+                key={project.proyect_id || `project-${index}`} 
                 project={project} 
                 onClick={() => handleProjectClick(project)}
                 onViewTasks={(e) => handleViewTasks(project.proyect_id, e)}
@@ -409,13 +410,13 @@ const ProjectCard: React.FC<{
           {project.start_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Start: {new Date(project.start_date).toISOString().split('T')[0]}</span>
+              <span>Start: {formatDateSafe(project.start_date)}</span>
             </div>
           )}
           {project.end_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
-              <span>Due: {new Date(project.end_date).toISOString().split('T')[0]}</span>
+              <span>Due: {formatDateSafe(project.end_date)}</span>
             </div>
           )}
         </div>
@@ -423,7 +424,7 @@ const ProjectCard: React.FC<{
 
       <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 flex items-center justify-between">
         <span className="text-xs text-[#0c272d]/60">
-          Updated {new Date(project.updated_at).toISOString().split('T')[0]}
+          Updated {formatDateSafe(project.updated_at)}
         </span>
         <button
           onClick={onViewTasks}

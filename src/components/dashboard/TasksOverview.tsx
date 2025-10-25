@@ -15,6 +15,7 @@ import { useProjects } from '@/lib/projects';
 import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
+import { formatDateSafe } from './utils';
 
 // Type declaration for canvas-confetti
 declare module 'canvas-confetti' {
@@ -381,8 +382,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
             className="px-3 py-2 bg-white/60 border border-[#9fdbc2]/20 rounded-lg text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
           >
             <option value="all">All Projects</option>
-            {projects?.map((project) => (
-              <option key={project.proyect_id} value={project.proyect_id}>
+            {projects?.map((project, index) => (
+              <option key={project.proyect_id || `project-${index}`} value={project.proyect_id}>
                 {project.name_proyect}
               </option>
             ))}
@@ -456,7 +457,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                               </span>
                               {task.limit_date && (
                                 <span className="text-xs text-[#0c272d]/60">
-                                  {new Date(task.limit_date).toLocaleDateString()}
+                                  {formatDateSafe(task.limit_date)}
                                 </span>
                               )}
                             </div>
@@ -514,7 +515,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                                 </span>
                                 {task.limit_date && (
                                   <span className="text-xs text-[#0c272d]/60">
-                                    Due: {new Date(task.limit_date).toLocaleDateString()}
+                                    Due: {formatDateSafe(task.limit_date)}
                                   </span>
                                 )}
                               </div>

@@ -6,6 +6,7 @@ import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskState, TaskPriorit
 import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
 import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
+import { formatDateSafe } from '../dashboard/utils';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         state: task.state,
         priority: task.priority,
         assigned_to_ids: task.assigned_to_ids || '',
-        limit_date: task.limit_date ? new Date(task.limit_date).toISOString().split('T')[0] : '',
+        limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
         project_id: projectId ? projectId.toString() : ''
       });
     } else {

@@ -1,5 +1,5 @@
-// Flowmatic Backend Auth Types
-// Based on the API documentation provided
+// Flowmatic Auth Types
+// Supports both Supabase-like user shape and Backend-mapped user shape
 
 export interface User {
   id: string;
@@ -8,6 +8,19 @@ export interface User {
   user_metadata: Record<string, unknown>;
   aud: string;
 }
+
+// Backend user shape returned by Flowmatic API
+export interface BackendUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  tenantId?: number;
+  auth_provider_id?: string;
+}
+
+// API user can be either Supabase-like or Backend-like; normalize later
+export type ApiUser = User | BackendUser;
 
 export interface AuthTokens {
   access_token: string;
@@ -21,12 +34,12 @@ export interface LoginResponse {
   refresh_token: string;
   expires_in: number;
   token_type: "bearer";
-  user: User;
+  user: ApiUser;
 }
 
 export interface RegisterResponse {
   message: string;
-  user: User;
+  user: ApiUser;
 }
 
 export interface RegisterWithTokensResponse extends RegisterResponse, AuthTokens {}
