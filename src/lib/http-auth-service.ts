@@ -25,7 +25,7 @@ export class HttpAuthService implements AuthService {
 
   async login(credentials: LoginRequest): Promise<AuthResult> {
     try {
-      const url = 'http:/localhost:3000/v1/auth/login';
+      const url = 'http://localhost:3000/v1/auth/login';
       const requestBody = JSON.stringify(credentials);
       
       console.log(`[HttpAuthService] POST ${url}`, {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { authApi } from '../authenticated-api';
+import { useAuthState } from '../auth-store';
 import type { 
   Project, 
   ProjectFilters, 
@@ -11,11 +12,39 @@ import type {
 } from '../types/project-types';
 
 // Hook to fetch all projects with filters
+// Adapt various backend shapes to our UI Project type
+function adaptBackendProjectToUI(item: any): Project {
+  const proyect_id = item?.proyect_id ?? item?.ProjectID ?? item?.id;
+  const name_proyect = item?.name_proyect ?? item?.NameProject ?? item?.name ?? item?.Name;
+  const description = item?.description ?? item?.Description ?? undefined;
+  const state = item?.state ?? item?.State ?? 'Planning';
+  const type = item?.type ?? item?.MethodologyName ?? undefined;
+  const start_date = item?.start_date ?? item?.Start_date ?? undefined;
+  const end_date = item?.end_date ?? item?.End_date ?? undefined;
+  const created_at = item?.created_at ?? item?.CreatedAt ?? '';
+  const updated_at = item?.updated_at ?? item?.UpdatedAt ?? '';
+  const created_by = item?.created_by ?? undefined;
+
+  return {
+    proyect_id: Number(proyect_id),
+    name_proyect: String(name_proyect || ''),
+    description,
+    state: String(state || 'Planning'),
+    type: type ? String(type) : undefined,
+    start_date: start_date ? String(start_date) : undefined,
+    end_date: end_date ? String(end_date) : undefined,
+    created_by: typeof created_by === 'number' ? created_by : undefined,
+    created_at: created_at ? String(created_at) : '',
+    updated_at: updated_at ? String(updated_at) : '',
+  };
+}
+
 export function useProjects(initialFilters?: ProjectFilters) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [pagination, setPagination] = useState<ProjectPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthState();
 
   const fetchProjects = useCallback(async (filters?: ProjectFilters) => {
     setLoading(true);
@@ -39,31 +68,32 @@ export function useProjects(initialFilters?: ProjectFilters) {
       if (filters?.order) params.append('order', filters.order);
 
       const queryString = params.toString();
-      const url = `/projects?${queryString}`;
+      const mail = user?.email;
+      const url = mail
+        ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
+        : `/projects?${queryString}`;
 
       console.log('[useProjects] Fetching projects with URL:', url);
       console.log('[useProjects] Filters:', filters);
       console.log('[useProjects] API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
-      const response = await authApi.get<ProjectsResponse>(url);
+      const response = await authApi.get<any>(url);
       
       console.log('[useProjects] Response received:', response);
       console.log('[useProjects] Response data:', response?.data);
       console.log('[useProjects] Response meta:', response?.meta);
       console.log('[useProjects] Number of projects:', response?.data?.length || 0);
       
-      // Validate response structure
-      if (!response || typeof response !== 'object') {
-        throw new Error('Invalid response format: response is not an object');
-      }
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error('[useProjects] Invalid data structure. Expected { data: [], meta: {} }, got:', response);
-        throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
-      }
-      
-      setProjects(response.data);
-      setPagination(response.meta || null);
+      const items: any[] = Array.isArray(response)
+        ? response
+        : Array.isArray((response as any)?.data)
+          ? (response as any).data
+          : [];
+
+      const adapted = items.map(adaptBackendProjectToUI);
+
+      setProjects(adapted);
+      setPagination((response as any)?.meta || null);
       
       console.log('[useProjects] Projects state updated with', response.data.length, 'projects');
     } catch (err) {
@@ -100,6 +130,7 @@ export function useProject(projectId: number) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthState();
 
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
@@ -108,8 +139,9 @@ export function useProject(projectId: number) {
     setError(null);
 
     try {
-      const response = await authApi.get<Project>(`/projects/${projectId}`);
-      setProject(response);
+      const response = await authApi.get<any>(`/projects/${projectId}`);
+      const adapted = adaptBackendProjectToUI(response);
+      setProject(adapted);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project';
       setError(errorMessage);
@@ -135,13 +167,58 @@ export function useProject(projectId: number) {
 export function useCreateProject() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthState();
+
+  // Ensure methodology exists and return its ID
+  const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
+    if (!name || !name.trim()) return undefined;
+    try {
+      // Try to find by name
+      const queryName = encodeURIComponent(name.trim());
+      const lookup = await authApi.get<any>(`/methodologies?name=${queryName}`);
+
+      // Handle possible response shapes
+      const list = Array.isArray(lookup) ? lookup : Array.isArray((lookup as any)?.data) ? (lookup as any).data : [];
+      const found = list.find((m: any) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
+      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
+      if (idFromFound) return Number(idFromFound);
+
+      // Create if not found
+      const created = await authApi.post<any>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
+      const idFromCreated = (created as any)?.MethodologyID ?? (created as any)?.id ?? (created as any)?.methodologyId;
+      return idFromCreated ? Number(idFromCreated) : undefined;
+    } catch (e) {
+      console.warn('[useCreateProject] Failed to ensure methodology, continuing without one:', e);
+      return undefined;
+    }
+  }, []);
 
   const createProject = async (data: CreateProjectRequest): Promise<Project | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await authApi.post<Project>('/projects', data as unknown as Record<string, unknown>);
+      // Map UI payload to backend schema
+      const methodologyId = await ensureMethodology(data.type);
+      const payload: Record<string, unknown> = {
+        NameProject: data.name_proyect,
+        Description: data.description,
+        Mail: user?.email || '',
+        Start_date: data.start_date || undefined,
+        End_date: data.end_date || undefined,
+        State: data.state,
+        MethodologyID: methodologyId,
+      };
+
+      // Basic validation aligned with backend expectations
+      if (!payload.NameProject || typeof payload.NameProject !== 'string') {
+        throw new Error('Project name is required');
+      }
+      if (!payload.Mail || typeof payload.Mail !== 'string') {
+        throw new Error('Mail (current user email) is required');
+      }
+
+      const response = await authApi.post<Project>('/projects', payload);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create project';
@@ -165,13 +242,45 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthState();
+  const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
+    if (!name || !name.trim()) return undefined;
+    try {
+      const queryName = encodeURIComponent(name.trim());
+      const lookup = await authApi.get<any>(`/methodologies?name=${queryName}`);
+      const list = Array.isArray(lookup) ? lookup : Array.isArray((lookup as any)?.data) ? (lookup as any).data : [];
+      const found = list.find((m: any) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
+      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
+      if (idFromFound) return Number(idFromFound);
+      const created = await authApi.post<any>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
+      const idFromCreated = (created as any)?.MethodologyID ?? (created as any)?.id ?? (created as any)?.methodologyId;
+      return idFromCreated ? Number(idFromCreated) : undefined;
+    } catch (e) {
+      console.warn('[useUpdateProject] Failed to ensure methodology, continuing without one:', e);
+      return undefined;
+    }
+  }, []);
 
   const updateProject = async (projectId: number, data: Partial<CreateProjectRequest>): Promise<Project | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await authApi.patch<Project>(`/projects/${projectId}`, data as unknown as Record<string, unknown>);
+      const methodologyId = await ensureMethodology(data.type);
+      const payload: Record<string, unknown> = {
+        NameProject: data.name_proyect,
+        Description: data.description,
+        Mail: user?.email || undefined,
+        Start_date: data.start_date,
+        End_date: data.end_date,
+        State: data.state,
+        MethodologyID: methodologyId,
+      };
+
+      // Remove undefined fields for a clean PATCH
+      Object.keys(payload).forEach((k) => (payload as any)[k] === undefined && delete (payload as any)[k]);
+
+      const response = await authApi.patch<Project>(`/projects/${projectId}`, payload);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update project';

@@ -6,6 +6,7 @@ import type { Project, CreateProjectDto, UpdateProjectDto, ProjectState } from '
 import { prepareCreateProjectData, prepareUpdateProjectData, parseUserId } from '@/lib/projects/validation';
 import { useAuthState } from '@/lib/auth-store';
 import { useCreateProject, useUpdateProject } from '@/lib/projects';
+import { authApi } from '@/lib/authenticated-api';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -44,8 +45,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSubmit, 
     end_date: '',
     state: 'Planning' as ProjectState,
   });
+  const [methodologyOptions, setMethodologyOptions] = useState<Array<{ id: number; name: string }>>([]);
 
   useEffect(() => {
+    // Load methodology options for TYPE selector
+    const loadMethodologies = async () => {
+      try {
+        const options = await authApi.get<Array<{ id: number; name: string }>>('/projects/methodology-options');
+        setMethodologyOptions(options || []);
+      } catch (e) {
+        console.warn('Failed to load methodology options', e);
+      }
+    };
+    loadMethodologies();
+
     if (mode === 'edit' && project) {
       setFormData({
         name_proyect: project.name_proyect,
@@ -294,8 +307,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSubmit, 
                 disabled={loading}
               >
                 <option value="">Select a type...</option>
-                {PROJECT_TYPES.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                {methodologyOptions.map(opt => (
+                  <option key={opt.id} value={opt.name}>{opt.name}</option>
                 ))}
               </select>
             </div>
