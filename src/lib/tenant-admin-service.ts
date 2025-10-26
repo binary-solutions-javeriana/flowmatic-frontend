@@ -1,6 +1,7 @@
 // Tenant Admin Service - API calls for tenant administrator operations
+// Uses direct connection to Java backend at localhost:8080/api/v1
 
-import { authApi } from './authenticated-api';
+import { tenantAdminAuthApi } from './tenant-admin-api';
 import type {
   TenantDashboardResponse,
   UserResponse,
@@ -13,7 +14,7 @@ export class TenantAdminService {
    * @param tenantAdminId - The tenant admin user ID
    */
   async getDashboardData(tenantAdminId: number): Promise<TenantDashboardResponse> {
-    return authApi.get<TenantDashboardResponse>(`/tenant-admin/${tenantAdminId}/dashboard`);
+    return tenantAdminAuthApi.get<TenantDashboardResponse>(`/tenant-admin/${tenantAdminId}/dashboard`);
   }
 
   /**
@@ -21,7 +22,7 @@ export class TenantAdminService {
    * @param tenantAdminId - The tenant admin user ID
    */
   async getUsers(tenantAdminId: number): Promise<UserResponse[]> {
-    return authApi.get<UserResponse[]>(`/tenant-admin/${tenantAdminId}/users`);
+    return tenantAdminAuthApi.get<UserResponse[]>(`/tenant-admin/${tenantAdminId}/users`);
   }
 
   /**
@@ -30,7 +31,7 @@ export class TenantAdminService {
    * @param userId - The user ID to fetch
    */
   async getUser(tenantAdminId: number, userId: number): Promise<UserResponse> {
-    return authApi.get<UserResponse>(`/tenant-admin/${tenantAdminId}/users/${userId}`);
+    return tenantAdminAuthApi.get<UserResponse>(`/tenant-admin/${tenantAdminId}/users/${userId}`);
   }
 
   /**
@@ -39,7 +40,7 @@ export class TenantAdminService {
    * @param userData - The user data to create
    */
   async createUser(tenantAdminId: number, userData: CreateUserRequest): Promise<UserResponse> {
-    return authApi.post<UserResponse>(`/tenant-admin/${tenantAdminId}/users`, userData);
+    return tenantAdminAuthApi.post<UserResponse>(`/tenant-admin/${tenantAdminId}/users`, userData as unknown as Record<string, unknown>);
   }
 
   /**
@@ -53,7 +54,7 @@ export class TenantAdminService {
     userId: number,
     userData: CreateUserRequest
   ): Promise<UserResponse> {
-    return authApi.put<UserResponse>(`/tenant-admin/${tenantAdminId}/users/${userId}`, userData);
+    return tenantAdminAuthApi.put<UserResponse>(`/tenant-admin/${tenantAdminId}/users/${userId}`, userData as unknown as Record<string, unknown>);
   }
 
   /**
@@ -62,7 +63,7 @@ export class TenantAdminService {
    * @param userId - The user ID to delete/deactivate
    */
   async deleteUser(tenantAdminId: number, userId: number): Promise<void> {
-    return authApi.delete<void>(`/tenant-admin/${tenantAdminId}/users/${userId}`);
+    return tenantAdminAuthApi.delete<void>(`/tenant-admin/${tenantAdminId}/users/${userId}`);
   }
 }
 
