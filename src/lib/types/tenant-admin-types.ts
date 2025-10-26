@@ -20,9 +20,9 @@ export interface UserResponse {
 
 export interface TenantDto {
   tenantId: number;
-  universityName: string;
-  createdAt: string;
-  updatedAt: string;
+  universityName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProjectSummaryDto {
@@ -31,23 +31,23 @@ export interface ProjectSummaryDto {
   state: string;
   startDate: string;
   endDate: string;
-  taskCount: number;
-  completedTasks: number;
+  taskCount?: number;
+  completedTasks?: number;
 }
 
 export interface TenantKpiDto {
-  activeProjects: number;
-  completedTasks: number;
-  userEngagement: number; // Percentage 0-100
-  projectCompletionRate: number; // Percentage 0-100
+  activeProjects?: number;
+  completedTasks?: number;
+  userEngagement?: number; // Percentage 0-100
+  projectCompletionRate?: number; // Percentage 0-100
 }
 
 export interface TenantDashboardResponse {
-  tenantInfo: TenantDto;
-  totalUsers: number;
-  totalProjects: number;
-  kpis: TenantKpiDto;
-  recentProjects: ProjectSummaryDto[];
+  tenantInfo?: TenantDto;
+  totalUsers?: number;
+  totalProjects?: number;
+  kpis?: TenantKpiDto;
+  recentProjects?: ProjectSummaryDto[];
 }
 
 export interface ErrorResponse {

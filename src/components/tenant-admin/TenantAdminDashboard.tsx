@@ -98,12 +98,14 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
             <>
               {activeView === 'overview' && (
                 <div className="space-y-6">
-                  <TenantInfo tenant={dashboardData.tenantInfo} />
-                  <TenantKPIs
-                    kpis={dashboardData.kpis}
-                    totalUsers={dashboardData.totalUsers}
-                    totalProjects={dashboardData.totalProjects}
-                  />
+                  {dashboardData.tenantInfo && <TenantInfo tenant={dashboardData.tenantInfo} />}
+                  {dashboardData.kpis && (
+                    <TenantKPIs
+                      kpis={dashboardData.kpis}
+                      totalUsers={dashboardData.totalUsers}
+                      totalProjects={dashboardData.totalProjects}
+                    />
+                  )}
                   <div>
                     <h3 className="text-xl font-bold text-[#0c272d] mb-4">Recent Projects</h3>
                     <TenantProjects projects={dashboardData.recentProjects} />

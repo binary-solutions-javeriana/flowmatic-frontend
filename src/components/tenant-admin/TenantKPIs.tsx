@@ -6,15 +6,15 @@ import type { TenantKpiDto } from '@/lib/types/tenant-admin-types';
 
 interface TenantKPIsProps {
   kpis: TenantKpiDto;
-  totalUsers: number;
-  totalProjects: number;
+  totalUsers?: number;
+  totalProjects?: number;
 }
 
 const TenantKPIs: React.FC<TenantKPIsProps> = ({ kpis, totalUsers, totalProjects }) => {
   const kpiCards = [
     {
       title: 'Total Users',
-      value: totalUsers,
+      value: totalUsers ?? 0,
       icon: Users,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
@@ -23,7 +23,7 @@ const TenantKPIs: React.FC<TenantKPIsProps> = ({ kpis, totalUsers, totalProjects
     },
     {
       title: 'Total Projects',
-      value: totalProjects,
+      value: totalProjects ?? 0,
       icon: FolderOpen,
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
@@ -32,7 +32,7 @@ const TenantKPIs: React.FC<TenantKPIsProps> = ({ kpis, totalUsers, totalProjects
     },
     {
       title: 'Active Projects',
-      value: kpis.activeProjects,
+      value: kpis.activeProjects ?? 0,
       icon: TrendingUp,
       color: 'from-[#14a67e] to-[#0f8263]',
       bgColor: 'bg-[#14a67e]/5',
@@ -41,7 +41,7 @@ const TenantKPIs: React.FC<TenantKPIsProps> = ({ kpis, totalUsers, totalProjects
     },
     {
       title: 'Completed Tasks',
-      value: kpis.completedTasks,
+      value: kpis.completedTasks ?? 0,
       icon: CheckCircle,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
@@ -50,25 +50,25 @@ const TenantKPIs: React.FC<TenantKPIsProps> = ({ kpis, totalUsers, totalProjects
     },
     {
       title: 'User Engagement',
-      value: `${kpis.userEngagement.toFixed(1)}%`,
+      value: `${(kpis.userEngagement ?? 0).toFixed(1)}%`,
       icon: Users,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
       showProgress: true,
-      progress: kpis.userEngagement
+      progress: kpis.userEngagement ?? 0
     },
     {
       title: 'Project Completion',
-      value: `${kpis.projectCompletionRate.toFixed(1)}%`,
+      value: `${(kpis.projectCompletionRate ?? 0).toFixed(1)}%`,
       icon: CheckCircle,
       color: 'from-teal-500 to-teal-600',
       bgColor: 'bg-teal-50',
       iconBg: 'bg-teal-100',
       iconColor: 'text-teal-600',
       showProgress: true,
-      progress: kpis.projectCompletionRate
+      progress: kpis.projectCompletionRate ?? 0
     }
   ];
 

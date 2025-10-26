@@ -5,10 +5,13 @@ import { FolderOpen, Calendar, CheckCircle, Clock } from 'lucide-react';
 import type { ProjectSummaryDto } from '@/lib/types/tenant-admin-types';
 
 interface TenantProjectsProps {
-  projects: ProjectSummaryDto[];
+  projects?: ProjectSummaryDto[];
 }
 
-const TenantProjects: React.FC<TenantProjectsProps> = ({ projects }) => {
+const TenantProjects: React.FC<TenantProjectsProps> = ({ projects: projectsProp }) => {
+  // Ensure projects is always an array
+  const projects = projectsProp ?? [];
+  
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -38,8 +41,10 @@ const TenantProjects: React.FC<TenantProjectsProps> = ({ projects }) => {
   };
 
   const calculateProgress = (project: ProjectSummaryDto) => {
-    if (project.taskCount === 0) return 0;
-    return Math.round((project.completedTasks / project.taskCount) * 100);
+    const taskCount = project.taskCount ?? 0;
+    const completedTasks = project.completedTasks ?? 0;
+    if (taskCount === 0) return 0;
+    return Math.round((completedTasks / taskCount) * 100);
   };
 
   return (
@@ -95,7 +100,7 @@ const TenantProjects: React.FC<TenantProjectsProps> = ({ projects }) => {
                         <span>Tasks</span>
                       </div>
                       <span className="font-semibold text-[#0c272d]">
-                        {project.completedTasks} / {project.taskCount}
+                        {project.completedTasks ?? 0} / {project.taskCount ?? 0}
                       </span>
                     </div>
 

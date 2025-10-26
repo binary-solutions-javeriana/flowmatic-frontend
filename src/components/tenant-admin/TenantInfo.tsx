@@ -9,12 +9,17 @@ interface TenantInfoProps {
 }
 
 const TenantInfo: React.FC<TenantInfoProps> = ({ tenant }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
   };
 
   return (
@@ -25,7 +30,7 @@ const TenantInfo: React.FC<TenantInfoProps> = ({ tenant }) => {
             <Building2 className="w-6 h-6 text-[#14a67e]" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#0c272d]">{tenant.universityName}</h2>
+            <h2 className="text-2xl font-bold text-[#0c272d]">{tenant.universityName || 'Unknown University'}</h2>
             <p className="text-sm text-[#0c272d]/60">Tenant Information</p>
           </div>
         </div>
