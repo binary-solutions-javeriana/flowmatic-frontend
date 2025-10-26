@@ -213,19 +213,29 @@ export class HttpAuthService implements AuthService {
   // Private helper methods
 
   private mapUser(user: ApiUser, userType?: 'user' | 'tenantAdmin', isTenantAdmin?: boolean): AuthUser {
+    // Extended user metadata shape
+    interface ExtendedUserMetadata {
+      isTenantAdmin?: boolean;
+      userType?: 'user' | 'tenantAdmin';
+      [key: string]: unknown;
+    }
+
+    interface ExtendedUser {
+      id: string;
+      email: string;
+      app_metadata?: Record<string, unknown>;
+      user_metadata?: ExtendedUserMetadata;
+      aud?: string;
+    }
+
     // If response already has Supabase-like shape, pass through safely
+    const extendedUser = user as unknown as ExtendedUser;
     if (
-      (user as any).aud !== undefined ||
-      (user as any).app_metadata !== undefined ||
-      (user as any).user_metadata !== undefined
+      extendedUser.aud !== undefined ||
+      extendedUser.app_metadata !== undefined ||
+      extendedUser.user_metadata !== undefined
     ) {
-      const u = user as unknown as {
-        id: string;
-        email: string;
-        app_metadata?: Record<string, unknown>;
-        user_metadata?: Record<string, unknown>;
-        aud?: string;
-      };
+      const u = extendedUser;
       
       console.log('[mapUser] User has metadata, processing...', {
         existingMetadata: u.user_metadata,
@@ -234,8 +244,8 @@ export class HttpAuthService implements AuthService {
       });
       
       // Merge metadata: prioritize values from user_metadata, then top-level params
-      const existingIsTenantAdmin = (u.user_metadata as any)?.isTenantAdmin;
-      const existingUserType = (u.user_metadata as any)?.userType;
+      const existingIsTenantAdmin = u.user_metadata?.isTenantAdmin;
+      const existingUserType = u.user_metadata?.userType;
       
       const finalIsTenantAdmin = existingIsTenantAdmin !== undefined 
         ? existingIsTenantAdmin 

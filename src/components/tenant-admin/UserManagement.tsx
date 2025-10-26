@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, Edit2, Trash2, Mail, UserCheck, UserX, Search, X } from 'lucide-react';
 import type { UserResponse, CreateUserRequest, UserRole } from '@/lib/types/tenant-admin-types';
 import { tenantAdminService } from '@/lib/tenant-admin-service';
@@ -23,11 +23,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ tenantAdminId }) => {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadUsers();
-  }, [tenantAdminId]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -38,7 +34,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ tenantAdminId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantAdminId]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleCreate = () => {
     setEditingUser(null);

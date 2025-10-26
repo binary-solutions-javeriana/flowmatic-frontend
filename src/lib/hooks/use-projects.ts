@@ -11,9 +11,48 @@ import type {
   ProjectPagination
 } from '../types/project-types';
 
+// Backend response types
+interface BackendProject {
+  proyect_id?: number;
+  ProjectID?: number;
+  id?: number;
+  name_proyect?: string;
+  NameProject?: string;
+  name?: string;
+  Name?: string;
+  description?: string;
+  Description?: string;
+  state?: string;
+  State?: string;
+  type?: string;
+  MethodologyName?: string;
+  start_date?: string;
+  Start_date?: string;
+  end_date?: string;
+  End_date?: string;
+  created_at?: string;
+  CreatedAt?: string;
+  updated_at?: string;
+  UpdatedAt?: string;
+  created_by?: number;
+}
+
+interface BackendMethodology {
+  MethodologyID?: number;
+  id?: number;
+  methodologyId?: number;
+  Name?: string;
+  name?: string;
+}
+
+interface BackendApiResponse<T> {
+  data?: T;
+  meta?: ProjectPagination;
+}
+
 // Hook to fetch all projects with filters
 // Adapt various backend shapes to our UI Project type
-function adaptBackendProjectToUI(item: any): Project {
+function adaptBackendProjectToUI(item: BackendProject): Project {
   const proyect_id = item?.proyect_id ?? item?.ProjectID ?? item?.id;
   const name_proyect = item?.name_proyect ?? item?.NameProject ?? item?.name ?? item?.Name;
   const description = item?.description ?? item?.Description ?? undefined;
@@ -77,23 +116,23 @@ export function useProjects(initialFilters?: ProjectFilters) {
       console.log('[useProjects] Filters:', filters);
       console.log('[useProjects] API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
-      const response = await authApi.get<any>(url);
+      const response = await authApi.get<BackendProject[] | BackendApiResponse<BackendProject[]>>(url);
       
       console.log('[useProjects] Response received:', response);
       console.log('[useProjects] Response data:', response?.data);
       console.log('[useProjects] Response meta:', response?.meta);
       console.log('[useProjects] Number of projects:', response?.data?.length || 0);
       
-      const items: any[] = Array.isArray(response)
+      const items: BackendProject[] = Array.isArray(response)
         ? response
-        : Array.isArray((response as any)?.data)
-          ? (response as any).data
+        : Array.isArray((response as BackendApiResponse<BackendProject[]>)?.data)
+          ? (response as BackendApiResponse<BackendProject[]>).data || []
           : [];
 
       const adapted = items.map(adaptBackendProjectToUI);
 
       setProjects(adapted);
-      setPagination((response as any)?.meta || null);
+      setPagination((response as BackendApiResponse<BackendProject[]>)?.meta || null);
       
       console.log('[useProjects] Projects state updated with', response.data.length, 'projects');
     } catch (err) {
@@ -130,7 +169,6 @@ export function useProject(projectId: number) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuthState();
 
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
@@ -139,7 +177,7 @@ export function useProject(projectId: number) {
     setError(null);
 
     try {
-      const response = await authApi.get<any>(`/projects/${projectId}`);
+      const response = await authApi.get<BackendProject>(`/projects/${projectId}`);
       const adapted = adaptBackendProjectToUI(response);
       setProject(adapted);
     } catch (err) {
@@ -175,17 +213,17 @@ export function useCreateProject() {
     try {
       // Try to find by name
       const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<any>(`/methodologies?name=${queryName}`);
+      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
 
       // Handle possible response shapes
-      const list = Array.isArray(lookup) ? lookup : Array.isArray((lookup as any)?.data) ? (lookup as any).data : [];
-      const found = list.find((m: any) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
+      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
+      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
       const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
       if (idFromFound) return Number(idFromFound);
 
       // Create if not found
-      const created = await authApi.post<any>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
-      const idFromCreated = (created as any)?.MethodologyID ?? (created as any)?.id ?? (created as any)?.methodologyId;
+      const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
+      const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
       return idFromCreated ? Number(idFromCreated) : undefined;
     } catch (e) {
       console.warn('[useCreateProject] Failed to ensure methodology, continuing without one:', e);
@@ -247,13 +285,13 @@ export function useUpdateProject() {
     if (!name || !name.trim()) return undefined;
     try {
       const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<any>(`/methodologies?name=${queryName}`);
-      const list = Array.isArray(lookup) ? lookup : Array.isArray((lookup as any)?.data) ? (lookup as any).data : [];
-      const found = list.find((m: any) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
+      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
+      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
+      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
       const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
       if (idFromFound) return Number(idFromFound);
-      const created = await authApi.post<any>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
-      const idFromCreated = (created as any)?.MethodologyID ?? (created as any)?.id ?? (created as any)?.methodologyId;
+      const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
+      const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
       return idFromCreated ? Number(idFromCreated) : undefined;
     } catch (e) {
       console.warn('[useUpdateProject] Failed to ensure methodology, continuing without one:', e);
@@ -278,7 +316,11 @@ export function useUpdateProject() {
       };
 
       // Remove undefined fields for a clean PATCH
-      Object.keys(payload).forEach((k) => (payload as any)[k] === undefined && delete (payload as any)[k]);
+      Object.keys(payload).forEach((k) => {
+        if (payload[k] === undefined) {
+          delete payload[k];
+        }
+      });
 
       const response = await authApi.patch<Project>(`/projects/${projectId}`, payload);
       return response;

@@ -14,14 +14,28 @@ import type {
   TimeEntriesResponse,
   AssignUsersRequest,
   AssignUsersResponse,
-  SubtasksResponse,
-  TaskStats
+  SubtasksResponse
 } from '../types/task-types';
+
+// Pagination type
+interface TaskPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages?: number;
+}
+
+// Backend response type for tasks (can be array or wrapped)
+interface BackendTasksResponse {
+  data?: Task[];
+  tasks?: Task[];
+  meta?: TaskPagination;
+}
 
 // Hook to fetch all tasks with filters
 export function useTasks(initialFilters?: TaskFilters) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<TaskPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,7 +114,7 @@ export function useTasks(initialFilters?: TaskFilters) {
 // Hook to fetch tasks for a specific project
 export function useProjectTasks(projectId: number, filters?: TaskFilters) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<TaskPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -359,9 +373,9 @@ export function useKanbanBoard(projectId: number) {
         console.log('[useKanbanBoard] Fallback URL:', `/projects/${projectId}/tasks`);
         
         // Try multiple possible endpoints
-        let tasksResponse;
+        let tasksResponse: TasksResponse | BackendTasksResponse;
         try {
-          tasksResponse = await authApi.get<any>(`/projects/${projectId}/tasks`);
+          tasksResponse = await authApi.get<TasksResponse | BackendTasksResponse>(`/projects/${projectId}/tasks`);
           console.log('[useKanbanBoard] Tasks endpoint worked');
         } catch (tasksErr) {
           console.log('[useKanbanBoard] Tasks endpoint failed, trying alternatives');
@@ -369,7 +383,7 @@ export function useKanbanBoard(projectId: number) {
           
           // Try alternative endpoints
           try {
-            tasksResponse = await authApi.get<any>(`/tasks?project_id=${projectId}`);
+            tasksResponse = await authApi.get<TasksResponse | BackendTasksResponse>(`/tasks?project_id=${projectId}`);
             console.log('[useKanbanBoard] Alternative tasks endpoint worked');
           } catch (altErr) {
             console.error('[useKanbanBoard] Alternative endpoint also failed:', altErr);
@@ -388,8 +402,8 @@ export function useKanbanBoard(projectId: number) {
         } else if (tasksResponse.data && Array.isArray(tasksResponse.data)) {
           // Wrapped in data property
           tasks = tasksResponse.data;
-        } else if (tasksResponse.tasks && Array.isArray(tasksResponse.tasks)) {
-          // Alternative wrapper
+        } else if ('tasks' in tasksResponse && tasksResponse.tasks && Array.isArray(tasksResponse.tasks)) {
+          // Alternative wrapper (BackendTasksResponse)
           tasks = tasksResponse.tasks;
         }
         
@@ -492,7 +506,7 @@ export function useAssignUsers() {
 // Hook to fetch subtasks
 export function useSubtasks(taskId: number) {
   const [subtasks, setSubtasks] = useState<Task[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [pagination, setPagination] = useState<TaskPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

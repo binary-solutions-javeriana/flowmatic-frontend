@@ -122,7 +122,7 @@ export function getTaskProgress(task: Task, subtasks: Task[] = []): number {
 }
 
 // Calculate total time worked on task
-export function calculateTotalTime(timeEntries: any[]): number {
+export function calculateTotalTime(timeEntries: TimeEntry[]): number {
   return timeEntries.reduce((total, entry) => {
     return total + (entry.duration_hours || 0);
   }, 0);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Sidebar from '../dashboard/Sidebar';
 import Header from '../dashboard/Header';
 import TenantInfo from './TenantInfo';
@@ -28,11 +28,7 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [tenantAdminId]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +39,11 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantAdminId]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const sidebarItems: SidebarItem[] = useMemo(
     () => [
