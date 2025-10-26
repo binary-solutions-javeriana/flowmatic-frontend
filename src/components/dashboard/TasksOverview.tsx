@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Plus
 } from 'lucide-react';
-import type { Task } from '@/lib/types/task-types';
+import type { Task, TaskState } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
 import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';

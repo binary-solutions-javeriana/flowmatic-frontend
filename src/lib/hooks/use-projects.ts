@@ -119,9 +119,13 @@ export function useProjects(initialFilters?: ProjectFilters) {
       const response = await authApi.get<BackendProject[] | BackendApiResponse<BackendProject[]>>(url);
       
       console.log('[useProjects] Response received:', response);
-      console.log('[useProjects] Response data:', response?.data);
-      console.log('[useProjects] Response meta:', response?.meta);
-      console.log('[useProjects] Number of projects:', response?.data?.length || 0);
+      if (!Array.isArray(response)) {
+        console.log('[useProjects] Response data:', response?.data);
+        console.log('[useProjects] Response meta:', response?.meta);
+        console.log('[useProjects] Number of projects:', response?.data?.length || 0);
+      } else {
+        console.log('[useProjects] Response is array with length:', response.length);
+      }
       
       const items: BackendProject[] = Array.isArray(response)
         ? response
@@ -134,7 +138,7 @@ export function useProjects(initialFilters?: ProjectFilters) {
       setProjects(adapted);
       setPagination((response as BackendApiResponse<BackendProject[]>)?.meta || null);
       
-      console.log('[useProjects] Projects state updated with', response.data.length, 'projects');
+      console.log('[useProjects] Projects state updated with', items.length, 'projects');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects';
       setError(errorMessage);

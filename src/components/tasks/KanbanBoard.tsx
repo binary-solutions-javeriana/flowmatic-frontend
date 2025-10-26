@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Plus, MoreHorizontal } from 'lucide-react';
-import type { Task, TaskState, KanbanBoard, CreateTaskRequest } from '@/lib/types/task-types';
+import type { Task, TaskState, KanbanBoard as KanbanBoardData, CreateTaskRequest } from '@/lib/types/task-types';
 import { useKanbanBoard, useUpdateTaskStatus, useCreateTask } from '@/lib/hooks/use-tasks';
 import TaskCard from './TaskCard';
 import TaskModal from './TaskModal';

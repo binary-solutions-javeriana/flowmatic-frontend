@@ -317,7 +317,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
           )}
 
           {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && !searchTerm && !statusFilter && !priorityFilter && (
+          {pagination && (pagination.totalPages ?? 0) > 1 && !searchTerm && !statusFilter && !priorityFilter && (
             <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-[#0c272d]/70">
@@ -334,7 +334,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
                     Previous
                   </button>
                   
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  {Array.from({ length: Math.min(5, pagination.totalPages ?? 1) }, (_, i) => {
                     const page = i + 1;
                     return (
                       <button
@@ -353,7 +353,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
                   
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.totalPages}
+                    disabled={pagination.page >= (pagination.totalPages ?? 1)}
                     className="px-3 py-2 text-sm bg-white/50 border border-[#9fdbc2]/30 rounded-lg hover:bg-white/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
