@@ -211,16 +211,38 @@ export function useCreateTask() {
     setError(null);
 
     try {
+      // Map UI payload (aliases) to backend schema
+      const projectId = (data as any).project_id ?? (data as any).proyect_id;
+      // Normalize priority to numeric 1-5 as required by backend validation
+      const rawPriority = (data as any).priority;
+      const priorityValue = typeof rawPriority === 'number'
+        ? rawPriority
+        : typeof rawPriority === 'string'
+          ? ({ low: 1, bajo: 1, medium: 3, medio: 3, high: 4, alto: 4, critical: 5 } as Record<string, number>)[rawPriority.toLowerCase()]
+          : undefined;
+      const payload: Record<string, unknown> = {
+        ProjectID: projectId,
+        Title: (data as any).title,
+        Description: (data as any).description,
+        Priority: priorityValue,
+        State: (data as any).state,
+        CreatedBy: (data as any).created_by,
+        LimitDate: (data as any).limit_date,
+        // Backend will read this from a dedicated endpoint/field; we won't send AssignedUserIds anymore
+      };
+
+      // Basic validation
+      if (!payload.ProjectID) throw new Error('ProjectID is required');
+      if (!payload.Title) throw new Error('Title is required');
+      if (!payload.State) throw new Error('State is required');
+
       let response: Task;
-      
-      if (data.proyect_id) {
-        // Create task via project endpoint
-        response = await authApi.post<Task>(`/projects/${data.proyect_id}/tasks`, data as unknown as Record<string, unknown>);
+      if (projectId) {
+        response = await authApi.post<Task>(`/projects/${projectId}/tasks`, payload);
       } else {
-        // Create standalone task
-        response = await authApi.post<Task>('/tasks', data as unknown as Record<string, unknown>);
+        response = await authApi.post<Task>('/tasks', payload);
       }
-      
+
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create task';
