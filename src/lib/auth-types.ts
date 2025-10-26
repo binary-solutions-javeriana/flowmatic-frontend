@@ -17,6 +17,8 @@ export interface BackendUser {
   role?: string;
   tenantId?: number;
   auth_provider_id?: string;
+  userType?: 'user' | 'tenantAdmin'; // Indicates which table the user is from
+  isTenantAdmin?: boolean; // Flag to identify tenant admins
 }
 
 // API user can be either Supabase-like or Backend-like; normalize later
@@ -35,6 +37,8 @@ export interface LoginResponse {
   expires_in: number;
   token_type: "bearer";
   user: ApiUser;
+  userType?: 'user' | 'tenantAdmin'; // Indicates which table the user is from
+  isTenantAdmin?: boolean; // Flag to identify tenant admins
 }
 
 export interface RegisterResponse {

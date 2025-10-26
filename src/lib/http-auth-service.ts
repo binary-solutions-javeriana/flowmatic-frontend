@@ -71,8 +71,24 @@ export class HttpAuthService implements AuthService {
 
       const responseData = await response.json() as LoginResponse;
 
+      // DEBUG: Log what backend returned
+      console.log('=== BACKEND RESPONSE DEBUG ===');
+      console.log('Full response:', responseData);
+      console.log('userType from backend:', responseData.userType);
+      console.log('isTenantAdmin from backend:', responseData.isTenantAdmin);
+      console.log('user object from backend:', responseData.user);
+      console.log('==============================');
+
+      // Map user and include userType/isTenantAdmin info
+      const user = this.mapUser(responseData.user, responseData.userType, responseData.isTenantAdmin);
+
+      console.log('=== MAPPED USER DEBUG ===');
+      console.log('Mapped user:', user);
+      console.log('user_metadata:', user.user_metadata);
+      console.log('=========================');
+
       return {
-        user: this.mapUser(responseData.user),
+        user,
         tokens: this.mapTokens(responseData)
       };
     } catch (error) {
@@ -196,7 +212,7 @@ export class HttpAuthService implements AuthService {
 
   // Private helper methods
 
-  private mapUser(user: ApiUser): AuthUser {
+  private mapUser(user: ApiUser, userType?: 'user' | 'tenantAdmin', isTenantAdmin?: boolean): AuthUser {
     // If response already has Supabase-like shape, pass through safely
     if (
       (user as any).aud !== undefined ||
@@ -210,11 +226,37 @@ export class HttpAuthService implements AuthService {
         user_metadata?: Record<string, unknown>;
         aud?: string;
       };
+      
+      console.log('[mapUser] User has metadata, processing...', {
+        existingMetadata: u.user_metadata,
+        topLevelUserType: userType,
+        topLevelIsTenantAdmin: isTenantAdmin
+      });
+      
+      // Merge metadata: prioritize values from user_metadata, then top-level params
+      const existingIsTenantAdmin = (u.user_metadata as any)?.isTenantAdmin;
+      const existingUserType = (u.user_metadata as any)?.userType;
+      
+      const finalIsTenantAdmin = existingIsTenantAdmin !== undefined 
+        ? existingIsTenantAdmin 
+        : (isTenantAdmin !== undefined ? isTenantAdmin : false);
+        
+      const finalUserType = existingUserType || userType || (finalIsTenantAdmin ? 'tenantAdmin' : 'user');
+      
+      // Add userType info to existing metadata
+      const user_metadata = {
+        ...(u.user_metadata || {}),
+        userType: finalUserType,
+        isTenantAdmin: finalIsTenantAdmin
+      };
+      
+      console.log('[mapUser] Final metadata:', user_metadata);
+      
       return {
         id: u.id,
         email: u.email,
         app_metadata: u.app_metadata || {},
-        user_metadata: u.user_metadata || {},
+        user_metadata,
         aud: u.aud || 'authenticated'
       };
     }
@@ -227,9 +269,14 @@ export class HttpAuthService implements AuthService {
       role?: string;
       tenantId?: number;
       auth_provider_id?: string;
+      userType?: 'user' | 'tenantAdmin';
+      isTenantAdmin?: boolean;
     };
 
     const derivedName = backend.name || (backend.email ? backend.email.split('@')[0] : 'User');
+    
+    // Determine if user is tenant admin from multiple sources
+    const isAdmin = isTenantAdmin ?? backend.isTenantAdmin ?? (userType === 'tenantAdmin') ?? (backend.userType === 'tenantAdmin');
 
     return {
       id: backend.id,
@@ -239,7 +286,9 @@ export class HttpAuthService implements AuthService {
         name: derivedName,
         role: backend.role,
         tenantId: backend.tenantId,
-        auth_provider_id: backend.auth_provider_id
+        auth_provider_id: backend.auth_provider_id,
+        userType: userType || backend.userType || (isAdmin ? 'tenantAdmin' : 'user'),
+        isTenantAdmin: isAdmin
       },
       aud: 'authenticated'
     };
