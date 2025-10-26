@@ -127,13 +127,13 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
     try {
       // Build query string from filters
       const params = new URLSearchParams();
-      
+
       const page = filters?.page ?? 1;
       const limit = filters?.limit ?? 10;
-      
+
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      
+
       if (filters?.search) params.append('search', filters.search);
       if (filters?.state) params.append('state', filters.state);
       if (filters?.priority) params.append('priority', filters.priority);
@@ -143,24 +143,48 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
       const url = `/projects/${projectId}/tasks?${queryString}`;
 
       console.log('[useProjectTasks] Fetching project tasks with URL:', url);
+      console.log('[useProjectTasks] Filters:', filters);
 
       const response = await authApi.get<TasksResponse>(url);
-      
+
+      console.log('[useProjectTasks] Response received:', response);
+      console.log('[useProjectTasks] Response type:', typeof response);
+
+      // Validate response structure
       if (!response || typeof response !== 'object') {
         throw new Error('Invalid response format: response is not an object');
       }
-      
-      if (!response.data || !Array.isArray(response.data)) {
+
+      // Handle different response structures (similar to useTasks)
+      let tasksArray: Task[] = [];
+      if (Array.isArray(response)) {
+        // Direct array response
+        tasksArray = response;
+        console.log('[useProjectTasks] Response is direct array with', response.length, 'tasks');
+      } else if (response.data && Array.isArray(response.data)) {
+        // Wrapped in data property
+        tasksArray = response.data;
+        console.log('[useProjectTasks] Response has data array with', response.data.length, 'tasks');
+      } else if ('tasks' in response && response.tasks && Array.isArray(response.tasks)) {
+        // Alternative wrapper (BackendTasksResponse)
+        tasksArray = response.tasks;
+        console.log('[useProjectTasks] Response has tasks array with', response.tasks.length, 'tasks');
+      } else {
+        console.error('[useProjectTasks] Invalid data structure. Expected array or { data: [], meta: {} }, got:', response);
         throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
       }
-      
-      setTasks(response.data);
+
+      setTasks(tasksArray);
       setPagination(response.meta || null);
-      
+
+      console.log('[useProjectTasks] Tasks state updated with', tasksArray.length, 'tasks');
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project tasks';
       setError(errorMessage);
       console.error('[useProjectTasks] Error fetching project tasks:', err);
+      console.error('[useProjectTasks] Project ID:', projectId);
+      console.error('[useProjectTasks] API URL:', `/projects/${projectId}/tasks`);
     } finally {
       setLoading(false);
     }
@@ -227,9 +251,9 @@ export function useCreateTask() {
     try {
       let response: Task;
       
-      if (data.proyect_id) {
+      if (data.ProjectID) {
         // Create task via project endpoint
-        response = await authApi.post<Task>(`/projects/${data.proyect_id}/tasks`, data as unknown as Record<string, unknown>);
+        response = await authApi.post<Task>(`/projects/${data.ProjectID}/tasks`, data as unknown as Record<string, unknown>);
       } else {
         // Create standalone task
         response = await authApi.post<Task>('/tasks', data as unknown as Record<string, unknown>);

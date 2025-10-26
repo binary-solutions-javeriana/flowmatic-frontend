@@ -97,16 +97,18 @@ const TaskModal: React.FC<TaskModalProps> = ({
       if (mode === 'create') {
         const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
         const createData: CreateTaskRequest = {
-          title: formData.title,
-          description: formData.description || undefined,
-          state: formData.state,
-          priority: formData.priority,
+          Title: formData.title,
+          Description: formData.description || undefined,
+          State: formData.state,
+          Priority: formData.priority,
           created_by: 1, // TODO: Get from auth context
           assigned_to_ids: formData.assigned_to_ids || undefined,
           limit_date: formData.limit_date || undefined,
-          ...(selectedProjectId && { proyect_id: selectedProjectId }),
+          ...(selectedProjectId && { ProjectID: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId })
         };
+
+        console.log('Sending task creation data:', createData);
 
         result = await createTask(createData);
       } else if (mode === 'edit' && task) {

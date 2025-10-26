@@ -19,12 +19,12 @@ export interface Task {
 }
 
 export interface CreateTaskRequest {
-  proyect_id?: number; // Optional when creating via project endpoint
+  ProjectID?: number; // Optional when creating via project endpoint
   parent_task_id?: number; // For subtasks
-  title: string;
-  description?: string;
-  state?: TaskState;
-  priority: TaskPriority;
+  Title: string;
+  Description?: string;
+  State?: TaskState;
+  Priority: TaskPriority;
   created_by: number;
   assigned_to_ids?: string;
   limit_date?: string;

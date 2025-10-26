@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Kanban, 
   List, 
@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { Task, TaskState } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
-import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
+import { useTasks, useProjectTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
 import { formatDateSafe } from './utils';
@@ -45,18 +45,37 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
 
-  const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
-    page: 1, 
-    limit: 100, 
-    orderBy: 'created_at', 
-    order: 'desc' 
-  });
-
-  // Fetch all tasks across all projects
-  const { tasks, loading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTasks({
+  // Memoize filters to prevent unnecessary re-renders
+  const projectFilters = useMemo(() => ({ page: 1, limit: 100 }), []);
+  const allTasksFilters = useMemo(() => ({ page: 1, limit: 100 }), []);
+  const projectsFilters = useMemo(() => ({
     page: 1,
-    limit: 100
-  });
+    limit: 100,
+    orderBy: 'created_at' as const,
+    order: 'desc' as const
+  }), []);
+
+  // Only fetch projects when no specific projectId is provided
+  const { projects, loading: projectsLoading, error: projectsError } = useProjects(
+    projectId ? undefined : projectsFilters
+  );
+
+  // Only fetch all tasks when no specific projectId is provided
+  const { tasks: allTasks, loading: allTasksLoading, error: allTasksError, refetch: refetchAllTasks } = useTasks(
+    projectId ? undefined : allTasksFilters
+  );
+
+  // Only fetch project-specific tasks if projectId is provided and valid
+  const { tasks: projectTasks, loading: projectTasksLoading, error: projectTasksError, refetch: refetchProjectTasks } = useProjectTasks(
+    projectId && projectId > 0 ? projectId : 0,
+    projectId && projectId > 0 ? projectFilters : undefined
+  );
+
+  // Use project-specific tasks if projectId is provided, otherwise use all tasks
+  const tasks = projectId ? projectTasks : allTasks;
+  const tasksLoading = projectId ? projectTasksLoading : allTasksLoading;
+  const tasksError = projectId ? projectTasksError : allTasksError;
+  const refetchTasks = projectId ? refetchProjectTasks : refetchAllTasks;
 
   // Hook for updating task status
   const { updateTaskStatus } = useUpdateTaskStatus();
@@ -142,7 +161,9 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const handleCreateTask = (task: Task) => {
     // Task creation will be handled by the modal
     setIsCreateModalOpen(false);
-    // Refresh tasks
+    // Add the new task to optimistic state immediately
+    setOptimisticTasks(prevTasks => [task, ...prevTasks]);
+    // Refresh tasks in background to ensure consistency
     refetchTasks();
   };
 
@@ -229,13 +250,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   // Filter tasks by selected project (use optimistic tasks if available)
   const tasksToUse = optimisticTasks.length > 0 ? optimisticTasks : tasks;
-  
-  // If we have a specific projectId (from URL), filter by that project
+
+  // If we have a specific projectId (from URL), no additional filtering needed since we already fetch project-specific tasks
   // Otherwise, use the selectedProject filter
-  const filteredTasks = projectId 
-    ? tasksToUse.filter(task => task.proyect_id === projectId)
-    : selectedProject === 'all' 
-      ? tasksToUse 
+  const filteredTasks = projectId
+    ? tasksToUse
+    : selectedProject === 'all'
+      ? tasksToUse
       : tasksToUse.filter(task => task.proyect_id === selectedProject);
 
   const getTaskStats = () => {
@@ -380,24 +401,26 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         </div>
       </div>
 
-      {/* Project Filter */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-[#0c272d]">Filter by Project</h3>
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="px-3 py-2 bg-white/60 border border-[#9fdbc2]/20 rounded-lg text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
-          >
-            <option value="all">All Projects</option>
-            {projects?.map((project, index) => (
-              <option key={project.proyect_id || `project-${index}`} value={project.proyect_id}>
-                {project.name_proyect}
-              </option>
-            ))}
-          </select>
+      {/* Project Filter - Only show when no specific projectId */}
+      {!projectId && (
+        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-[#0c272d]">Filter by Project</h3>
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="px-3 py-2 bg-white/60 border border-[#9fdbc2]/20 rounded-lg text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
+            >
+              <option value="all">All Projects</option>
+              {projects?.map((project, index) => (
+                <option key={project.proyect_id || `project-${index}`} value={project.proyect_id}>
+                  {project.name_proyect}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content - Tasks View */}
       <div className="min-h-[600px]">
