@@ -58,7 +58,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   // Fetch project-specific tasks if projectId is provided
   const { tasks: projectTasks, loading: projectTasksLoading, error: projectTasksError, refetch: refetchProjectTasks } = useProjectTasks(
-    projectId || 0,
+    projectId && projectId > 0 ? projectId : null,
     { page: 1, limit: 100 }
   );
 
@@ -277,8 +277,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     <div className="space-y-6">
 
       {/* Stats Cards with Controls */}
-      <div className="flex items-center justify-between">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
           <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-50 rounded-xl">
@@ -404,7 +404,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                   </div>
 
                   {/* Tasks */}
-                  <div className="p-4 space-y-3 min-h-[400px]">
+                  <div className="p-4 min-h-[400px]">
                     {stateTasks.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-32 text-[#0c272d]/40">
                         <div className="w-12 h-12 bg-white/60 rounded-xl flex items-center justify-center mb-2">
@@ -413,35 +413,37 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                         <p className="text-sm text-center">No tasks</p>
                       </div>
                     ) : (
-                      stateTasks.map((task) => (
-                        <div
-                          key={task.task_id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, task)}
-                          onDragEnd={handleDragEnd}
-                          className="cursor-move transition-all duration-200 ease-in-out"
-                          onClick={() => handleTaskClick(task)}
-                        >
-                          <div className="bg-white/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-200">
-                            <h4 className="font-medium text-[#0c272d] text-sm mb-1 line-clamp-2">
-                              {task.title}
-                            </h4>
-                            <p className="text-xs text-[#0c272d]/60 line-clamp-2">
-                              {task.description}
-                            </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full">
-                                {task.priority || 'Medium'}
-                              </span>
-                              {task.limit_date && (
-                                <span className="text-xs text-[#0c272d]/60">
-                                  {formatDateSafe(task.limit_date)}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {stateTasks.map((task) => (
+                          <div
+                            key={task.task_id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            onDragEnd={handleDragEnd}
+                            className="cursor-move transition-all duration-200 ease-in-out"
+                            onClick={() => handleTaskClick(task)}
+                          >
+                            <div className="bg-white/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-200 h-full">
+                              <h4 className="font-medium text-[#0c272d] text-sm mb-1 line-clamp-2">
+                                {task.title}
+                              </h4>
+                              <p className="text-xs text-[#0c272d]/60 line-clamp-2">
+                                {task.description}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full">
+                                  {task.priority || 'Medium'}
                                 </span>
-                              )}
+                                {task.limit_date && (
+                                  <span className="text-xs text-[#0c272d]/60">
+                                    {formatDateSafe(task.limit_date)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

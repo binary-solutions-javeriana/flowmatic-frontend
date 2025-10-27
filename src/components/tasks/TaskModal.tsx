@@ -178,8 +178,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#9fdbc2]/20">
-          <h2 className="text-xl font-bold text-[#0c272d]">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[#9fdbc2]/20">
+          <h2 className="text-lg sm:text-xl font-bold text-[#0c272d]">
             {mode === 'create' ? 'Create New Task' : 'Edit Task'}
           </h2>
           <button
@@ -192,7 +192,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
           {/* Errors */}
           {(errors.length > 0 || error) && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
