@@ -284,7 +284,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <option value="To Do">To Do</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Done">Done</option>
-                <option value="Blocked">Blocked</option>
               </select>
             </div>
 

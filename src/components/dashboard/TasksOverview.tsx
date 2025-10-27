@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { Task } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
-import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
+import { useTasks, useProjectTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
 import { formatDateSafe } from './utils';
@@ -29,7 +29,6 @@ declare module 'canvas-confetti' {
 }
 
 type ViewMode = 'kanban' | 'list';
-type ProjectFilter = 'all' | number;
 
 interface TasksOverviewProps {
   projectId?: number;
@@ -37,7 +36,6 @@ interface TasksOverviewProps {
 
 const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-  const [selectedProject, setSelectedProject] = useState<ProjectFilter>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -52,11 +50,23 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     order: 'desc' 
   });
 
-  // Fetch all tasks across all projects
-  const { tasks, loading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTasks({
+  // Fetch tasks based on projectId
+  const { tasks: allTasks, loading: allTasksLoading, error: allTasksError, refetch: refetchAllTasks } = useTasks({
     page: 1,
     limit: 100
   });
+
+  // Fetch project-specific tasks if projectId is provided
+  const { tasks: projectTasks, loading: projectTasksLoading, error: projectTasksError, refetch: refetchProjectTasks } = useProjectTasks(
+    projectId || 0,
+    { page: 1, limit: 100 }
+  );
+
+  // Use project tasks if projectId is provided, otherwise use all tasks
+  const tasks = projectId ? projectTasks : allTasks;
+  const tasksLoading = projectId ? projectTasksLoading : allTasksLoading;
+  const tasksError = projectId ? projectTasksError : allTasksError;
+  const refetchTasks = projectId ? refetchProjectTasks : refetchAllTasks;
 
   // Hook for updating task status
   const { updateTaskStatus } = useUpdateTaskStatus();
@@ -112,14 +122,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     }
   }, [tasks]);
 
-  // Sync selectedProject with projectId prop
-  useEffect(() => {
-    if (projectId) {
-      setSelectedProject(projectId);
-    } else {
-      setSelectedProject('all');
-    }
-  }, [projectId]);
+
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -219,16 +222,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       });
   };
 
-  // Filter tasks by selected project (use optimistic tasks if available)
-  const tasksToUse = optimisticTasks.length > 0 ? optimisticTasks : tasks;
-  
-  // If we have a specific projectId (from URL), filter by that project
-  // Otherwise, use the selectedProject filter
-  const filteredTasks = projectId 
-    ? tasksToUse.filter(task => task.proyect_id === projectId)
-    : selectedProject === 'all' 
-      ? tasksToUse 
-      : tasksToUse.filter(task => task.proyect_id === selectedProject);
+  // Use optimistic tasks if available, otherwise use the fetched tasks
+  const filteredTasks = optimisticTasks.length > 0 ? optimisticTasks : tasks;
 
   const getTaskStats = () => {
     if (!filteredTasks || filteredTasks.length === 0) return { total: 0, completed: 0, inProgress: 0, pending: 0 };
@@ -372,30 +367,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         </div>
       </div>
 
-      {/* Project Filter */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-[#0c272d]">Filter by Project</h3>
-          <select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="px-3 py-2 bg-white/60 border border-[#9fdbc2]/20 rounded-lg text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
-          >
-            <option value="all">All Projects</option>
-            {projects?.map((project, index) => (
-              <option key={project.proyect_id || `project-${index}`} value={project.proyect_id}>
-                {project.name_proyect}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+
 
       {/* Main Content - Tasks View */}
       <div className="min-h-[600px]">
         {viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {['To Do', 'In Progress', 'Done'].map((state) => {
               const stateTasks = filteredTasks.filter(task => task.state === state);
               return (
                 <div
@@ -479,7 +457,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                 <p className="text-[#0c272d]/60">No tasks match your current filter.</p>
               </div>
             ) : (
-              ['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+              ['To Do', 'In Progress', 'Done'].map((state) => {
                 const stateTasks = filteredTasks.filter(task => task.state === state);
                 if (stateTasks.length === 0) return null;
                 
@@ -548,7 +526,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
         mode="create"
-        projectId={projectId || (selectedProject !== 'all' ? selectedProject : undefined)}
+        projectId={projectId}
       />
 
     </div>

@@ -1,0 +1,4 @@
+- [x] Remove the 'tasks' item from sidebarItems in Dashboard.tsx to eliminate the Tasks button from the left menu.
+- [x] Modify headerTitle in Dashboard.tsx to display the project name when viewing tasks (e.g., "Tasks for [Project Name]").
+- [x] Verify that tasks are only accessible by selecting a specific project and only show tasks related to that project.
+- [x] Test the changes by running the app and ensuring no direct Tasks button, and tasks view is project-specific.

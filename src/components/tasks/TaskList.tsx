@@ -193,7 +193,6 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
               <option value="Done">Done</option>
-              <option value="Blocked">Blocked</option>
             </select>
           </div>
 

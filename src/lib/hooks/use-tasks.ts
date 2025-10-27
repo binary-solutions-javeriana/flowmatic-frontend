@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { authApi } from '../authenticated-api';
 import type { 
   Task, 
@@ -104,6 +104,16 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => filters, [
+    filters?.page,
+    filters?.limit,
+    filters?.search,
+    filters?.state,
+    filters?.priority,
+    filters?.assigned_to
+  ]);
+
   const fetchProjectTasks = useCallback(async () => {
     if (!projectId) return;
 
@@ -113,35 +123,50 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
     try {
       // Build query string from filters
       const params = new URLSearchParams();
-      
-      const page = filters?.page ?? 1;
-      const limit = filters?.limit ?? 10;
-      
+
+      const page = memoizedFilters?.page ?? 1;
+      const limit = memoizedFilters?.limit ?? 10;
+
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      
-      if (filters?.search) params.append('search', filters.search);
-      if (filters?.state) params.append('state', filters.state);
-      if (filters?.priority) params.append('priority', filters.priority);
-      if (filters?.assigned_to) params.append('assigned_to', filters.assigned_to);
+
+      if (memoizedFilters?.search) params.append('search', memoizedFilters.search);
+      if (memoizedFilters?.state) params.append('state', memoizedFilters.state);
+      if (memoizedFilters?.priority) params.append('priority', memoizedFilters.priority);
+      if (memoizedFilters?.assigned_to) params.append('assigned_to', memoizedFilters.assigned_to);
 
       const queryString = params.toString();
-      const url = `/projects/${projectId}/tasks?${queryString}`;
+      const url = `/projects/${projectId}/tasks${queryString ? `?${queryString}` : ''}`;
 
       console.log('[useProjectTasks] Fetching project tasks with URL:', url);
 
-      const response = await authApi.get<TasksResponse>(url);
-      
+      const response = await authApi.get<any>(url);
+
       if (!response || typeof response !== 'object') {
         throw new Error('Invalid response format: response is not an object');
       }
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
+
+      // Handle different response structures
+      let tasks: Task[] = [];
+      let pagination: any = null;
+
+      if (Array.isArray(response)) {
+        // Direct array response
+        tasks = response;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Wrapped in data property
+        tasks = response.data;
+        pagination = response.meta || null;
+      } else if (response.tasks && Array.isArray(response.tasks)) {
+        // Alternative wrapper
+        tasks = response.tasks;
+        pagination = response.meta || null;
+      } else {
+        throw new Error('Invalid response format: expected array or object with data/tasks property');
       }
-      
-      setTasks(response.data);
-      setPagination(response.meta || null);
+
+      setTasks(tasks);
+      setPagination(pagination);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project tasks';
@@ -150,7 +175,7 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
     } finally {
       setLoading(false);
     }
-  }, [projectId, filters]);
+  }, [projectId, memoizedFilters]);
 
   useEffect(() => {
     fetchProjectTasks();
@@ -424,8 +449,7 @@ export function useKanbanBoard(projectId: number) {
           columns: {
             'To Do': tasks.filter(task => task.state === 'To Do'),
             'In Progress': tasks.filter(task => task.state === 'In Progress'),
-            'Done': tasks.filter(task => task.state === 'Done'),
-            'Cancelled': tasks.filter(task => task.state === 'Cancelled')
+            'Done': tasks.filter(task => task.state === 'Done')
           }
         };
         console.log('[useKanbanBoard] Created kanban data:', kanbanData);
@@ -446,8 +470,7 @@ export function useKanbanBoard(projectId: number) {
           columns: {
             'To Do': [],
             'In Progress': [],
-            'Done': [],
-            'Cancelled': []
+            'Done': []
           }
         };
         setKanbanBoard(emptyKanbanData);
