@@ -19,6 +19,15 @@ const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState<string>('overview');
 
+  // Check for URL query parameter to set initial view
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam && ['overview', 'projects', 'settings'].includes(viewParam)) {
+      setActiveView(viewParam);
+    }
+  }, []);
+
   const { projects, loading, error } = useProjects({ 
     page: 1, 
     limit: 100, 

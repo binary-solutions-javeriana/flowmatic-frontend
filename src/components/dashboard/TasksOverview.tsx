@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Kanban, 
-  List, 
+import {
+  Kanban,
+  List,
   ArrowRight,
   CheckSquare,
   Clock,
@@ -11,7 +11,7 @@ import {
   Plus
 } from 'lucide-react';
 import type { Task, TaskState } from '@/lib/types/task-types';
-import { useProjects } from '@/lib/projects';
+import { useProjects } from '@/lib/hooks/use-projects';
 import { useTasks, useProjectTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
@@ -55,10 +55,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     order: 'desc' as const
   }), []);
 
-  // Only fetch projects when no specific projectId is provided
+  // Fetch projects to get project name when projectId is provided
   const { projects, loading: projectsLoading, error: projectsError } = useProjects(
-    projectId ? undefined : projectsFilters
+    projectId ? { page: 1, limit: 1 } : projectsFilters
   );
+
+  // Get project name for display
+  const projectName = projectId && projects?.length > 0 ? projects[0].name_proyect : null;
 
   // Only fetch all tasks when no specific projectId is provided
   const { tasks: allTasks, loading: allTasksLoading, error: allTasksError, refetch: refetchAllTasks } = useTasks(
@@ -82,16 +85,16 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   const triggerConfetti = useCallback(async (dropPosition?: { x: number; y: number }) => {
     const confetti = (await import("canvas-confetti")).default;
-    
+
     if (dropPosition) {
       // Calculate relative position (0-1) from absolute coordinates
       const relativeX = dropPosition.x / window.innerWidth;
       const relativeY = dropPosition.y / window.innerHeight;
-      
+
       // Main confetti from the drop position
-      confetti({ 
-        particleCount: 80, 
-        spread: 50, 
+      confetti({
+        particleCount: 80,
+        spread: 50,
         origin: { x: relativeX, y: relativeY },
         gravity: 1.2,
         ticks: 150,
@@ -99,12 +102,12 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         startVelocity: 15,
         scalar: 0.8
       });
-      
+
       // Additional smaller bursts from the same position
       setTimeout(() => {
-        confetti({ 
-          particleCount: 40, 
-          spread: 35, 
+        confetti({
+          particleCount: 40,
+          spread: 35,
           origin: { x: relativeX, y: relativeY },
           gravity: 1.2,
           ticks: 100,
@@ -171,7 +174,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     setDraggedTask(task);
     e.dataTransfer.effectAllowed = 'move';
-    
+
     // Add visual feedback for dragged element
     const target = e.target as HTMLElement;
     target.style.opacity = '0.5';
@@ -193,14 +196,14 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   const handleDrop = async (e: React.DragEvent, targetState: string) => {
     e.preventDefault();
-    
+
     if (!draggedTask || draggedTask.state === targetState) {
       setDraggedTask(null);
       return;
     }
 
     // Validate that targetState is a valid TaskState
-    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done'];
     if (!validStates.includes(targetState as TaskState)) {
       console.error('Invalid task state:', targetState);
       setDraggedTask(null);
@@ -209,8 +212,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
     // Optimistic update - move task immediately in UI
     const updatedTask = { ...draggedTask, state: targetState as TaskState };
-    setOptimisticTasks(prevTasks => 
-      prevTasks.map(task => 
+    setOptimisticTasks(prevTasks =>
+      prevTasks.map(task =>
         task.task_id === draggedTask.task_id ? updatedTask : task
       )
     );
@@ -238,8 +241,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       .catch((error) => {
         console.error('Error updating task status:', error);
         // Revert optimistic update on error
-        setOptimisticTasks(prevTasks => 
-          prevTasks.map(task => 
+        setOptimisticTasks(prevTasks =>
+          prevTasks.map(task =>
             task.task_id === draggedTask.task_id ? draggedTask : task
           )
         );
@@ -261,7 +264,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   const getTaskStats = () => {
     if (!filteredTasks || filteredTasks.length === 0) return { total: 0, completed: 0, inProgress: 0, pending: 0 };
-    
+
     const total = filteredTasks.length;
     const completed = filteredTasks.filter(task => task.state === 'Done').length;
     const inProgress = filteredTasks.filter(task => task.state === 'In Progress').length;
@@ -309,6 +312,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
 
   return (
     <div className="space-y-6">
+
+      {/* Header with Project Name */}
+      {projectId && projectName && (
+        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+          <h1 className="text-2xl font-bold text-[#0c272d]">{projectName} - Tasks</h1>
+        </div>
+      )}
 
       {/* Stats Cards with Controls */}
       <div className="flex items-center justify-between">
@@ -362,8 +372,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
           </div>
         </div>
 
-        {/* Controls - Triangle Layout */}
-        <div className="flex flex-col items-center space-y-3 ml-6">
+        {/* Controls - Horizontal Layout */}
+        <div className="flex flex-row items-center space-x-3 ml-6">
           {/* View Mode Toggle */}
           <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-lg rounded-xl p-1 border border-[#9fdbc2]/20">
             <button
@@ -389,7 +399,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
               <span className="hidden sm:inline">List</span>
             </button>
           </div>
-          
+
           {/* Create Task Button */}
           <button
             onClick={() => setIsCreateModalOpen(true)}
@@ -425,8 +435,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       {/* Main Content - Tasks View */}
       <div className="min-h-[600px]">
         {viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {['To Do', 'In Progress', 'Done'].map((state) => {
               const stateTasks = filteredTasks.filter(task => task.state === state);
               return (
                 <div
@@ -510,10 +520,10 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                 <p className="text-[#0c272d]/60">No tasks match your current filter.</p>
               </div>
             ) : (
-              ['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+              ['To Do', 'In Progress', 'Done'].map((state) => {
                 const stateTasks = filteredTasks.filter(task => task.state === state);
                 if (stateTasks.length === 0) return null;
-                
+
                 return (
                   <div key={state} className="space-y-3">
                     {/* State Header */}
@@ -523,7 +533,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                         {stateTasks.length}
                       </span>
                     </div>
-                    
+
                     {/* Tasks in this state */}
                     <div className="space-y-2">
                       {stateTasks.map((task) => (

@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Header from "@/components/dashboard/Header";
 import TasksOverview from "@/components/dashboard/TasksOverview";
+import { useProject } from "@/lib/hooks/use-projects";
 import type { SidebarItem } from "@/components/dashboard/types";
 import {
   FolderOpen,
@@ -17,6 +18,9 @@ function ProjectTasksPage() {
   const params = useParams();
   const projectId = parseInt(params.id as string, 10);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Fetch project details to get the project name
+  const { project, loading: projectLoading, error: projectError } = useProject(projectId);
 
   const sidebarItems: SidebarItem[] = useMemo(
     () => [
@@ -32,10 +36,14 @@ function ProjectTasksPage() {
     if (view === 'overview') {
       window.location.href = '/dashboard';
     } else if (view === 'projects') {
-      window.location.href = '/dashboard';
+      window.location.href = '/dashboard?view=projects';
     } else if (view === 'settings') {
-      window.location.href = '/dashboard';
+      window.location.href = '/dashboard?view=settings';
     }
+  };
+
+  const handleHeaderNavigate = (view: string) => {
+    handleSidebarSelect(view);
   };
 
   if (isNaN(projectId)) {
@@ -60,7 +68,7 @@ function ProjectTasksPage() {
         />
 
         <div className="flex-1 flex flex-col">
-          <Header title="Project Tasks" onNavigate={handleSidebarSelect} />
+          <Header title={project ? `${project.name_proyect} - Tasks` : "Project Tasks"} onNavigate={handleSidebarSelect} />
           <main className="flex-1 p-6 overflow-auto">
             <TasksOverview projectId={projectId} />
           </main>
