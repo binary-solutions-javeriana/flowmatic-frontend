@@ -2,27 +2,29 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  X, 
-  Calendar, 
-  User, 
-  Clock, 
-  Plus, 
-  Edit, 
-  Trash2, 
+  X,
+  Calendar,
+  User,
+  Clock,
+  Plus,
+  Edit,
+  Trash2,
   CheckCircle,
   AlertCircle,
   Play,
   Pause,
-  Square
+  Square,
+  ChevronDown
 } from 'lucide-react';
-import type { Task, TimeEntry, CreateTimeEntryRequest } from '@/lib/types/task-types';
-import { 
-  useUpdateTask, 
-  useDeleteTask, 
-  useSubtasks, 
-  useTimeEntries, 
+import type { Task, TimeEntry, CreateTimeEntryRequest, TaskState, TaskPriority } from '@/lib/types/task-types';
+import {
+  useUpdateTask,
+  useDeleteTask,
+  useSubtasks,
+  useTimeEntries,
   useCreateTimeEntry,
-  useDeleteTimeEntry 
+  useDeleteTimeEntry,
+  useUpdateTaskStatus
 } from '@/lib/hooks/use-tasks';
 import { 
   getTaskStateColor, 
@@ -58,6 +60,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const { updateTask, loading: updating } = useUpdateTask();
   const { deleteTask, loading: deleting } = useDeleteTask();
+  const { updateTaskStatus, loading: updatingStatus } = useUpdateTaskStatus();
   const { subtasks, loading: loadingSubtasks } = useSubtasks(task?.task_id || 0);
   const { timeEntries, totalHours, loading: loadingTimeEntries, refetch: refetchTimeEntries } = useTimeEntries(task?.task_id || 0);
   const { createTimeEntry, loading: creatingTimeEntry } = useCreateTimeEntry();
@@ -132,6 +135,31 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     onUpdate();
   };
 
+  const handleStatusChange = async (newState: TaskState) => {
+    if (!task) return;
+
+    try {
+      await updateTaskStatus(task.task_id, newState);
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
+  };
+
+  const handlePriorityChange = async (newPriority: TaskPriority) => {
+    if (!task) return;
+
+    try {
+      await updateTask({
+        ...task,
+        priority: newPriority
+      });
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+    }
+  };
+
   const handleDeleteTask = async () => {
     if (!task) return;
     
@@ -172,17 +200,40 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-[#9fdbc2]/20">
           <div className="flex items-center space-x-3">
             <h2 className="text-xl font-bold text-[#0c272d]">{task.title}</h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${stateColors}`}>
-              {task.state}
-            </span>
-            <span className={`px-3 py-1 rounded-lg text-xs font-medium ${priorityColors}`}>
-              {priorityIcon} {task.priority}
-            </span>
+            {/* Status Selector */}
+            <div className="relative">
+              <select
+                value={task.state}
+                onChange={(e) => handleStatusChange(e.target.value as TaskState)}
+                disabled={updatingStatus}
+                className={`px-3 py-1 rounded-full text-xs font-medium appearance-none pr-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${stateColors}`}
+              >
+                <option value="To Do">To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none text-current opacity-60" />
+            </div>
+            {/* Priority Selector */}
+            <div className="relative">
+              <select
+                value={task.priority}
+                onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
+                disabled={updating}
+                className={`px-3 py-1 rounded-lg text-xs font-medium appearance-none pr-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${priorityColors}`}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none text-current opacity-60" />
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsEditing(true)}
-              disabled={updating || deleting}
+              disabled={updating || deleting || updatingStatus}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
               title="Edit task"
             >
@@ -190,7 +241,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </button>
             <button
               onClick={handleDeleteTask}
-              disabled={updating || deleting}
+              disabled={updating || deleting || updatingStatus}
               className="p-2 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
               title="Delete task"
             >
@@ -198,7 +249,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </button>
             <button
               onClick={handleClose}
-              disabled={updating || deleting}
+              disabled={updating || deleting || updatingStatus}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >
               <X className="w-5 h-5 text-[#0c272d]/60" />
