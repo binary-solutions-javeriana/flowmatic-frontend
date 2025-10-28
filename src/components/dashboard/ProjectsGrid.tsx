@@ -57,7 +57,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#0c272d]">All Projects</h2>
+        <h2 className="text-2xl font-bold text-[#0c272d] dark:text-white">All Projects</h2>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="bg-[#14a67e] text-white px-4 py-2 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2"
@@ -76,7 +76,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.length === 0 && (
           <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-[#0c272d]/60 mb-4">No projects found</p>
+            <p className="text-[#0c272d]/60 dark:text-gray-300/60 mb-4">No projects found</p>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="bg-[#14a67e] text-white px-4 py-2 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2"
@@ -87,15 +87,15 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }
           </div>
         )}
         {projects.map((project) => (
-          <div key={project.id} className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
+          <div key={project.id} className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-[#0c272d] truncate">{project.name}</h3>
+              <h3 className="font-semibold text-[#0c272d] dark:text-white truncate">{project.name}</h3>
               <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getProjectStateColor(backendProjects.find(p => p.proyect_id === project.id)?.state)}`}>
                 {project.status}
               </span>
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm text-[#0c272d]/60">
+              <div className="flex items-center justify-between text-sm text-[#0c272d]/60 dark:text-gray-300/60">
                 <span>Progress</span>
                 <span>{project.progress}%</span>
               </div>
@@ -105,7 +105,7 @@ const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects: backendProjects }
                   style={{ width: `${project.progress}%` }}
                 ></div>
               </div>
-              <div className="flex items-center justify-between text-sm text-[#0c272d]/60">
+              <div className="flex items-center justify-between text-sm text-[#0c272d]/60 dark:text-gray-300/60">
                 <div className="flex items-center space-x-1">
                   <Users className="w-4 h-4" />
                   <span>{project.team} members</span>

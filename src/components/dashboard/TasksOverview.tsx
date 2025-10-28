@@ -292,50 +292,50 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       {/* Stats Cards with Controls */}
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-50 rounded-xl">
                 <CheckSquare className="w-6 h-6 text-blue-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-[#0c272d]/60 mb-1">Total Tasks</p>
-                <p className="text-2xl font-bold text-[#0c272d]">{stats.total}</p>
+                <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-1">Total Tasks</p>
+                <p className="text-2xl font-bold text-[#0c272d] dark:text-white">{stats.total}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-green-50 rounded-xl">
                 <CheckSquare className="w-6 h-6 text-green-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-[#0c272d]/60 mb-1">Completed</p>
-                <p className="text-2xl font-bold text-[#0c272d]">{stats.completed}</p>
+                <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-1">Completed</p>
+                <p className="text-2xl font-bold text-[#0c272d] dark:text-white">{stats.completed}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-yellow-50 rounded-xl">
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-[#0c272d]/60 mb-1">In Progress</p>
-                <p className="text-2xl font-bold text-[#0c272d]">{stats.inProgress}</p>
+                <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-1">In Progress</p>
+                <p className="text-2xl font-bold text-[#0c272d] dark:text-white">{stats.inProgress}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg flex items-center justify-center min-h-[120px]">
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-gray-50 rounded-xl">
                 <AlertCircle className="w-6 h-6 text-gray-600" />
               </div>
               <div className="text-center">
-                <p className="text-sm text-[#0c272d]/60 mb-1">Pending</p>
-                <p className="text-2xl font-bold text-[#0c272d]">{stats.pending}</p>
+                <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-1">Pending</p>
+                <p className="text-2xl font-bold text-[#0c272d] dark:text-white">{stats.pending}</p>
               </div>
             </div>
           </div>
@@ -344,13 +344,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         {/* Controls - Triangle Layout */}
         <div className="flex flex-col items-center space-y-3 ml-6">
           {/* View Mode Toggle */}
-          <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-lg rounded-xl p-1 border border-[#9fdbc2]/20">
+          <div className="flex items-center space-x-2 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl p-1 border border-[#9fdbc2]/20 dark:border-gray-700/20">
             <button
               onClick={() => setViewMode('kanban')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
                 viewMode === 'kanban'
                   ? 'bg-[#14a67e] text-white shadow-md'
-                  : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
+                  : 'text-[#0c272d]/60 dark:text-gray-300/60 hover:text-[#0c272d] dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-700/50'
               }`}
             >
               <Kanban className="w-4 h-4" />
@@ -361,7 +361,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-300 ${
                 viewMode === 'list'
                   ? 'bg-[#14a67e] text-white shadow-md'
-                  : 'text-[#0c272d]/60 hover:text-[#0c272d] hover:bg-white/50'
+                  : 'text-[#0c272d]/60 dark:text-gray-300/60 hover:text-[#0c272d] dark:hover:text-white hover:bg-white/50 dark:hover:bg-gray-700/50'
               }`}
             >
               <List className="w-4 h-4" />
@@ -381,13 +381,14 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       </div>
 
       {/* Project Filter */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-[#0c272d]">Filter by Project</h3>
+          <h3 className="font-semibold text-[#0c272d] dark:text-white">Filter by Project</h3>
           <select
             value={selectedProject}
             onChange={(e) => setSelectedProject(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="px-3 py-2 bg-white/60 border border-[#9fdbc2]/20 rounded-lg text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
+            className="px-3 py-2 bg-white/60 dark:bg-gray-700/60 border border-[#9fdbc2]/20 dark:border-gray-600/20 rounded-lg text-[#0c272d] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
+            aria-label="Filter by project"
           >
             <option value="all">All Projects</option>
             {projects?.map((project, index) => (
@@ -409,10 +410,10 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                 <div
                   key={state}
                   className={`rounded-2xl border-2 border-dashed transition-all duration-200 ease-in-out ${
-                    state === 'To Do' ? 'bg-gray-50 border-gray-200' :
-                    state === 'In Progress' ? 'bg-blue-50 border-blue-200' :
-                    state === 'Done' ? 'bg-green-50 border-green-200' :
-                    'bg-red-50 border-red-200'
+                    state === 'To Do' ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600' :
+                    state === 'In Progress' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-600' :
+                    state === 'Done' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-600' :
+                    'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-600'
                   } ${
                     draggedTask && draggedTask.state !== state
                       ? 'border-[#14a67e] bg-[#14a67e]/10 scale-105 shadow-lg'
@@ -422,11 +423,11 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                   onDrop={(e) => handleDrop(e, state)}
                 >
                   {/* Column Header */}
-                  <div className="p-4 border-b border-gray-200">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-600">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-[#0c272d] flex items-center space-x-2">
+                      <h3 className="font-semibold text-[#0c272d] dark:text-white flex items-center space-x-2">
                         <span>{state}</span>
-                        <span className="bg-white/60 text-[#0c272d]/60 px-2 py-1 rounded-full text-xs font-medium">
+                        <span className="bg-white/60 dark:bg-gray-700/60 text-[#0c272d]/60 dark:text-gray-300/60 px-2 py-1 rounded-full text-xs font-medium">
                           {stateTasks.length}
                         </span>
                       </h3>
@@ -436,8 +437,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                   {/* Tasks */}
                   <div className="p-4 space-y-3 min-h-[400px]">
                     {stateTasks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-32 text-[#0c272d]/40">
-                        <div className="w-12 h-12 bg-white/60 rounded-xl flex items-center justify-center mb-2">
+                      <div className="flex flex-col items-center justify-center h-32 text-[#0c272d]/40 dark:text-gray-400/60">
+                        <div className="w-12 h-12 bg-white/60 dark:bg-gray-700/60 rounded-xl flex items-center justify-center mb-2">
                           <CheckSquare className="w-6 h-6" />
                         </div>
                         <p className="text-sm text-center">No tasks</p>
@@ -452,11 +453,11 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                           className="cursor-move transition-all duration-200 ease-in-out"
                           onClick={() => handleTaskClick(task)}
                         >
-                          <div className="bg-white/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-200">
-                            <h4 className="font-medium text-[#0c272d] text-sm mb-1 line-clamp-2">
+                          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-sm hover:shadow-md transition-all duration-200">
+                            <h4 className="font-medium text-[#0c272d] dark:text-white text-sm mb-1 line-clamp-2">
                               {task.title}
                             </h4>
-                            <p className="text-xs text-[#0c272d]/60 line-clamp-2">
+                            <p className="text-xs text-[#0c272d]/60 dark:text-gray-300/60 line-clamp-2">
                               {task.description}
                             </p>
                             <div className="flex items-center justify-between mt-2">
@@ -464,7 +465,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                                 {task.priority || 'Medium'}
                               </span>
                               {task.limit_date && (
-                                <span className="text-xs text-[#0c272d]/60">
+                                <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
                                   {formatDateSafe(task.limit_date)}
                                 </span>
                               )}
@@ -481,10 +482,10 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         ) : (
           <div className="space-y-6">
             {filteredTasks.length === 0 ? (
-              <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-12 border border-[#9fdbc2]/20 shadow-lg text-center">
-                <CheckSquare className="w-12 h-12 text-[#0c272d]/40 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-[#0c272d] mb-2">No tasks found</h3>
-                <p className="text-[#0c272d]/60">No tasks match your current filter.</p>
+              <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-12 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg text-center">
+                <CheckSquare className="w-12 h-12 text-[#0c272d]/40 dark:text-gray-400/60 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-[#0c272d] dark:text-white mb-2">No tasks found</h3>
+                <p className="text-[#0c272d]/60 dark:text-gray-300/60">No tasks match your current filter.</p>
               </div>
             ) : (
               ['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
@@ -495,7 +496,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                   <div key={state} className="space-y-3">
                     {/* State Header */}
                     <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-semibold text-[#0c272d]">{state}</h3>
+                      <h3 className="text-lg font-semibold text-[#0c272d] dark:text-white">{state}</h3>
                       <span className="px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full text-sm font-medium">
                         {stateTasks.length}
                       </span>
@@ -507,28 +508,28 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                         <div
                           key={task.task_id}
                           onClick={() => handleTaskClick(task)}
-                          className="bg-white/60 backdrop-blur-lg rounded-lg p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                          className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-lg p-3 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <h4 className="font-medium text-[#0c272d] text-sm mb-1">{task.title}</h4>
+                              <h4 className="font-medium text-[#0c272d] dark:text-white text-sm mb-1">{task.title}</h4>
                               {task.description && (
-                                <p className="text-xs text-[#0c272d]/60 line-clamp-1">
+                                <p className="text-xs text-[#0c272d]/60 dark:text-gray-300/60 line-clamp-1">
                                   {task.description}
                                 </p>
                               )}
                               <div className="flex items-center space-x-2 mt-2">
-                                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs">
+                                <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded text-xs">
                                   {task.priority || 'Medium'}
                                 </span>
                                 {task.limit_date && (
-                                  <span className="text-xs text-[#0c272d]/60">
+                                  <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
                                     Due: {formatDateSafe(task.limit_date)}
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <ArrowRight className="w-4 h-4 text-[#0c272d]/40" />
+                            <ArrowRight className="w-4 h-4 text-[#0c272d]/40 dark:text-gray-400/60" />
                           </div>
                         </div>
                       ))}

@@ -12,7 +12,7 @@ interface HeaderProps {
   showProfileButton?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = true, showProfileButton = true }) => {
+const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, showProfileButton = false }) => {
   const { user } = useAuthState();
   const { logout } = useAuth();
   const router = useRouter();
@@ -141,18 +141,6 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = true, s
 
                 {/* Menu Items */}
                 <div className="py-2">
-                  {showProfileButton && (
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        // Navigate to profile settings
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
-                    >
-                      <UserIcon className="w-4 h-4" />
-                      <span>Profile</span>
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       setShowDropdown(false);

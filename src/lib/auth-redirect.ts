@@ -68,15 +68,45 @@ export function getUserRole(user?: StoredUser | null): UserRole | null {
     user = getStoredUser();
   }
   
-  if (!user) return null;
+  if (!user) {
+    console.log('=== getUserRole DEBUG ===');
+    console.log('No user found');
+    console.log('========================');
+    return null;
+  }
+  
+  // Debug logging
+  console.log('=== getUserRole DEBUG ===');
+  console.log('user:', user);
+  console.log('user.user_metadata:', user.user_metadata);
+  console.log('user.user_metadata?.role:', user.user_metadata?.role);
+  console.log('user.user_metadata?.role type:', typeof user.user_metadata?.role);
+  console.log('isTenantAdmin(user):', isTenantAdmin(user));
+  console.log('========================');
   
   // Check if tenant admin first
   if (isTenantAdmin(user)) {
+    console.log('User is TenantAdmin');
     return 'TenantAdmin';
   }
   
   // Otherwise return the role from user metadata
-  return (user.user_metadata?.role as UserRole) || null;
+  const role = user.user_metadata?.role as UserRole;
+  console.log('Extracted role from metadata:', role);
+  
+  // Validate that the role is one of the expected values (case insensitive)
+  const roleStr = String(role).toLowerCase();
+  if (roleStr && ['profesor', 'professor', 'estudiante', 'student'].includes(roleStr)) {
+    console.log('Valid role found:', roleStr);
+    // Convert to uppercase enum values for consistency
+    const normalizedRole = roleStr === 'professor' ? 'PROFESOR' : 
+                          roleStr === 'student' ? 'ESTUDIANTE' : 
+                          roleStr.toUpperCase();
+    return normalizedRole as UserRole;
+  }
+  
+  console.log('No valid role found, returning null');
+  return null;
 }
 
 /**
@@ -144,6 +174,40 @@ export function getUserId(user?: StoredUser | null): number | null {
   
   const userId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
   return isNaN(userId as number) ? null : userId as number;
+}
+
+/**
+ * Map database role to user-friendly display name
+ */
+export function mapRoleToDisplayName(role: UserRole | null): string {
+  console.log('=== mapRoleToDisplayName DEBUG ===');
+  console.log('Input role:', role);
+  console.log('Role type:', typeof role);
+  
+  // Handle both database values and enum values
+  if (!role) {
+    console.log('Mapped to: User (default)');
+    return 'User';
+  }
+  
+  const roleStr = String(role).toLowerCase();
+  
+  switch (roleStr) {
+    case 'profesor':
+    case 'professor':
+      console.log('Mapped to: Professor');
+      return 'Professor';
+    case 'estudiante':
+    case 'student':
+      console.log('Mapped to: Student');
+      return 'Student';
+    case 'tenantadmin':
+      console.log('Mapped to: Tenant Admin');
+      return 'Tenant Admin';
+    default:
+      console.log('Mapped to: User (default)');
+      return 'User';
+  }
 }
 
 /**

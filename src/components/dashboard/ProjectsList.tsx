@@ -175,7 +175,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-[#0c272d]">All Projects</h2>
+        <h2 className="text-2xl font-bold text-[#0c272d] dark:text-white">All Projects</h2>
         <button 
           onClick={() => setIsModalOpen(true)}
           className="bg-[#14a67e] text-white px-4 py-2 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2"
@@ -201,7 +201,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
       />
 
       {/* Search and Filters */}
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className={`w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${isSearching ? 'text-[#14a67e] animate-pulse' : 'text-[#0c272d]/40'}`} />
@@ -210,12 +210,14 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
               placeholder="Search by project name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
+              className="w-full pl-10 pr-10 py-2 bg-white/50 dark:bg-gray-700/50 border border-[#9fdbc2]/30 dark:border-gray-600/30 rounded-xl text-[#0c272d] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40 hover:text-[#0c272d] transition-colors"
+                aria-label="Clear search"
+                title="Clear search"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -226,7 +228,8 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer"
+              className="w-full pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-700/50 border border-[#9fdbc2]/30 dark:border-gray-600/30 rounded-xl text-[#0c272d] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer"
+              aria-label="Filter by status"
             >
               <option value="">All Status</option>
               <option value="Planning">Planning</option>
@@ -239,6 +242,8 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
               <button
                 onClick={() => setStatusFilter('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40 hover:text-[#0c272d] transition-colors z-10"
+                aria-label="Clear status filter"
+                title="Clear status filter"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -247,7 +252,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
           {(searchTerm || statusFilter) && (
             <button
               onClick={handleClearSearch}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 whitespace-nowrap flex items-center space-x-2"
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 whitespace-nowrap flex items-center space-x-2"
             >
               <X className="w-4 h-4" />
               <span>Clear</span>
@@ -262,7 +267,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
               <span className="inline-flex items-center space-x-1 px-3 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-lg text-sm">
                 <Search className="w-3 h-3" />
                 <span>Search: &quot;{searchTerm}&quot;</span>
-                <button onClick={() => setSearchTerm('')} className="hover:text-[#14a67e]/70">
+                <button onClick={() => setSearchTerm('')} className="hover:text-[#14a67e]/70" aria-label="Remove search filter" title="Remove search filter">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -271,7 +276,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
               <span className="inline-flex items-center space-x-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm">
                 <Filter className="w-3 h-3" />
                 <span>Status: {statusFilter}</span>
-                <button onClick={() => setStatusFilter('')} className="hover:text-blue-600">
+                <button onClick={() => setStatusFilter('')} className="hover:text-blue-600" aria-label="Remove status filter" title="Remove status filter">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -282,12 +287,12 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
 
       {/* Projects Grid */}
       {filteredProjects.length === 0 && !loading ? (
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-12 border border-[#9fdbc2]/20 shadow-lg text-center">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-12 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg text-center">
           <div className="w-16 h-16 bg-[#14a67e]/10 rounded-2xl mx-auto flex items-center justify-center mb-4">
             <Plus className="w-8 h-8 text-[#14a67e]" />
           </div>
-          <h3 className="text-xl font-semibold text-[#0c272d] mb-2">No projects found</h3>
-          <p className="text-[#0c272d]/60 mb-6">
+          <h3 className="text-xl font-semibold text-[#0c272d] dark:text-white mb-2">No projects found</h3>
+          <p className="text-[#0c272d]/60 dark:text-gray-300/60 mb-6">
             {searchTerm || statusFilter ? 'Try adjusting your search criteria.' : 'Get started by creating your first project.'}
           </p>
           <button
@@ -313,7 +318,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
 
           {/* Results Count */}
           {filteredProjects.length > 0 && (
-            <div className="text-sm text-[#0c272d]/70 text-center">
+            <div className="text-sm text-[#0c272d]/70 dark:text-gray-300/70 text-center">
               Showing {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projects'}
               {searchTerm || statusFilter ? ' matching your criteria' : ''}
             </div>
@@ -321,9 +326,9 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && !searchTerm && !statusFilter && (
-            <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
+            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-[#0c272d]/70">
+                <div className="text-sm text-[#0c272d]/70 dark:text-gray-300/70">
                   Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
                   {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
                   {pagination.total} results
@@ -332,7 +337,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page <= 1}
-                    className="px-3 py-2 text-sm bg-white/50 border border-[#9fdbc2]/30 rounded-lg hover:bg-white/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm bg-white/50 dark:bg-gray-700/50 border border-[#9fdbc2]/30 dark:border-gray-600/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-600/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
@@ -346,7 +351,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
                         className={`px-3 py-2 text-sm rounded-lg transition-all ${
                           pagination.page === page
                             ? 'bg-[#14a67e] text-white'
-                            : 'bg-white/50 border border-[#9fdbc2]/30 hover:bg-white/70'
+                            : 'bg-white/50 dark:bg-gray-700/50 border border-[#9fdbc2]/30 dark:border-gray-600/30 hover:bg-white/70 dark:hover:bg-gray-600/70'
                         }`}
                       >
                         {page}
@@ -357,7 +362,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page >= pagination.totalPages}
-                    className="px-3 py-2 text-sm bg-white/50 border border-[#9fdbc2]/30 rounded-lg hover:bg-white/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm bg-white/50 dark:bg-gray-700/50 border border-[#9fdbc2]/30 dark:border-gray-600/30 rounded-lg hover:bg-white/70 dark:hover:bg-gray-600/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -382,31 +387,31 @@ const ProjectCard: React.FC<{
   return (
     <div 
       onClick={onClick}
-      className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
+      className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-[#0c272d] truncate flex-1 mr-2">{project.name_proyect}</h3>
+        <h3 className="font-semibold text-[#0c272d] dark:text-white truncate flex-1 mr-2">{project.name_proyect}</h3>
         <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusColors}`}>
           {project.state}
         </span>
       </div>
       
       {project.description && (
-        <p className="text-sm text-[#0c272d]/60 mb-4 line-clamp-2">
+        <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-4 line-clamp-2">
           {project.description}
         </p>
       )}
 
       <div className="space-y-3">
         {project.type && (
-          <div className="flex items-center text-xs text-[#0c272d]/60">
-            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded">
+          <div className="flex items-center text-xs text-[#0c272d]/60 dark:text-gray-300/60">
+            <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded">
               {project.type}
             </span>
           </div>
         )}
         
-        <div className="flex items-center justify-between text-xs text-[#0c272d]/60">
+        <div className="flex items-center justify-between text-xs text-[#0c272d]/60 dark:text-gray-300/60">
           {project.start_date && (
             <div className="flex items-center space-x-1">
               <Calendar className="w-3 h-3" />
@@ -422,8 +427,8 @@ const ProjectCard: React.FC<{
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 flex items-center justify-between">
-        <span className="text-xs text-[#0c272d]/60">
+      <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 dark:border-gray-600/20 flex items-center justify-between">
+        <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
           Updated {formatDateSafe(project.updated_at)}
         </span>
         <button
