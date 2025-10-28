@@ -91,15 +91,73 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
     return 'U';
   };
 
+  // Get user role from metadata
+  const getUserRole = (): string => {
+    if (!user || !user.user_metadata) return 'Usuario';
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Check if user is tenant admin
+    if (metadata.isTenantAdmin === true || metadata.userType === 'tenantAdmin') {
+      return 'Administrador';
+    }
+
+    // Check for role field
+    if (metadata.role) {
+      return String(metadata.role);
+    }
+
+    return 'Usuario';
+  };
+
+  // Get tenant information
+  const getTenantInfo = (): string => {
+    if (!user || !user.user_metadata) return '';
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Prefer tenantName if available, otherwise fall back to tenantId
+    if (metadata.tenantName) {
+      return String(metadata.tenantName);
+    }
+
+    if (metadata.tenantId) {
+      return `Tenant: ${metadata.tenantId}`;
+    }
+
+    return '';
+  };
+
   const displayName = getUserDisplayName();
   const initials = getUserInitials();
+  const userRole = getUserRole();
+  const tenantInfo = getTenantInfo();
+
+  // Debug logs
+  console.log('=== HEADER COMPONENT DEBUG ===');
+  console.log('user object:', user);
+  console.log('user.user_metadata:', user?.user_metadata);
+  console.log('displayName:', displayName);
+  console.log('userRole:', userRole);
+  console.log('tenantInfo:', tenantInfo);
+  console.log('==============================');
 
   return (
     <header className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 dark:border-gray-700/50 p-6 relative z-20">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0c272d] dark:text-gray-100">{title}</h1>
-          <p className="text-[#0c272d]/60 dark:text-gray-400">Welcome back, {displayName}</p>
+          <p className="text-[#0c272d]/60 dark:text-gray-400">
+            Welcome back, {displayName}
+            <span className="ml-2 text-sm font-medium text-[#14a67e] dark:text-[#9fdbc2]">
+              ({userRole})
+            </span>
+            {tenantInfo && (
+              <span className="ml-2 text-xs text-[#0c272d]/50 dark:text-gray-500">
+                {tenantInfo}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center space-x-4">
           {showSearch && (
