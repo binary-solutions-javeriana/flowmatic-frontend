@@ -329,7 +329,7 @@ export function useUpdateTaskStatus() {
     setError(null);
 
     try {
-      const response = await authApi.patch<Task>(`/tasks/${taskId}`, { state });
+      const response = await authApi.patch<Task>(`/tasks/${taskId}`, { State: state });
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task status';
