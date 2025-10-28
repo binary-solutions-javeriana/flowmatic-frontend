@@ -1,17 +1,18 @@
 'use client';
 
-import React from 'react';
-import { Calendar, Clock, User, MoreVertical } from 'lucide-react';
-import type { Task } from '@/lib/types/task-types';
-import { 
-  getTaskStateColor, 
-  getTaskPriorityColor, 
+import React, { useState } from 'react';
+import { Calendar, Clock, User, MoreVertical, ChevronDown } from 'lucide-react';
+import type { Task, TaskState, TaskPriority } from '@/lib/types/task-types';
+import {
+  getTaskStateColor,
+  getTaskPriorityColor,
   getTaskPriorityIcon,
   formatDueDate,
   isTaskOverdue,
   parseAssignedUserIds
 } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
+import { useUpdateTaskStatus, useUpdateTask } from '@/lib/hooks/use-tasks';
 
 interface TaskCardProps {
   task: Task;
@@ -22,14 +23,20 @@ interface TaskCardProps {
   compact?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ 
-  task, 
-  onClick, 
-  onEdit, 
-  onDelete, 
+const TaskCard: React.FC<TaskCardProps> = ({
+  task,
+  onClick,
+  onEdit,
+  onDelete,
   showProject = false,
-  compact = false 
+  compact = false
 }) => {
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingPriority, setUpdatingPriority] = useState(false);
+
+  const { updateTaskStatus } = useUpdateTaskStatus();
+  const { updateTask } = useUpdateTask();
+
   const stateColors = getTaskStateColor(task.state);
   const priorityColors = getTaskPriorityColor(task.priority);
   const priorityIcon = getTaskPriorityIcon(task.priority);
@@ -48,6 +55,30 @@ const TaskCard: React.FC<TaskCardProps> = ({
     // TODO: Implement dropdown menu
   };
 
+  const handleStatusChange = async (newState: TaskState) => {
+    setUpdatingStatus(true);
+    try {
+      await updateTaskStatus(task.task_id, newState);
+      // The task state will be updated via the parent component's refetch
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handlePriorityChange = async (newPriority: TaskPriority) => {
+    setUpdatingPriority(true);
+    try {
+      await updateTask(task.task_id, { priority: newPriority });
+      // The task priority will be updated via the parent component's refetch
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+    } finally {
+      setUpdatingPriority(false);
+    }
+  };
+
   if (compact) {
     return (
       <div 
@@ -61,9 +92,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {task.title}
           </h4>
           <div className="flex items-center space-x-1">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${stateColors}`}>
-              {task.state}
-            </span>
+            <div className="relative">
+              <select
+                value={task.state}
+                onChange={(e) => handleStatusChange(e.target.value as TaskState)}
+                disabled={updatingStatus}
+                className={`px-2 py-1 rounded-full text-xs font-medium appearance-none cursor-pointer transition-all duration-200 ${stateColors} ${
+                  updatingStatus ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+                }`}
+              >
+                <option value="To Do">To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
+            </div>
             <button onClick={handleMenuClick} className="text-[#0c272d]/40 hover:text-[#0c272d]">
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -72,9 +115,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
         
         <div className="flex items-center justify-between text-xs text-[#0c272d]/60">
           <div className="flex items-center space-x-2">
-            <span className={`px-2 py-1 rounded text-xs ${priorityColors}`}>
-              {priorityIcon} {task.priority}
-            </span>
+            <div className="relative">
+              <select
+                value={task.priority}
+                onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
+                disabled={updatingPriority}
+                className={`px-2 py-1 rounded text-xs appearance-none cursor-pointer transition-all duration-200 ${priorityColors} ${
+                  updatingPriority ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+                }`}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+              <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
+            </div>
             {assignedUserIds.length > 0 && (
               <div className="flex items-center space-x-1">
                 <User className="w-3 h-3" />
@@ -120,12 +176,37 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <div className="space-y-3">
         {/* Status and Priority */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${stateColors}`}>
-            {task.state}
-          </span>
-          <span className={`px-3 py-1 rounded-lg text-xs font-medium w-fit ${priorityColors}`}>
-            {priorityIcon} {task.priority}
-          </span>
+          <div className="relative">
+            <select
+              value={task.state}
+              onChange={(e) => handleStatusChange(e.target.value as TaskState)}
+              disabled={updatingStatus}
+              className={`px-3 py-1 rounded-full text-xs font-medium w-fit appearance-none cursor-pointer transition-all duration-200 ${stateColors} ${
+                updatingStatus ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+              }`}
+            >
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+            <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
+          </div>
+          <div className="relative">
+            <select
+              value={task.priority}
+              onChange={(e) => handlePriorityChange(e.target.value as TaskPriority)}
+              disabled={updatingPriority}
+              className={`px-3 py-1 rounded-lg text-xs font-medium w-fit appearance-none cursor-pointer transition-all duration-200 ${priorityColors} ${
+                updatingPriority ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+              }`}
+            >
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
+            </select>
+            <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
+          </div>
         </div>
 
         {/* Assigned Users */}

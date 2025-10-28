@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { authApi } from '../authenticated-api';
-import type { 
-  Task, 
-  TaskFilters, 
+import type {
+  Task,
+  TaskFilters,
   TasksResponse,
   CreateTaskRequest,
   UpdateTaskRequest,
@@ -32,14 +32,14 @@ export function useTasks(initialFilters?: TaskFilters) {
     try {
       // Build query string from filters with defaults
       const params = new URLSearchParams();
-      
+
       // Always send page and limit
       const page = filters?.page ?? 1;
       const limit = filters?.limit ?? 10;
-      
+
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      
+
       if (filters?.search) params.append('search', filters.search);
       if (filters?.state) params.append('state', filters.state);
       if (filters?.priority) params.append('priority', filters.priority);
@@ -53,25 +53,25 @@ export function useTasks(initialFilters?: TaskFilters) {
       console.log('[useTasks] Filters:', filters);
 
       const response = await authApi.get<TasksResponse>(url);
-      
+
       console.log('[useTasks] Response received:', response);
       console.log('[useTasks] Response data:', response?.data);
       console.log('[useTasks] Response meta:', response?.meta);
       console.log('[useTasks] Number of tasks:', response?.data?.length || 0);
-      
+
       // Validate response structure
       if (!response || typeof response !== 'object') {
         throw new Error('Invalid response format: response is not an object');
       }
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         console.error('[useTasks] Invalid data structure. Expected { data: [], meta: {} }, got:', response);
         throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
       }
-      
+
       setTasks(response.data);
       setPagination(response.meta || null);
-      
+
       console.log('[useTasks] Tasks state updated with', response.data.length, 'tasks');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
@@ -302,7 +302,16 @@ export function useUpdateTask() {
     setError(null);
 
     try {
-      const response = await authApi.patch<Task>(`/tasks/${taskId}`, data as unknown as Record<string, unknown>);
+      const payload: Record<string, unknown> = {
+        ...(data as any).title !== undefined && { Title: (data as any).title },
+        ...(data as any).description !== undefined && { Description: (data as any).description },
+        ...(data as any).state !== undefined && { State: (data as any).state },
+        ...(data as any).priority !== undefined && { Priority: (data as any).priority },
+        ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date },
+        ...(data as any).assigned_to_ids !== undefined && { AssignedUserIds: (data as any).assigned_to_ids }
+      };
+
+      const response = await authApi.patch<Task>(`/tasks/${taskId}`, payload);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
@@ -403,13 +412,13 @@ export function useKanbanBoard(projectId: number) {
       console.error('Error fetching Kanban board:', err);
       console.error('Project ID:', projectId);
       console.error('API URL:', `/projects/${projectId}/kanban`);
-      
+
       // Fallback: Try to fetch tasks and organize them into kanban columns
       console.log('[useKanbanBoard] === FALLBACK STARTED ===');
       try {
         console.log('[useKanbanBoard] Trying fallback: fetch project tasks');
         console.log('[useKanbanBoard] Fallback URL:', `/projects/${projectId}/tasks`);
-        
+
         // Try multiple possible endpoints
         let tasksResponse;
         try {
@@ -418,7 +427,7 @@ export function useKanbanBoard(projectId: number) {
         } catch (tasksErr) {
           console.log('[useKanbanBoard] Tasks endpoint failed, trying alternatives');
           console.error('[useKanbanBoard] Tasks endpoint error:', tasksErr);
-          
+
           // Try alternative endpoints
           try {
             tasksResponse = await authApi.get<any>(`/tasks?project_id=${projectId}`);
@@ -431,7 +440,7 @@ export function useKanbanBoard(projectId: number) {
         console.log('[useKanbanBoard] Tasks response received:', tasksResponse);
         console.log('[useKanbanBoard] Response type:', typeof tasksResponse);
         console.log('[useKanbanBoard] Is array?', Array.isArray(tasksResponse));
-        
+
         // Handle different response structures
         let tasks: Task[] = [];
         if (Array.isArray(tasksResponse)) {
@@ -442,11 +451,11 @@ export function useKanbanBoard(projectId: number) {
           tasks = tasksResponse.data;
         } else if (tasksResponse.tasks && Array.isArray(tasksResponse.tasks)) {
           // Alternative wrapper
-          tasks = tasksResponse.tasks;
+          tasks = response.tasks;
         }
-        
+
         console.log('[useKanbanBoard] Extracted tasks:', tasks);
-        
+
         // Always create kanban data, even if no tasks
         const kanbanData: KanbanBoard = {
           project_id: projectId,
@@ -466,7 +475,7 @@ export function useKanbanBoard(projectId: number) {
           stack: fallbackErr instanceof Error ? fallbackErr.stack : undefined,
           response: fallbackErr
         });
-        
+
         // Final fallback: Create empty kanban board
         console.log('[useKanbanBoard] Creating empty kanban board as final fallback');
         const emptyKanbanData: KanbanBoard = {
@@ -479,7 +488,7 @@ export function useKanbanBoard(projectId: number) {
           }
         };
         setKanbanBoard(emptyKanbanData);
-        
+
         // Show warning instead of error
         const errorMessage = fallbackErr instanceof Error ? fallbackErr.message : 'Failed to fetch tasks';
         console.warn(`[useKanbanBoard] Tasks API not available: ${errorMessage}. Showing empty board.`);
@@ -556,10 +565,18 @@ export function useSubtasks(taskId: number) {
       const response = await authApi.get<SubtasksResponse>(`/tasks/${taskId}/subtasks`);
       setSubtasks(response.data || []);
       setPagination(response.meta || null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
-      setError(errorMessage);
-      console.error('Error fetching subtasks:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Subtasks endpoint not available for task ${taskId}`);
+        setSubtasks([]);
+        setPagination(null);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
+        setError(errorMessage);
+        console.error('Error fetching subtasks:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -595,10 +612,18 @@ export function useTimeEntries(taskId: number) {
       const response = await authApi.get<TimeEntriesResponse>(`/tasks/${taskId}/time-entries`);
       setTimeEntries(response.data || []);
       setTotalHours(response.total_hours || 0);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
-      setError(errorMessage);
-      console.error('Error fetching time entries:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Time entries endpoint not available for task ${taskId}`);
+        setTimeEntries([]);
+        setTotalHours(0);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
+        setError(errorMessage);
+        console.error('Error fetching time entries:', err);
+      }
     } finally {
       setLoading(false);
     }
