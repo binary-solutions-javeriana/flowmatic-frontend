@@ -49,6 +49,18 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const { updateTask, loading: updating, error: updateError } = useUpdateTask();
   const { projects, loading: projectsLoading } = useProjects({ page: 1, limit: 100 });
 
+  const toNumberArray = (val: unknown): number[] => {
+    if (Array.isArray(val)) return val.map((x) => Number(x)).filter((x) => !Number.isNaN(x));
+    if (typeof val === 'string') {
+      const s = val.trim();
+      if (!s) return [];
+      return s.split(',').map((p) => Number(p.trim())).filter((x) => !Number.isNaN(x));
+    }
+    if (val == null) return [];
+    const n = Number(val);
+    return Number.isNaN(n) ? [] : [n];
+  };
+
   // Initialize form data and fetch tenant users
   useEffect(() => {
     const loadTenantUsers = async () => {
@@ -81,8 +93,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
         limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserIds('');
-    } else {
+      setAssigneeUserIds(toNumberArray(task.assigned_to_ids));   
+     } else {
       setFormData({
         title: '',
         description: '',
@@ -92,7 +104,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserIds(user?.id ? String(user.id) : '');
+      setAssigneeUserIds(user?.id ? [Number(user.id)] : []);
     }
     setErrors([]);
   }, [mode, task, isOpen, initialState, projectId, user]);
@@ -308,24 +320,26 @@ const TaskModal: React.FC<TaskModalProps> = ({
           </div>
 
           {/* Assigned User (Tenant-scoped, single select) */}
+          {/* Assigned Users (Tenant-scoped, multi-select) */}
           <div>
-            <label htmlFor="assignee" className="block text-sm font-medium text-[#0c272d] mb-2">
+            <label htmlFor="assignees" className="block text-sm font-medium text-[#0c272d] mb-2">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
-                <span>Assign To</span>
+                <span>Assign To (multiple)</span>
               </div>
             </label>
+
             <select
               id="assignees"
               multiple
-              value={assigneeUserIds.map(String)}
+              value={(Array.isArray(assigneeUserIds) ? assigneeUserIds : []).map(String)}
               onChange={(e) => {
                 const selected = Array.from(e.target.selectedOptions).map(o => Number(o.value));
                 setAssigneeUserIds(selected);
               }}
               className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
               disabled={isSubmitting}
-              size={Math.min(tenantUsers.length || 4, 6)} // se ve bonito y útil
+              size={Math.min(tenantUsers.length || 4, 6)}
             >
               {tenantUsers.length === 0 ? (
                 <option value="" disabled>No users found</option>
