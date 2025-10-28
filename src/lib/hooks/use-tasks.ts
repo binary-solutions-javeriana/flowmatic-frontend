@@ -240,13 +240,11 @@ export function useCreateTask() {
     try {
       // Map UI payload (aliases) to backend schema
       const projectId = (data as any).project_id ?? (data as any).proyect_id;
-      // Normalize priority to numeric 1-5 as required by backend validation
+      // Normalize priority to string value as expected by backend
       const rawPriority = (data as any).priority;
-      const priorityValue = typeof rawPriority === 'number'
-        ? rawPriority
-        : typeof rawPriority === 'string'
-          ? ({ low: 1, bajo: 1, medium: 3, medio: 3, high: 4, alto: 4, critical: 5 } as Record<string, number>)[rawPriority.toLowerCase()]
-          : undefined;
+      const priorityValue = typeof rawPriority === 'string'
+        ? rawPriority.charAt(0).toUpperCase() + rawPriority.slice(1).toLowerCase()
+        : undefined;
       const payload: Record<string, unknown> = {
         ProjectID: projectId,
         Title: (data as any).title,
@@ -302,11 +300,17 @@ export function useUpdateTask() {
     setError(null);
 
     try {
+      // Map priority to string value as expected by backend
+      const rawPriority = (data as any).priority;
+      const priorityValue = typeof rawPriority === 'string'
+        ? rawPriority.charAt(0).toUpperCase() + rawPriority.slice(1).toLowerCase()
+        : undefined;
+
       const payload: Record<string, unknown> = {
         ...(data as any).title !== undefined && { Title: (data as any).title },
         ...(data as any).description !== undefined && { Description: (data as any).description },
         ...(data as any).state !== undefined && { State: (data as any).state },
-        ...(data as any).priority !== undefined && { Priority: (data as any).priority },
+        ...(priorityValue !== undefined) && { Priority: priorityValue },
         ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date },
         ...(data as any).assigned_to_ids !== undefined && { AssignedUserIds: (data as any).assigned_to_ids }
       };
@@ -371,12 +375,34 @@ export function useDeleteTask() {
     setError(null);
 
     try {
+      console.log(`[useDeleteTask] Attempting to delete task ${taskId}`);
       await authApi.delete<void>(`/tasks/${taskId}`);
+      console.log(`[useDeleteTask] Successfully deleted task ${taskId}`);
       return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete task';
+    } catch (err: any) {
+      console.error('[useDeleteTask] Error deleting task:', err);
+      console.error('[useDeleteTask] Task ID:', taskId);
+      console.error('[useDeleteTask] Error details:', {
+        message: err?.message,
+        statusCode: err?.statusCode,
+        path: err?.path,
+        method: err?.method,
+        timestamp: err?.timestamp
+      });
+
+      let errorMessage = 'Failed to delete task';
+
+      if (err?.statusCode === 404) {
+        errorMessage = 'Task not found. It may have already been deleted.';
+      } else if (err?.statusCode === 403) {
+        errorMessage = 'You do not have permission to delete this task.';
+      } else if (err?.statusCode === 500) {
+        errorMessage = 'Server error occurred while deleting the task. Please try again later.';
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
-      console.error('Error deleting task:', err);
       return false;
     } finally {
       setLoading(false);
@@ -451,7 +477,7 @@ export function useKanbanBoard(projectId: number) {
           tasks = tasksResponse.data;
         } else if (tasksResponse.tasks && Array.isArray(tasksResponse.tasks)) {
           // Alternative wrapper
-          tasks = response.tasks;
+          tasks = tasksResponse.tasks;
         }
 
         console.log('[useKanbanBoard] Extracted tasks:', tasks);

@@ -23,18 +23,18 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
   useEffect(() => {
     if (tasks && tasks.length > 0) {
       const stats: Record<number, { total: number; completed: number }> = {};
-      
+
       tasks.forEach(task => {
-        const projectId = task.proyect_id;
+        const projectId = (task as any).ProjectID || task.proyect_id;
         if (!stats[projectId]) {
           stats[projectId] = { total: 0, completed: 0 };
         }
         stats[projectId].total += 1;
-        if (task.state === 'Done') {
+        if ((task as any).State === 'done' || task.state === 'Done') {
           stats[projectId].completed += 1;
         }
       });
-      
+
       setProjectStats(stats);
     }
   }, [tasks]);
@@ -54,11 +54,11 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
   const inProgressProjects = backendProjects.filter(p => p.state === 'In Progress').length;
   const planningProjects = backendProjects.filter(p => p.state === 'Planning').length;
   const onHoldProjects = backendProjects.filter(p => p.state === 'On Hold').length;
-  
+
   // Calculate overall task statistics
   const totalTasks = tasks?.length || 0;
-  const completedTasks = tasks?.filter(task => task.state === 'Done').length || 0;
-  const inProgressTasks = tasks?.filter(task => task.state === 'In Progress').length || 0;
+  const completedTasks = tasks?.filter(task => (task as any).State === 'done' || task.state === 'Done').length || 0;
+  const inProgressTasks = tasks?.filter(task => (task as any).State === 'In Progress' || task.state === 'In Progress').length || 0;
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

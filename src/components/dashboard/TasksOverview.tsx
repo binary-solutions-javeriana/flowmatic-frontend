@@ -135,11 +135,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   };
 
   const handleTaskUpdate = () => {
-    // Tasks will be refreshed automatically by their respective components
+    // Refresh tasks after update
+    refetchTasks();
   };
 
   const handleTaskDelete = () => {
-    // Handle task deletion if needed
+    // Refresh tasks after deletion
+    refetchTasks();
   };
 
   const handleCreateTask = (task: Task) => {

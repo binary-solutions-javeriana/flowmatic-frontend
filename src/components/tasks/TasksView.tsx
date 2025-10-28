@@ -77,9 +77,17 @@ const TasksView: React.FC<TasksViewProps> = ({ projectId }) => {
     setSelectedTask(null);
   };
 
-  const handleTaskUpdate = () => {
-    // Tasks will be refreshed automatically by their respective components
-    // This is just for any additional actions needed after update
+  const handleTaskUpdate = (updatedTask?: Task) => {
+    // Update the selected task if an updated task is provided
+    if (updatedTask && selectedTask && updatedTask.task_id === selectedTask.task_id) {
+      setSelectedTask(updatedTask);
+    }
+    // Force refresh of the current view to show updated data immediately
+    if (viewMode === 'kanban') {
+      // KanbanBoard will handle its own refresh
+    } else {
+      // TaskList will handle its own refresh
+    }
   };
 
   const handleTaskDelete = () => {

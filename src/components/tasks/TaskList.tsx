@@ -82,10 +82,8 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
 
   const handleCreateTask = async () => {
     setIsCreateModalOpen(false);
-    // Add a small delay to ensure the backend has processed the task
-    setTimeout(() => {
-      refetch();
-    }, 200);
+    // Refresh tasks immediately after creation
+    refetch();
   };
 
   const handleTaskClick = (task: Task) => {

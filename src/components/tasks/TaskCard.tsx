@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, MoreVertical, ChevronDown } from 'lucide-react';
 import type { Task, TaskState, TaskPriority } from '@/lib/types/task-types';
 import {
@@ -33,6 +33,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingPriority, setUpdatingPriority] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState<string>('');
+
+  useEffect(() => {
+    if (confirmationMessage) {
+      const timeout = setTimeout(() => setConfirmationMessage(''), 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [confirmationMessage]);
 
   const { updateTaskStatus } = useUpdateTaskStatus();
   const { updateTask } = useUpdateTask();
@@ -60,6 +68,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     try {
       await updateTaskStatus(task.task_id, newState);
       // The task state will be updated via the parent component's refetch
+      setConfirmationMessage(`Status updated to "${newState}" successfully!`);
     } catch (error) {
       console.error('Error updating task status:', error);
     } finally {
@@ -72,6 +81,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     try {
       await updateTask(task.task_id, { priority: newPriority });
       // The task priority will be updated via the parent component's refetch
+      setConfirmationMessage(`Priority updated to "${newPriority}" successfully!`);
     } catch (error) {
       console.error('Error updating task priority:', error);
     } finally {
@@ -81,12 +91,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   if (compact) {
     return (
-      <div 
+      <div
         onClick={handleCardClick}
         className={`bg-white/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] ${
           isOverdue ? 'ring-2 ring-red-200' : ''
         }`}
       >
+        {/* Confirmation Message */}
+        {confirmationMessage && (
+          <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-xs font-medium">
+            {confirmationMessage}
+          </div>
+        )}
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-medium text-[#0c272d] text-sm truncate flex-1 mr-2">
             {task.title}
@@ -158,6 +174,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
         isOverdue ? 'ring-2 ring-red-200' : ''
       }`}
     >
+      {/* Confirmation Message */}
+      {confirmationMessage && (
+        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-xs font-medium">
+          {confirmationMessage}
+        </div>
+      )}
       <div className="flex items-start justify-between mb-3">
         <h3 className="font-semibold text-[#0c272d] text-base sm:text-lg leading-tight flex-1 mr-2">
           {task.title}

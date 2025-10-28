@@ -34,7 +34,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     title: '',
     description: '',
     state: 'To Do' as TaskState,
-    priority: 'Medium' as any,
+    priority: 'Medium' as TaskPriority,
     assigned_to_ids: '', // will be replaced by select of users
     limit_date: '',
     project_id: ''
@@ -88,8 +88,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
         title: task.title,
         description: task.description || '',
         state: task.state,
-        priority: (task.priority as any) || 'Medium',
-        assigned_to_ids: task.assigned_to_ids || '',
+        priority: task.priority || 'Medium',
+        assigned_to_ids: Array.isArray(task.assigned_to_ids) ? task.assigned_to_ids.join(',') : (task.assigned_to_ids || ''),
         limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
         project_id: projectId ? projectId.toString() : ''
       });
@@ -99,7 +99,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         title: '',
         description: '',
         state: initialState || 'To Do',
-        priority: 'Medium' as any,
+        priority: 'Medium' as TaskPriority,
         assigned_to_ids: '',
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
@@ -123,8 +123,24 @@ const TaskModal: React.FC<TaskModalProps> = ({
     setErrors([]);
 
     try {
-      // Validate form data
-      const validation = validateTaskData(formData);
+      // Get project dates for validation
+      let projectStartDate: string | undefined;
+      let projectEndDate: string | undefined;
+
+      const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
+      if (selectedProjectId) {
+        const selectedProject = projects?.find(p => p.proyect_id === selectedProjectId);
+        if (selectedProject) {
+          projectStartDate = selectedProject.start_date;
+          projectEndDate = selectedProject.end_date;
+        }
+      }
+
+      // Validate form data with project dates
+      const validation = validateTaskData({
+        ...formData,
+        assigned_to_ids: assigneeUserIds
+      }, projectStartDate, projectEndDate);
       if (!validation.isValid) {
         setErrors(validation.errors);
         return;
@@ -319,13 +335,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Assigned User (Tenant-scoped, single select) */}
           {/* Assigned Users (Tenant-scoped, multi-select) */}
           <div>
             <label htmlFor="assignees" className="block text-sm font-medium text-[#0c272d] mb-2">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
-                <span>Assign To (multiple)</span>
+                <span>Assign To *</span>
               </div>
             </label>
 
@@ -340,6 +355,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
               className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
               disabled={isSubmitting}
               size={Math.min(tenantUsers.length || 4, 6)}
+              required
             >
               {tenantUsers.length === 0 ? (
                 <option value="" disabled>No users found</option>
@@ -358,17 +374,65 @@ const TaskModal: React.FC<TaskModalProps> = ({
             <label htmlFor="limit_date" className="block text-sm font-medium text-[#0c272d] mb-2">
               <div className="flex items-center space-x-2">
                 <Calendar className="w-4 h-4" />
-                <span>Due Date</span>
+                <span>Due Date *</span>
               </div>
             </label>
-            <input
-              type="date"
-              id="limit_date"
-              value={formData.limit_date}
-              onChange={(e) => handleInputChange('limit_date', e.target.value)}
-              className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
-              disabled={isSubmitting}
-            />
+            {(() => {
+              let projectForDates = null;
+              if (mode === 'edit' && task?.proyect_id) {
+                // For edit mode, get project from task
+                projectForDates = projects?.find(p => p.proyect_id === task.proyect_id);
+              } else {
+                // For create mode, get from form or prop
+                const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
+                projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
+              }
+              return projectForDates ? (
+                <div className="text-xs text-[#0c272d]/70 mb-2">
+                  Project dates: {projectForDates.start_date ? formatDateSafe(projectForDates.start_date) : 'N/A'} - {projectForDates.end_date ? formatDateSafe(projectForDates.end_date) : 'N/A'}
+                </div>
+              ) : null;
+            })()}
+            {(() => {
+              let minDate = '';
+              let maxDate = '';
+              let projectForDates = null;
+              let selectedProjectId: number | undefined;
+
+              if (mode === 'edit' && task?.proyect_id) {
+                // For edit mode, get project from task
+                selectedProjectId = task.proyect_id;
+                projectForDates = projects?.find(p => p.proyect_id === task.proyect_id);
+              } else {
+                // For create mode, get from form or prop
+                selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
+                projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
+              }
+
+              if (projectForDates) {
+                if (projectForDates.start_date) {
+                  minDate = new Date(projectForDates.start_date).toISOString().split('T')[0];
+                }
+                if (projectForDates.end_date) {
+                  maxDate = new Date(projectForDates.end_date).toISOString().split('T')[0];
+                }
+              }
+
+              return (
+                <input
+                  key={`date-input-${selectedProjectId || 'no-project'}`} // Force re-mount when project changes
+                  type="date"
+                  id="limit_date"
+                  value={formData.limit_date}
+                  onChange={(e) => handleInputChange('limit_date', e.target.value)}
+                  min={minDate}
+                  max={maxDate}
+                  className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
+                  disabled={isSubmitting}
+                  required
+                />
+              );
+            })()}
           </div>
 
           {/* Submit Buttons */}

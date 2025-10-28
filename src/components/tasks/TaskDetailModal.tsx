@@ -28,7 +28,7 @@ interface TaskDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
-  onUpdate: () => void;
+  onUpdate: (updatedTask?: Task) => void;
   onDelete: () => void;
 }
 
@@ -46,6 +46,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [tempStatus, setTempStatus] = useState<TaskState>('To Do');
   const [tempPriority, setTempPriority] = useState<TaskPriority>('Medium');
   const [currentTask, setCurrentTask] = useState<Task | null>(task);
+  const [confirmationMessage, setConfirmationMessage] = useState<string>('');
 
   // Update currentTask when task prop changes
   React.useEffect(() => {
@@ -71,7 +72,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const handleUpdateTask = async (updatedTask: Task) => {
     setIsEditing(false);
     setCurrentTask(updatedTask);
-    onUpdate();
+    onUpdate(updatedTask);
+    // Close the modal immediately after successful update
+    onClose();
   };
 
   const startEditingStatus = () => {
@@ -92,13 +95,20 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (!currentTask) return;
 
     try {
-      await updateTaskStatus(currentTask.task_id, tempStatus);
-      // Update local state immediately for instant UI feedback
-      setCurrentTask(prev => prev ? { ...prev, state: tempStatus } : null);
+      const updatedTask = await updateTaskStatus(currentTask.task_id, tempStatus);
+      // Update local state with the returned task from API
+      if (updatedTask) {
+        setCurrentTask(updatedTask);
+      }
       setEditingStatus(false);
-      onUpdate();
+      onUpdate(updatedTask);
+      setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
+      // Close the modal after successful update
+      onClose();
     } catch (error) {
       console.error('Error updating task status:', error);
+      // Revert temp status on error
+      setTempStatus(currentTask.state);
     }
   };
 
@@ -106,15 +116,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (!currentTask) return;
 
     try {
-      await updateTask(currentTask.task_id, {
+      const updatedTask = await updateTask(currentTask.task_id, {
         priority: tempPriority
       });
-      // Update local state immediately for instant UI feedback
-      setCurrentTask(prev => prev ? { ...prev, priority: tempPriority } : null);
+      // Update local state with the returned task from API
+      if (updatedTask) {
+        setCurrentTask(updatedTask);
+      }
       setEditingPriority(false);
-      onUpdate();
+      onUpdate(updatedTask);
+      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);
+      // Close the modal after successful update
+      onClose();
     } catch (error) {
       console.error('Error updating task priority:', error);
+      // Revert temp priority on error
+      setTempPriority(currentTask.priority);
     }
   };
 
@@ -131,9 +148,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
     if (window.confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
       try {
-        await deleteTask(currentTask.task_id);
-        onDelete();
-        onClose();
+        const success = await deleteTask(currentTask.task_id);
+        if (success) {
+          onDelete();
+          onClose();
+        }
+        // Error handling is done in the hook, no need to handle here
       } catch (error) {
         console.error('Error deleting task:', error);
       }
@@ -181,6 +201,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         <div className="p-6">
+          {/* Confirmation Message */}
+          {confirmationMessage && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm font-medium">
+              {confirmationMessage}
+            </div>
+          )}
+
           {/* Task Controls Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {/* Status Card */}

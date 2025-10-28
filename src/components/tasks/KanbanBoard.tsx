@@ -56,7 +56,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
 
   const handleDrop = useCallback(async (e: React.DragEvent, targetState: TaskState) => {
     e.preventDefault();
-    
+
     if (!draggedTask || draggedTask.state === targetState) {
       setDraggedTask(null);
       return;
@@ -64,9 +64,12 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
 
     try {
       await updateTaskStatus(draggedTask.task_id, targetState);
+      // Force refresh to update the UI immediately
       forceRefresh();
     } catch (error) {
       console.error('Error updating task status:', error);
+      // Force refresh to revert any optimistic updates
+      forceRefresh();
     } finally {
       setDraggedTask(null);
     }
