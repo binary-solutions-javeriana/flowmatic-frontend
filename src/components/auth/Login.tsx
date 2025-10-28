@@ -5,15 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-store";
 import StyledLoginForm from "./LoginForm";
+import { redirectToDashboard } from "@/lib/auth-redirect";
 
 export default function Login() {
   const { state } = useAuth();
   const router = useRouter();
 
-  // Redirect to dashboard if already authenticated
+  // Redirect to appropriate dashboard if already authenticated
   useEffect(() => {
     if (!state.isLoading && state.isAuthenticated) {
-      router.push('/dashboard');
+      console.log('[Login] User already authenticated, redirecting...');
+      redirectToDashboard(router);
     }
   }, [state.isLoading, state.isAuthenticated, router]);
 

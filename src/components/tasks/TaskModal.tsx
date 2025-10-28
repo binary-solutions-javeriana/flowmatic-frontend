@@ -7,7 +7,6 @@ import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
 import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
-import { useAuthState } from '@/lib/auth-store';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -34,14 +33,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
     title: '',
     description: '',
     state: 'To Do' as TaskState,
-    priority: 'Medium' as any,
-    assigned_to_ids: '', // will be replaced by select of users
+    priority: 'Medium' as TaskPriority,
+    assigned_to_ids: '',
     limit_date: '',
     project_id: ''
   });
-  const [tenantUsers, setTenantUsers] = useState<Array<{ id: number; email?: string; mail?: string; name?: string }>>([]);
-  const [assigneeUserId, setAssigneeUserId] = useState<string>('');
-  const { user } = useAuthState();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,53 +45,31 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const { updateTask, loading: updating, error: updateError } = useUpdateTask();
   const { projects, loading: projectsLoading } = useProjects({ page: 1, limit: 100 });
 
-  // Initialize form data and fetch tenant users
+  // Initialize form data
   useEffect(() => {
-    const loadTenantUsers = async () => {
-      try {
-        const auth = await import('@/lib/authenticated-api');
-        let users: Array<{ id: number; email?: string; mail?: string; name?: string }> = [];
-        const creatorMail = user?.email;
-        const tenantId = (user as any)?.user_metadata?.tenantId || (user as any)?.tenantId;
-        if (creatorMail) {
-          users = await auth.authApi.get(`/tasks/assignee-options?creatorMail=${encodeURIComponent(creatorMail)}`);
-        } else if (tenantId) {
-          users = await auth.authApi.get(`/tasks/assignee-options/by-tenant?tenantId=${encodeURIComponent(String(tenantId))}`);
-        } else {
-          users = await auth.authApi.get(`/tasks/assignee-options`);
-        }
-        setTenantUsers(Array.isArray(users) ? users : []);
-      } catch (e) {
-        console.warn('Failed to load tenant users', e);
-      }
-    };
-    loadTenantUsers();
-
     if (mode === 'edit' && task) {
       setFormData({
         title: task.title,
         description: task.description || '',
         state: task.state,
-        priority: (task.priority as any) || 'Medium',
+        priority: task.priority,
         assigned_to_ids: task.assigned_to_ids || '',
         limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserId('');
     } else {
       setFormData({
         title: '',
         description: '',
         state: initialState || 'To Do',
-        priority: 'Medium' as any,
+        priority: 'Medium',
         assigned_to_ids: '',
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserId(user?.id ? String(user.id) : '');
     }
     setErrors([]);
-  }, [mode, task, isOpen, initialState, projectId, user]);
+  }, [mode, task, isOpen, initialState, projectId]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -126,12 +100,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
           title: formData.title,
           description: formData.description || undefined,
           state: formData.state,
-          // map Spanish labels to backend expected text values
-          // keep UI labels but backend expects numeric 1-5; mapping handled in hook
-          priority: (formData.priority as any) as TaskPriority,
-          created_by: user?.id ? (typeof user.id === 'string' ? parseInt(user.id, 10) : (user.id as unknown as number)) : 0,
-          // assignee handled by backend via dedicated endpoint; omit here per validation
-          // do not send assigned_to_ids here; we will have a dedicated assign flow
+          priority: formData.priority,
+          created_by: 1, // TODO: Get from auth context
+          assigned_to_ids: formData.assigned_to_ids || undefined,
           limit_date: formData.limit_date || undefined,
           ...(selectedProjectId && { proyect_id: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId })
@@ -143,8 +114,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
           title: formData.title,
           description: formData.description || undefined,
           state: formData.state,
-          priority: (formData.priority as any) as TaskPriority,
-          // do not send assigned_to_ids in update payload
+          priority: formData.priority,
+          assigned_to_ids: formData.assigned_to_ids || undefined,
           limit_date: formData.limit_date || undefined
         };
 
@@ -307,32 +278,26 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Assigned User (Tenant-scoped, single select) */}
+          {/* Assigned Users */}
           <div>
-            <label htmlFor="assignee" className="block text-sm font-medium text-[#0c272d] mb-2">
+            <label htmlFor="assigned_to_ids" className="block text-sm font-medium text-[#0c272d] mb-2">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
-                <span>Assign To</span>
+                <span>Assigned Users</span>
               </div>
             </label>
-            <select
-              id="assignee"
-              value={assigneeUserId}
-              onChange={(e) => setAssigneeUserId(e.target.value)}
+            <input
+              type="text"
+              id="assigned_to_ids"
+              value={formData.assigned_to_ids}
+              onChange={(e) => handleInputChange('assigned_to_ids', e.target.value)}
+              placeholder="Enter user IDs separated by commas (e.g., 1,2,3)"
               className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
               disabled={isSubmitting}
-            >
-              <option value="">Select a user...</option>
-              {tenantUsers.length === 0 ? (
-                <option value="" disabled>No users found</option>
-              ) : (
-                tenantUsers.map((u) => (
-                  <option key={u.id} value={String(u.id)}>
-                    {u.mail || u.email || u.name || `User ${u.id}`}
-                  </option>
-                ))
-              )}
-            </select>
+            />
+            <p className="text-xs text-[#0c272d]/60 mt-1">
+              Enter comma-separated user IDs (e.g., 1,2,3)
+            </p>
           </div>
 
           {/* Due Date */}

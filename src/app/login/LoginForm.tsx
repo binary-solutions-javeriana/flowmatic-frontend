@@ -84,8 +84,30 @@ export default function LoginForm({ onSubmit, className }: LoginFormProps) {
       // Call optional onSubmit callback
       onSubmit?.(email, password);
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Wait a moment for state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // DEBUG: Check what data was stored
+      const storedUser = localStorage.getItem('flowmatic_user');
+      console.log('=== LOGIN DEBUG ===');
+      console.log('Stored user data:', storedUser);
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        console.log('Parsed user data:', userData);
+        console.log('user_metadata:', userData.user_metadata);
+        console.log('isTenantAdmin:', userData.user_metadata?.isTenantAdmin);
+        console.log('userType:', userData.user_metadata?.userType);
+      }
+      
+      // Use auth-redirect utility to redirect to appropriate dashboard
+      const { redirectToDashboard, isTenantAdmin, getDashboardRoute } = await import('@/lib/auth-redirect');
+      const isAdmin = isTenantAdmin();
+      const route = getDashboardRoute();
+      console.log('Is tenant admin?', isAdmin);
+      console.log('Redirecting to:', route);
+      console.log('===================');
+      
+      redirectToDashboard(router);
     } catch (error) {
       // Error is already handled by auth store and error handler
       console.error('Login failed:', error);
