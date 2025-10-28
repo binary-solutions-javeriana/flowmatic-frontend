@@ -299,7 +299,24 @@ export function useUpdateTask() {
     setError(null);
 
     try {
-      const response = await authApi.patch<Task>(`/tasks/${taskId}`, data as unknown as Record<string, unknown>);
+      // Normalize priority to numeric 1-5 as required by backend validation
+      const rawPriority = (data as any).priority;
+      const priorityValue = typeof rawPriority === 'number'
+        ? rawPriority
+        : typeof rawPriority === 'string'
+          ? ({ low: 1, bajo: 1, medium: 3, medio: 3, high: 4, alto: 4, critical: 5 } as Record<string, number>)[rawPriority.toLowerCase()]
+          : undefined;
+
+      const payload: Record<string, unknown> = {
+        ...(data as any).title !== undefined && { Title: (data as any).title },
+        ...(data as any).description !== undefined && { Description: (data as any).description },
+        ...(data as any).state !== undefined && { State: (data as any).state },
+        ...(data as any).priority !== undefined && priorityValue !== undefined && { Priority: priorityValue.toString() },
+        ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date },
+        ...(data as any).assigned_to_ids !== undefined && { AssignedUserIds: (data as any).assigned_to_ids }
+      };
+
+      const response = await authApi.patch<Task>(`/tasks/${taskId}`, payload);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
@@ -553,10 +570,18 @@ export function useSubtasks(taskId: number) {
       const response = await authApi.get<SubtasksResponse>(`/tasks/${taskId}/subtasks`);
       setSubtasks(response.data || []);
       setPagination(response.meta || null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
-      setError(errorMessage);
-      console.error('Error fetching subtasks:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Subtasks endpoint not available for task ${taskId}`);
+        setSubtasks([]);
+        setPagination(null);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
+        setError(errorMessage);
+        console.error('Error fetching subtasks:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -592,10 +617,18 @@ export function useTimeEntries(taskId: number) {
       const response = await authApi.get<TimeEntriesResponse>(`/tasks/${taskId}/time-entries`);
       setTimeEntries(response.data || []);
       setTotalHours(response.total_hours || 0);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
-      setError(errorMessage);
-      console.error('Error fetching time entries:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Time entries endpoint not available for task ${taskId}`);
+        setTimeEntries([]);
+        setTotalHours(0);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
+        setError(errorMessage);
+        console.error('Error fetching time entries:', err);
+      }
     } finally {
       setLoading(false);
     }
