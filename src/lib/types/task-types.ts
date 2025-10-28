@@ -11,7 +11,7 @@ export interface Task {
   state: TaskState;
   priority: TaskPriority;
   created_by: number;
-  assigned_to_ids?: string; // Comma-separated user IDs: "2,3,4"
+  assigned_to_ids?: string | number[]; // Comma-separated user IDs: "2,3,4"
   limit_date?: string; // ISO 8601 date
   parent_task_id?: number; // For subtasks
 }
@@ -24,7 +24,7 @@ export interface CreateTaskRequest {
   state?: TaskState;
   priority: TaskPriority;
   created_by: number;
-  assigned_to_ids?: string;
+  assigned_to_ids?: number[] | string;
   assignee_user_id?: number;
   limit_date?: string;
 }
@@ -34,7 +34,7 @@ export interface UpdateTaskRequest {
   description?: string;
   state?: TaskState;
   priority?: TaskPriority;
-  assigned_to_ids?: string;
+  assigned_to_ids?: number[] | string;
   limit_date?: string;
 }
 

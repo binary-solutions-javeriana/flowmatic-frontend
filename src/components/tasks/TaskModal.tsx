@@ -40,7 +40,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     project_id: ''
   });
   const [tenantUsers, setTenantUsers] = useState<Array<{ id: number; email?: string; mail?: string; name?: string }>>([]);
-  const [assigneeUserId, setAssigneeUserId] = useState<string>('');
+  const [assigneeUserIds, setAssigneeUserIds] = useState<number[]>([]);
   const { user } = useAuthState();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,7 +81,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserId('');
+      setAssigneeUserIds('');
     } else {
       setFormData({
         title: '',
@@ -92,7 +92,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserId(user?.id ? String(user.id) : '');
+      setAssigneeUserIds(user?.id ? String(user.id) : '');
     }
     setErrors([]);
   }, [mode, task, isOpen, initialState, projectId, user]);
@@ -134,7 +134,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
           // do not send assigned_to_ids here; we will have a dedicated assign flow
           limit_date: formData.limit_date || undefined,
           ...(selectedProjectId && { proyect_id: selectedProjectId }),
-          ...(parentTaskId && { parent_task_id: parentTaskId })
+          ...(parentTaskId && { parent_task_id: parentTaskId }),
+          assigned_to_ids: assigneeUserIds
         };
 
         result = await createTask(createData);
@@ -315,13 +316,17 @@ const TaskModal: React.FC<TaskModalProps> = ({
               </div>
             </label>
             <select
-              id="assignee"
-              value={assigneeUserId}
-              onChange={(e) => setAssigneeUserId(e.target.value)}
+              id="assignees"
+              multiple
+              value={assigneeUserIds.map(String)}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions).map(o => Number(o.value));
+                setAssigneeUserIds(selected);
+              }}
               className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
               disabled={isSubmitting}
+              size={Math.min(tenantUsers.length || 4, 6)} // se ve bonito y útil
             >
-              <option value="">Select a user...</option>
               {tenantUsers.length === 0 ? (
                 <option value="" disabled>No users found</option>
               ) : (

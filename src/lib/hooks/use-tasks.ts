@@ -256,6 +256,9 @@ export function useCreateTask() {
         CreatedBy: (data as any).created_by,
         LimitDate: (data as any).limit_date,
         // Backend will read this from a dedicated endpoint/field; we won't send AssignedUserIds anymore
+        // Pass assigned_to_ids instead
+        AssignedToIDs: (data as any).assigned_to_ids ?? (data as any).assignedToIds
+
       };
 
       // Basic validation
