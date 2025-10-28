@@ -168,9 +168,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
         )}
       </div>
 
-      {/* Created/Updated Info */}
+      {/* Task Info */}
       <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-        Updated {formatDateSafe(task.updated_at)}
+      Task ID: {task.task_id}
       </div>
     </div>
   );

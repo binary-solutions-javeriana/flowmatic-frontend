@@ -175,7 +175,7 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                     <Calendar className="w-4 h-4 text-[#14a67e]" />
                     <span className="font-medium">Updated:</span>
-                    <span>{formatDateSafe(project.updated_at)}</span>
+                    <span>Project ID: {project.proyect_id}</span>
                   </div>
                 </div>
               </div>

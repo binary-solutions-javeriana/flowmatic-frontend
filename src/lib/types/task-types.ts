@@ -14,8 +14,6 @@ export interface Task {
   assigned_to_ids?: string; // Comma-separated user IDs: "2,3,4"
   limit_date?: string; // ISO 8601 date
   parent_task_id?: number; // For subtasks
-  created_at: string;
-  updated_at: string;
 }
 
 export interface CreateTaskRequest {
@@ -58,7 +56,7 @@ export interface TaskFilters {
   priority?: TaskPriority;
   assigned_to?: string;
   project_id?: number;
-  orderBy?: 'created_at' | 'updated_at' | 'title' | 'priority' | 'limit_date';
+  orderBy?: 'title' | 'priority' | 'limit_date';
   order?: 'asc' | 'desc';
 }
 

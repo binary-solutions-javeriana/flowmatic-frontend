@@ -22,7 +22,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskState | ''>('');
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | ''>('');
-  const [sortBy, setSortBy] = useState<'priority' | 'due_date' | 'created_at'>('priority');
+  const [sortBy, setSortBy] = useState<'priority' | 'due_date' >('priority');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -226,8 +226,6 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
               <option value="priority-asc">Priority (Low to High)</option>
               <option value="due_date-asc">Due Date (Earliest)</option>
               <option value="due_date-desc">Due Date (Latest)</option>
-              <option value="created_at-desc">Created (Newest)</option>
-              <option value="created_at-asc">Created (Oldest)</option>
             </select>
           </div>
 

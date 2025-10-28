@@ -377,10 +377,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </div>
           )}
 
-          {/* Created/Updated Info */}
+          {/* Task Info */}
           <div className="pt-4 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-            <p>Created: {formatDateSafe(task.created_at)}</p>
-            <p>Updated: {formatDateSafe(task.updated_at)}</p>
+            <p>Task ID: {task.task_id}</p>
           </div>
         </div>
       </div>
