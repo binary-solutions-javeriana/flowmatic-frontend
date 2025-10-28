@@ -128,10 +128,37 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
     return '';
   };
 
+  // Check if user is admin (TenantAdmin or SuperAdmin)
+  const isAdmin = (): boolean => {
+    if (!user || !user.user_metadata) return false;
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Check if user is tenant admin or has SuperAdmin role
+    const isTenantAdmin = metadata.isTenantAdmin === true;
+    const isUserTypeTenantAdmin = metadata.userType === 'tenantAdmin';
+    const isSuperAdmin = metadata.role === 'SuperAdmin';
+
+    const result = isTenantAdmin || isUserTypeTenantAdmin || isSuperAdmin;
+
+    // Debug log
+    console.log('[isAdmin] Check:', {
+      isTenantAdmin,
+      isUserTypeTenantAdmin,
+      isSuperAdmin,
+      role: metadata.role,
+      userType: metadata.userType,
+      result
+    });
+
+    return result;
+  };
+
   const displayName = getUserDisplayName();
   const initials = getUserInitials();
   const userRole = getUserRole();
   const tenantInfo = getTenantInfo();
+  const userIsAdmin = isAdmin();
 
   // Debug logs
   console.log('=== HEADER COMPONENT DEBUG ===');
@@ -140,6 +167,7 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
   console.log('displayName:', displayName);
   console.log('userRole:', userRole);
   console.log('tenantInfo:', tenantInfo);
+  console.log('userIsAdmin:', userIsAdmin);
   console.log('==============================');
 
   return (
@@ -199,18 +227,21 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
 
                 {/* Menu Items */}
                 <div className="py-2">
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
-                      if (onNavigate) {
-                        onNavigate('settings');
-                      }
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </button>
+                  {/* Settings - Only visible for admins */}
+                  {userIsAdmin && (
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        if (onNavigate) {
+                          onNavigate('settings');
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Logout */}
