@@ -115,13 +115,13 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
   ]);
 
   const fetchProjectTasks = useCallback(async () => {
-    if (!projectId) return;
+    if (projectId == null) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      // Build query string from filters
+      // Use the correct endpoint for project tasks
       const params = new URLSearchParams();
 
       const page = memoizedFilters?.page ?? 1;
@@ -142,9 +142,9 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
 
       const response = await authApi.get<any>(url);
 
-      if (!response || typeof response !== 'object') {
-        throw new Error('Invalid response format: response is not an object');
-      }
+      console.log('[useProjectTasks] Response received:', response);
+      console.log('[useProjectTasks] Response type:', typeof response);
+      console.log('[useProjectTasks] Is array?', Array.isArray(response));
 
       // Handle different response structures
       let tasks: Task[] = [];
@@ -167,7 +167,9 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
 
       setTasks(tasks);
       setPagination(pagination);
-      
+
+      console.log('[useProjectTasks] Tasks state updated with', tasks.length, 'tasks');
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project tasks';
       setError(errorMessage);

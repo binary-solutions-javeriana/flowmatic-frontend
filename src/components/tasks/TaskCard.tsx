@@ -96,34 +96,34 @@ const TaskCard: React.FC<TaskCardProps> = ({
   }
 
   return (
-    <div 
+    <div
       onClick={handleCardClick}
       className={`bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02] ${
         isOverdue ? 'ring-2 ring-red-200' : ''
       }`}
     >
       <div className="flex items-start justify-between mb-3">
-        <h3 className="font-semibold text-[#0c272d] text-base leading-tight flex-1 mr-2">
+        <h3 className="font-semibold text-[#0c272d] text-base sm:text-lg leading-tight flex-1 mr-2">
           {task.title}
         </h3>
-        <button onClick={handleMenuClick} className="text-[#0c272d]/40 hover:text-[#0c272d] p-1">
+        <button onClick={handleMenuClick} className="text-[#0c272d]/40 hover:text-[#0c272d] p-1 flex-shrink-0">
           <MoreVertical className="w-4 h-4" />
         </button>
       </div>
-      
+
       {task.description && (
-        <p className="text-sm text-[#0c272d]/60 mb-3 line-clamp-2">
+        <p className="text-sm sm:text-base text-[#0c272d]/60 mb-3 line-clamp-2">
           {task.description}
         </p>
       )}
 
       <div className="space-y-3">
         {/* Status and Priority */}
-        <div className="flex items-center justify-between">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium ${stateColors}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${stateColors}`}>
             {task.state}
           </span>
-          <span className={`px-3 py-1 rounded-lg text-xs font-medium ${priorityColors}`}>
+          <span className={`px-3 py-1 rounded-lg text-xs font-medium w-fit ${priorityColors}`}>
             {priorityIcon} {task.priority}
           </span>
         </div>
@@ -131,8 +131,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {/* Assigned Users */}
         {assignedUserIds.length > 0 && (
           <div className="flex items-center space-x-2">
-            <User className="w-4 h-4 text-[#0c272d]/40" />
-            <div className="flex -space-x-2">
+            <User className="w-4 h-4 text-[#0c272d]/40 flex-shrink-0" />
+            <div className="flex -space-x-2 overflow-hidden">
               {assignedUserIds.slice(0, 3).map((userId) => (
                 <div
                   key={userId}
@@ -153,7 +153,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {/* Due Date */}
         {task.limit_date && (
           <div className={`flex items-center space-x-2 text-sm ${isOverdue ? 'text-red-600' : 'text-[#0c272d]/60'}`}>
-            <Calendar className={`w-4 h-4 ${isOverdue ? 'text-red-500' : 'text-[#0c272d]/40'}`} />
+            <Calendar className={`w-4 h-4 flex-shrink-0 ${isOverdue ? 'text-red-500' : 'text-[#0c272d]/40'}`} />
             <span className={isOverdue ? 'font-medium' : ''}>
               {formatDueDate(task)}
             </span>

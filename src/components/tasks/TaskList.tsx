@@ -160,56 +160,58 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
 
       {/* Search and Filters */}
       <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-4 border border-[#9fdbc2]/20 shadow-lg">
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col gap-4">
           {/* Search */}
-          <div className="flex-1 relative">
+          <div className="w-full relative">
             <Search className={`w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${isSearching ? 'text-[#14a67e] animate-pulse' : 'text-[#0c272d]/40'}`} />
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
+              className="w-full pl-10 pr-10 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 text-base"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40 hover:text-[#0c272d] transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
 
-          {/* Status Filter */}
-          <div className="w-full lg:w-48 relative">
-            <Filter className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as TaskState | '')}
-              className="w-full pl-10 pr-4 py-2 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer"
-            >
-              <option value="">All Status</option>
-              <option value="To Do">To Do</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Done">Done</option>
-            </select>
-          </div>
+          {/* Filters Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div className="w-full relative">
+              <Filter className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40 z-10" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as TaskState | '')}
+                className="w-full pl-10 pr-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer text-base"
+              >
+                <option value="">All Status</option>
+                <option value="To Do">To Do</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>
 
-          {/* Priority Filter */}
-          <div className="w-full lg:w-48 relative">
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
-              className="w-full px-4 py-2 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer"
-            >
-              <option value="">All Priority</option>
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Critical">Critical</option>
-            </select>
-          </div>
+            {/* Priority Filter */}
+            <div className="w-full relative">
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | '')}
+                className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 appearance-none cursor-pointer text-base"
+              >
+                <option value="">All Priority</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
 
           {/* Sort */}
           <div className="w-full lg:w-48 relative">
@@ -229,16 +231,17 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
             </select>
           </div>
 
-          {/* Clear Filters */}
-          {(searchTerm || statusFilter || priorityFilter) && (
-            <button
-              onClick={handleClearSearch}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 whitespace-nowrap flex items-center space-x-2"
-            >
-              <X className="w-4 h-4" />
-              <span>Clear</span>
-            </button>
-          )}
+            {/* Clear Filters */}
+            {(searchTerm || statusFilter || priorityFilter) && (
+              <button
+                onClick={handleClearSearch}
+                className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center justify-center space-x-2 text-base"
+              >
+                <X className="w-5 h-5" />
+                <span>Clear Filters</span>
+              </button>
+            )}
+          </div>
         </div>
         
         {/* Active Filters Display */}
@@ -294,11 +297,11 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, onTaskClick }) => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filteredAndSortedTasks.map((task: Task) => (
-              <TaskCard 
-                key={task.task_id} 
-                task={task} 
+              <TaskCard
+                key={task.task_id}
+                task={task}
                 onClick={() => handleTaskClick(task)}
                 showProject={false}
               />
