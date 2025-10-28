@@ -10,7 +10,7 @@ import {
   AlertCircle,
   Plus
 } from 'lucide-react';
-import type { Task } from '@/lib/types/task-types';
+import type { Task, TaskState } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
 import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
@@ -178,8 +178,16 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       return;
     }
 
+    // Validate that targetState is a valid TaskState
+    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+    if (!validStates.includes(targetState as TaskState)) {
+      console.error('Invalid task state:', targetState);
+      setDraggedTask(null);
+      return;
+    }
+
     // Optimistic update - move task immediately in UI
-    const updatedTask = { ...draggedTask, state: targetState as any };
+    const updatedTask = { ...draggedTask, state: targetState as TaskState };
     setOptimisticTasks(prevTasks => 
       prevTasks.map(task => 
         task.task_id === draggedTask.task_id ? updatedTask : task
@@ -201,7 +209,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     setDraggedTask(null);
 
     // Update backend in background (no await to prevent blocking)
-    updateTaskStatus(draggedTask.task_id, targetState as any)
+    updateTaskStatus(draggedTask.task_id, targetState as TaskState)
       .then(() => {
         // Success - no need to refresh, optimistic update is already applied
         console.log('Task status updated successfully');

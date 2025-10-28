@@ -27,7 +27,6 @@ export interface CreateTaskRequest {
   priority: TaskPriority;
   created_by: number;
   assigned_to_ids?: string;
-  assignee_user_id?: number;
   limit_date?: string;
 }
 

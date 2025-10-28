@@ -169,6 +169,12 @@ export function AuthProvider({ children, service = authService }: AuthProviderPr
         // Store in localStorage (in a real app, consider httpOnly cookies)
         if (access) localStorage.setItem('flowmatic_access_token', access);
         if (refresh) localStorage.setItem('flowmatic_refresh_token', refresh);
+        
+        console.log('=== AUTH STORE - STORING USER ===');
+        console.log('User being stored:', result.user);
+        console.log('user_metadata being stored:', result.user.user_metadata);
+        console.log('====================================');
+        
         localStorage.setItem('flowmatic_user', JSON.stringify(result.user));
       }
       

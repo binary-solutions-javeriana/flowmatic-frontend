@@ -13,7 +13,7 @@ if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
   // @ts-expect-error - assign to window for test env
   window.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
   // @ts-expect-error - assign to global for libraries referencing global directly
-  (global as any).IntersectionObserver = window.IntersectionObserver;
+  (global as typeof globalThis).IntersectionObserver = window.IntersectionObserver;
 }
 
 // Polyfill matchMedia for libraries relying on media queries (e.g., embla-carousel)
