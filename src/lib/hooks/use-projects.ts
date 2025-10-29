@@ -158,7 +158,8 @@ export function useProjects(initialFilters?: ProjectFilters) {
 
   useEffect(() => {
     fetchProjects(initialFilters);
-  }, [fetchProjects, initialFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     projects,
