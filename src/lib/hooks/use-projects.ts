@@ -111,9 +111,32 @@ export function useProjects(initialFilters?: ProjectFilters) {
 
       const queryString = params.toString();
       const mail = user?.email;
-      const url = mail
-        ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
-        : `/projects?${queryString}`;
+      const tenantId = user?.user_metadata?.tenantId as number | undefined;
+
+      let url: string;
+      const category = filters?.category || 'owned';
+
+      switch (category) {
+        case 'owned':
+          url = mail
+            ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
+            : `/projects?${queryString}`;
+          break;
+        case 'participant':
+          url = mail
+            ? `/projects/by-participant?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
+            : `/projects?${queryString}`;
+          break;
+        case 'tenant':
+          url = tenantId !== undefined
+            ? `/projects/by-tenant?tenantId=${tenantId}&mail=${encodeURIComponent(mail || '')}&${queryString}&orderBy=ProjectID&order=desc`
+            : `/projects?${queryString}`;
+          break;
+        default:
+          url = mail
+            ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
+            : `/projects?${queryString}`;
+      }
 
       console.log('[useProjects] Fetching projects with URL:', url);
       console.log('[useProjects] Filters:', filters);
@@ -396,4 +419,3 @@ export function useRecentProjects(limit: number = 5) {
     refetch: fetchRecentProjects
   };
 }
-

@@ -22,6 +22,7 @@ export interface ProjectFilters {
   type?: string;
   orderBy?: string;
   order?: 'asc' | 'desc';
+  category?: 'owned' | 'participant' | 'tenant';
 }
 
 export interface ProjectPagination {
@@ -56,4 +57,3 @@ export interface UpdateProjectRequest {
   start_date?: string;
   end_date?: string;
 }
-
