@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { authApi } from '../authenticated-api';
-import type { 
-  Task, 
-  TaskFilters, 
+import type {
+  Task,
+  TaskFilters,
   TasksResponse,
   CreateTaskRequest,
   UpdateTaskRequest,
@@ -46,14 +46,14 @@ export function useTasks(initialFilters?: TaskFilters) {
     try {
       // Build query string from filters with defaults
       const params = new URLSearchParams();
-      
+
       // Always send page and limit
       const page = filters?.page ?? 1;
       const limit = filters?.limit ?? 10;
-      
+
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      
+
       if (filters?.search) params.append('search', filters.search);
       if (filters?.state) params.append('state', filters.state);
       if (filters?.priority) params.append('priority', filters.priority);
@@ -67,25 +67,25 @@ export function useTasks(initialFilters?: TaskFilters) {
       console.log('[useTasks] Filters:', filters);
 
       const response = await authApi.get<TasksResponse>(url);
-      
+
       console.log('[useTasks] Response received:', response);
       console.log('[useTasks] Response data:', response?.data);
       console.log('[useTasks] Response meta:', response?.meta);
       console.log('[useTasks] Number of tasks:', response?.data?.length || 0);
-      
+
       // Validate response structure
       if (!response || typeof response !== 'object') {
         throw new Error('Invalid response format: response is not an object');
       }
-      
+
       if (!response.data || !Array.isArray(response.data)) {
         console.error('[useTasks] Invalid data structure. Expected { data: [], meta: {} }, got:', response);
         throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
       }
-      
+
       setTasks(response.data);
       setPagination(response.meta || null);
-      
+
       console.log('[useTasks] Tasks state updated with', response.data.length, 'tasks');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
@@ -118,45 +118,72 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => filters, [
+    filters?.page,
+    filters?.limit,
+    filters?.search,
+    filters?.state,
+    filters?.priority,
+    filters?.assigned_to
+  ]);
+
   const fetchProjectTasks = useCallback(async () => {
-    if (!projectId) return;
+    if (projectId == null) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      // Build query string from filters
+      // Use the correct endpoint for project tasks
       const params = new URLSearchParams();
-      
-      const page = filters?.page ?? 1;
-      const limit = filters?.limit ?? 10;
-      
+
+      const page = memoizedFilters?.page ?? 1;
+      const limit = memoizedFilters?.limit ?? 10;
+
       params.append('page', page.toString());
       params.append('limit', limit.toString());
-      
-      if (filters?.search) params.append('search', filters.search);
-      if (filters?.state) params.append('state', filters.state);
-      if (filters?.priority) params.append('priority', filters.priority);
-      if (filters?.assigned_to) params.append('assigned_to', filters.assigned_to);
+
+      if (memoizedFilters?.search) params.append('search', memoizedFilters.search);
+      if (memoizedFilters?.state) params.append('state', memoizedFilters.state);
+      if (memoizedFilters?.priority) params.append('priority', memoizedFilters.priority);
+      if (memoizedFilters?.assigned_to) params.append('assigned_to', memoizedFilters.assigned_to);
 
       const queryString = params.toString();
-      const url = `/projects/${projectId}/tasks?${queryString}`;
+      const url = `/projects/${projectId}/tasks${queryString ? `?${queryString}` : ''}`;
 
       console.log('[useProjectTasks] Fetching project tasks with URL:', url);
 
-      const response = await authApi.get<TasksResponse>(url);
-      
-      if (!response || typeof response !== 'object') {
-        throw new Error('Invalid response format: response is not an object');
+      const response = await authApi.get<any>(url);
+
+      console.log('[useProjectTasks] Response received:', response);
+      console.log('[useProjectTasks] Response type:', typeof response);
+      console.log('[useProjectTasks] Is array?', Array.isArray(response));
+
+      // Handle different response structures
+      let tasks: Task[] = [];
+      let pagination: any = null;
+
+      if (Array.isArray(response)) {
+        // Direct array response
+        tasks = response;
+      } else if (response.data && Array.isArray(response.data)) {
+        // Wrapped in data property
+        tasks = response.data;
+        pagination = response.meta || null;
+      } else if (response.tasks && Array.isArray(response.tasks)) {
+        // Alternative wrapper
+        tasks = response.tasks;
+        pagination = response.meta || null;
+      } else {
+        throw new Error('Invalid response format: expected array or object with data/tasks property');
       }
-      
-      if (!response.data || !Array.isArray(response.data)) {
-        throw new Error(`Invalid response format: data is ${response.data ? 'not an array' : 'missing'}`);
-      }
-      
-      setTasks(response.data);
-      setPagination(response.meta || null);
-      
+
+      setTasks(tasks);
+      setPagination(pagination);
+
+      console.log('[useProjectTasks] Tasks state updated with', tasks.length, 'tasks');
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch project tasks';
       setError(errorMessage);
@@ -164,7 +191,7 @@ export function useProjectTasks(projectId: number, filters?: TaskFilters) {
     } finally {
       setLoading(false);
     }
-  }, [projectId, filters]);
+  }, [projectId, memoizedFilters]);
 
   useEffect(() => {
     fetchProjectTasks();
@@ -225,14 +252,40 @@ export function useCreateTask() {
     setError(null);
 
     try {
+      // Map UI payload (aliases) to backend schema
+      const projectId = (data as any).project_id ?? (data as any).proyect_id;
+      // Normalize priority to string value as expected by backend
+      const rawPriority = (data as any).priority;
+      const priorityValue = typeof rawPriority === 'string'
+        ? rawPriority.charAt(0).toUpperCase() + rawPriority.slice(1).toLowerCase()
+        : undefined;
+      const payload: Record<string, unknown> = {
+        ProjectID: projectId,
+        Title: (data as any).title,
+        Description: (data as any).description,
+        Priority: priorityValue,
+        State: (data as any).state,
+        CreatedBy: (data as any).created_by,
+        LimitDate: (data as any).limit_date,
+        // Backend will read this from a dedicated endpoint/field; we won't send AssignedUserIds anymore
+        // Pass assigned_to_ids instead
+        AssignedToIDs: (data as any).assigned_to_ids ?? (data as any).assignedToIds
+
+      };
+
+      // Basic validation
+      if (!payload.ProjectID) throw new Error('ProjectID is required');
+      if (!payload.Title) throw new Error('Title is required');
+      if (!payload.State) throw new Error('State is required');
+
       let response: Task;
       
-      if (data.proyect_id) {
-        // Create task via project endpoint
-        response = await authApi.post<Task>(`/projects/${data.proyect_id}/tasks`, data as unknown as Record<string, unknown>);
+      if (projectId) {
+        // endpoint por proyecto
+        response = await authApi.post<Task>(`/projects/${projectId}/tasks`, payload);
       } else {
-        // Create standalone task
-        response = await authApi.post<Task>('/tasks', data as unknown as Record<string, unknown>);
+        // endpoint general
+        response = await authApi.post<Task>('/tasks', payload);
       }
       
       return response;
@@ -264,8 +317,65 @@ export function useUpdateTask() {
     setError(null);
 
     try {
-      const response = await authApi.patch<Task>(`/tasks/${taskId}`, data as unknown as Record<string, unknown>);
+      // Map priority to string value as expected by backend
+      const rawPriority = (data as any).priority;
+      const priorityValue = typeof rawPriority === 'string'
+        ? rawPriority.charAt(0).toUpperCase() + rawPriority.slice(1).toLowerCase()
+        : undefined;
+
+      const payload: Record<string, unknown> = {
+        ...(data as any).title !== undefined && { Title: (data as any).title },
+        ...(data as any).description !== undefined && { Description: (data as any).description },
+        ...(data as any).state !== undefined && { State: (data as any).state },
+        ...(priorityValue !== undefined) && { Priority: priorityValue },
+        ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date }
+        // Note: assigned_to_ids is handled separately via assign/unassign endpoints
+      };
+
+      const response = await authApi.patch<Task>(`/tasks/${taskId}`, payload);
+
+      // Handle assignee changes separately if provided
+      if ((data as any).assigned_to_ids !== undefined) {
+        // Normaliza entrada del front a arreglo de números
+        const nextIds: number[] = Array.isArray((data as any).assigned_to_ids)
+          ? (data as any).assigned_to_ids.map(Number).filter(n => !Number.isNaN(n))
+          : typeof (data as any).assigned_to_ids === 'string'
+            ? (data as any).assigned_to_ids
+                .split(',')
+                .map(s => Number(s.trim()))
+                .filter(n => !Number.isNaN(n))
+            : [];
+
+        try {
+          // 1) Traer asignados actuales; soporta dos formatos de respuesta
+          const current = await authApi.get<any>(`/tasks/${taskId}/assignees`);
+          const currentIds: number[] = Array.isArray(current)
+            ? (
+                // formato A: [{ TaskID, UserID }]
+                current.length && typeof current[0] === 'object' && 'UserID' in current[0]
+                  ? current.map((a: any) => Number(a.UserID))
+                  // formato B: [1,2,3]
+                  : current.map(Number)
+              ).filter((n: number) => !Number.isNaN(n))
+            : [];
+
+          // 2) Calcular delta
+          const toAdd = nextIds.filter(id => !currentIds.includes(id));
+          const toRemove = currentIds.filter(id => !nextIds.includes(id));
+
+          // 3) Aplicar cambios en paralelo
+          await Promise.allSettled([
+            ...toAdd.map(id => authApi.post(`/tasks/${taskId}/assignees/${id}`, {})),
+            ...toRemove.map(id => authApi.delete(`/tasks/${taskId}/assignees/${id}`))
+          ]);
+        } catch (assigneeErr) {
+          console.warn(`Failed to sync assignees for task ${taskId}:`, assigneeErr);
+          // No rompemos toda la actualización si solo falló la sincronización de asignados
+        }
+      }
+
       return response;
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
       setError(errorMessage);
@@ -294,7 +404,7 @@ export function useUpdateTaskStatus() {
     setError(null);
 
     try {
-      const response = await authApi.patch<Task>(`/projects/tasks/${taskId}/status`, { state });
+      const response = await authApi.patch<Task>(`/tasks/${taskId}`, { State: state });
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task status';
@@ -324,12 +434,34 @@ export function useDeleteTask() {
     setError(null);
 
     try {
+      console.log(`[useDeleteTask] Attempting to delete task ${taskId}`);
       await authApi.delete<void>(`/tasks/${taskId}`);
+      console.log(`[useDeleteTask] Successfully deleted task ${taskId}`);
       return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete task';
+    } catch (err: any) {
+      console.error('[useDeleteTask] Error deleting task:', err);
+      console.error('[useDeleteTask] Task ID:', taskId);
+      console.error('[useDeleteTask] Error details:', {
+        message: err?.message,
+        statusCode: err?.statusCode,
+        path: err?.path,
+        method: err?.method,
+        timestamp: err?.timestamp
+      });
+
+      let errorMessage = 'Failed to delete task';
+
+      if (err?.statusCode === 404) {
+        errorMessage = 'Task not found. It may have already been deleted.';
+      } else if (err?.statusCode === 403) {
+        errorMessage = 'You do not have permission to delete this task.';
+      } else if (err?.statusCode === 500) {
+        errorMessage = 'Server error occurred while deleting the task. Please try again later.';
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
-      console.error('Error deleting task:', err);
       return false;
     } finally {
       setLoading(false);
@@ -365,13 +497,13 @@ export function useKanbanBoard(projectId: number) {
       console.error('Error fetching Kanban board:', err);
       console.error('Project ID:', projectId);
       console.error('API URL:', `/projects/${projectId}/kanban`);
-      
+
       // Fallback: Try to fetch tasks and organize them into kanban columns
       console.log('[useKanbanBoard] === FALLBACK STARTED ===');
       try {
         console.log('[useKanbanBoard] Trying fallback: fetch project tasks');
         console.log('[useKanbanBoard] Fallback URL:', `/projects/${projectId}/tasks`);
-        
+
         // Try multiple possible endpoints
         let tasksResponse: TasksResponse | BackendTasksResponse;
         try {
@@ -380,7 +512,7 @@ export function useKanbanBoard(projectId: number) {
         } catch (tasksErr) {
           console.log('[useKanbanBoard] Tasks endpoint failed, trying alternatives');
           console.error('[useKanbanBoard] Tasks endpoint error:', tasksErr);
-          
+
           // Try alternative endpoints
           try {
             tasksResponse = await authApi.get<TasksResponse | BackendTasksResponse>(`/tasks?project_id=${projectId}`);
@@ -393,7 +525,7 @@ export function useKanbanBoard(projectId: number) {
         console.log('[useKanbanBoard] Tasks response received:', tasksResponse);
         console.log('[useKanbanBoard] Response type:', typeof tasksResponse);
         console.log('[useKanbanBoard] Is array?', Array.isArray(tasksResponse));
-        
+
         // Handle different response structures
         let tasks: Task[] = [];
         if (Array.isArray(tasksResponse)) {
@@ -406,9 +538,9 @@ export function useKanbanBoard(projectId: number) {
           // Alternative wrapper (BackendTasksResponse)
           tasks = tasksResponse.tasks;
         }
-        
+
         console.log('[useKanbanBoard] Extracted tasks:', tasks);
-        
+
         // Always create kanban data, even if no tasks
         const kanbanData: KanbanBoard = {
           project_id: projectId,
@@ -416,8 +548,7 @@ export function useKanbanBoard(projectId: number) {
           columns: {
             'To Do': tasks.filter(task => task.state === 'To Do'),
             'In Progress': tasks.filter(task => task.state === 'In Progress'),
-            'Done': tasks.filter(task => task.state === 'Done'),
-            'Cancelled': tasks.filter(task => task.state === 'Cancelled')
+            'Done': tasks.filter(task => task.state === 'Done')
           }
         };
         console.log('[useKanbanBoard] Created kanban data:', kanbanData);
@@ -429,7 +560,7 @@ export function useKanbanBoard(projectId: number) {
           stack: fallbackErr instanceof Error ? fallbackErr.stack : undefined,
           response: fallbackErr
         });
-        
+
         // Final fallback: Create empty kanban board
         console.log('[useKanbanBoard] Creating empty kanban board as final fallback');
         const emptyKanbanData: KanbanBoard = {
@@ -438,12 +569,11 @@ export function useKanbanBoard(projectId: number) {
           columns: {
             'To Do': [],
             'In Progress': [],
-            'Done': [],
-            'Cancelled': []
+            'Done': []
           }
         };
         setKanbanBoard(emptyKanbanData);
-        
+
         // Show warning instead of error
         const errorMessage = fallbackErr instanceof Error ? fallbackErr.message : 'Failed to fetch tasks';
         console.warn(`[useKanbanBoard] Tasks API not available: ${errorMessage}. Showing empty board.`);
@@ -520,10 +650,18 @@ export function useSubtasks(taskId: number) {
       const response = await authApi.get<SubtasksResponse>(`/tasks/${taskId}/subtasks`);
       setSubtasks(response.data || []);
       setPagination(response.meta || null);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
-      setError(errorMessage);
-      console.error('Error fetching subtasks:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Subtasks endpoint not available for task ${taskId}`);
+        setSubtasks([]);
+        setPagination(null);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch subtasks';
+        setError(errorMessage);
+        console.error('Error fetching subtasks:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -559,10 +697,18 @@ export function useTimeEntries(taskId: number) {
       const response = await authApi.get<TimeEntriesResponse>(`/tasks/${taskId}/time-entries`);
       setTimeEntries(response.data || []);
       setTotalHours(response.total_hours || 0);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
-      setError(errorMessage);
-      console.error('Error fetching time entries:', err);
+    } catch (err: any) {
+      // Handle 404 errors gracefully - endpoint may not be implemented
+      if (err?.statusCode === 404 || err?.message?.includes('404') || err?.message?.includes('Cannot GET')) {
+        console.warn(`Time entries endpoint not available for task ${taskId}`);
+        setTimeEntries([]);
+        setTotalHours(0);
+        setError(null); // Clear error to prevent UI issues
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch time entries';
+        setError(errorMessage);
+        console.error('Error fetching time entries:', err);
+      }
     } finally {
       setLoading(false);
     }

@@ -26,7 +26,6 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
     { id: 'To Do', title: 'To Do', color: 'bg-gray-50 border-gray-200' },
     { id: 'In Progress', title: 'In Progress', color: 'bg-blue-50 border-blue-200' },
     { id: 'Done', title: 'Done', color: 'bg-green-50 border-green-200' },
-    { id: 'Cancelled', title: 'Cancelled', color: 'bg-red-50 border-red-200' }
   ];
 
   const handleTaskClick = useCallback((task: Task) => {
@@ -57,7 +56,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
 
   const handleDrop = useCallback(async (e: React.DragEvent, targetState: TaskState) => {
     e.preventDefault();
-    
+
     if (!draggedTask || draggedTask.state === targetState) {
       setDraggedTask(null);
       return;
@@ -65,9 +64,12 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
 
     try {
       await updateTaskStatus(draggedTask.task_id, targetState);
+      // Force refresh to update the UI immediately
       forceRefresh();
     } catch (error) {
       console.error('Error updating task status:', error);
+      // Force refresh to revert any optimistic updates
+      forceRefresh();
     } finally {
       setDraggedTask(null);
     }
@@ -128,7 +130,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ projectId, onTaskClick }) => 
       </div>
 
       {/* Kanban Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {columns.map((column) => {
           const tasks = kanbanBoard.columns[column.id] || [];
           

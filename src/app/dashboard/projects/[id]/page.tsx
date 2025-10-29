@@ -160,8 +160,8 @@ function ProjectDetailContent() {
                   <dd className="text-gray-900">{new Date(project.created_at).toLocaleDateString()}</dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">Last Updated</dt>
-                  <dd className="text-gray-900">{new Date(project.updated_at).toLocaleDateString()}</dd>
+                  <dt className="text-gray-500">Project ID</dt>
+                  <dd className="text-gray-900">{project.proyect_id}</dd>
                 </div>
               </dl>
             </div>

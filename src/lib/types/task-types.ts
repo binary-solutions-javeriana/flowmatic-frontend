@@ -1,6 +1,6 @@
 // Task-related types based on the API documentation
 
-export type TaskState = 'To Do' | 'In Progress' | 'Done' | 'Cancelled';
+export type TaskState = 'To Do' | 'In Progress' | 'Done';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface Task {
@@ -11,11 +11,9 @@ export interface Task {
   state: TaskState;
   priority: TaskPriority;
   created_by: number;
-  assigned_to_ids?: string; // Comma-separated user IDs: "2,3,4"
+  assigned_to_ids?: string | number[]; // Comma-separated user IDs: "2,3,4"
   limit_date?: string; // ISO 8601 date
   parent_task_id?: number; // For subtasks
-  created_at: string;
-  updated_at: string;
 }
 
 export interface CreateTaskRequest {
@@ -26,7 +24,8 @@ export interface CreateTaskRequest {
   state?: TaskState;
   priority: TaskPriority;
   created_by: number;
-  assigned_to_ids?: string;
+  assigned_to_ids?: number[] | string;
+  assignee_user_id?: number;
   limit_date?: string;
 }
 
@@ -35,7 +34,7 @@ export interface UpdateTaskRequest {
   description?: string;
   state?: TaskState;
   priority?: TaskPriority;
-  assigned_to_ids?: string;
+  assigned_to_ids?: number[] | string;
   limit_date?: string;
 }
 
@@ -57,7 +56,7 @@ export interface TaskFilters {
   priority?: TaskPriority;
   assigned_to?: string;
   project_id?: number;
-  orderBy?: 'created_at' | 'updated_at' | 'title' | 'priority' | 'limit_date';
+  orderBy?: 'title' | 'priority' | 'limit_date';
   order?: 'asc' | 'desc';
 }
 
@@ -69,7 +68,6 @@ export interface KanbanBoard {
     'To Do': Task[];
     'In Progress': Task[];
     'Done': Task[];
-    'Cancelled': Task[];
   };
 }
 

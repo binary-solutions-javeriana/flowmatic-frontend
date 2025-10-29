@@ -50,7 +50,7 @@ export function ProjectListItem({ project }: ProjectListItemProps) {
               {project.end_date && (
                 <span>End: {formatDateSafe(project.end_date)}</span>
               )}
-              <span>Updated: {formatDateSafe(project.updated_at)}</span>
+              <span>ID: {project.proyect_id}</span>
             </div>
           </div>
           <div className="ml-4">

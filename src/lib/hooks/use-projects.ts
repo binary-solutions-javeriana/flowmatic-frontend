@@ -61,7 +61,6 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
   const start_date = item?.start_date ?? item?.Start_date ?? undefined;
   const end_date = item?.end_date ?? item?.End_date ?? undefined;
   const created_at = item?.created_at ?? item?.CreatedAt ?? '';
-  const updated_at = item?.updated_at ?? item?.UpdatedAt ?? '';
   const created_by = item?.created_by ?? undefined;
 
   return {
@@ -74,7 +73,6 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
     end_date: end_date ? String(end_date) : undefined,
     created_by: typeof created_by === 'number' ? created_by : undefined,
     created_at: created_at ? String(created_at) : '',
-    updated_at: updated_at ? String(updated_at) : '',
   };
 }
 
@@ -391,7 +389,7 @@ export function useRecentProjects(limit: number = 5) {
     setError(null);
 
     try {
-      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}&orderBy=updated_at&order=desc`);
+      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}&orderBy=title&order=asc`);
       setProjects(response.data || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recent projects';

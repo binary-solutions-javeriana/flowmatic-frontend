@@ -1,46 +1,59 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+import { authApi } from '@/lib/authenticated-api';
+import React, { useState } from 'react';
 import {
-  X, 
-  Calendar, 
-  User, 
-  Clock, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  CheckCircle,
-  AlertCircle,
-  Play,
-  Pause,
-  Square
+  X,
+  Edit,
+  Trash2,
+  RefreshCw,
+  ChevronDown,
+  Check,
+  X as XIcon,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
-import type { Task, TimeEntry, CreateTimeEntryRequest } from '@/lib/types/task-types';
-import { 
-  useUpdateTask, 
-  useDeleteTask, 
-  useSubtasks, 
-  useTimeEntries, 
-  useCreateTimeEntry,
-  useDeleteTimeEntry 
+import type { Task, TaskState, TaskPriority } from '@/lib/types/task-types';
+import {
+  useUpdateTask,
+  useDeleteTask,
+  useUpdateTaskStatus
 } from '@/lib/hooks/use-tasks';
-import { 
-  getTaskStateColor, 
-  getTaskPriorityColor, 
-  getTaskPriorityIcon,
-  formatDueDate,
-  isTaskOverdue,
-  formatDuration,
-  parseAssignedUserIds
+import {
+  getTaskStateColor,
+  getTaskPriorityColor
 } from '@/lib/tasks/utils';
 import TaskModal from './TaskModal';
-import { formatDateSafe } from '../dashboard/utils';
+
+// Normaliza cualquier payload de API al shape que espera el frontend
+const normalizeTask = (t: any): Task => {
+  if (!t) return t as Task;
+  const assigned =
+    Array.isArray(t.assigned_to_ids)
+      ? t.assigned_to_ids
+      : typeof t.assigned_to_ids === 'string'
+        ? t.assigned_to_ids.split(',').map((x: string) => Number(x.trim())).filter((n) => !Number.isNaN(n))
+        : [];
+
+  return {
+    task_id: t.task_id ?? t.TaskID ?? t.id,
+    title: t.title ?? t.Title ?? '',
+    description: t.description ?? t.Description ?? '',
+    state: t.state ?? t.State ?? 'To Do',
+    priority: t.priority ?? t.Priority ?? 'Medium',
+    limit_date: t.limit_date ?? t.LimitDate ?? t.limitDate ?? '',
+    proyect_id: t.proyect_id ?? t.project_id ?? t.ProjectID ?? t.ProyectID,
+    assigned_to_ids: assigned,
+    // conserva cualquier otro campo que tu tipo Task admita
+    ...(t.updated_at || t.UpdatedAt || t.updatedAt ? { updated_at: t.updated_at ?? t.UpdatedAt ?? t.updatedAt } : {})
+  } as Task;
+};
+
 
 interface TaskDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   task: Task | null;
-  onUpdate: () => void;
+  onUpdate: (updatedTask?: Task) => void;
   onDelete: () => void;
 }
 
@@ -52,118 +65,156 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onDelete
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [timerStartTime, setTimerStartTime] = useState<Date | null>(null);
-  const [currentTimerDescription, setCurrentTimerDescription] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [editingPriority, setEditingPriority] = useState(false);
+  const [tempStatus, setTempStatus] = useState<TaskState>('To Do');
+  const [tempPriority, setTempPriority] = useState<TaskPriority>('Medium');
+  const [currentTask, setCurrentTask] = useState<Task | null>(task);
+  const [confirmationMessage, setConfirmationMessage] = useState<string>('');
+
+  // Update currentTask when task prop changes
+  React.useEffect(() => {
+    setCurrentTask(task ? normalizeTask(task) : null);
+  }, [task]);
+
+  React.useEffect(() => {
+    const fetchFresh = async () => {
+      if (!isOpen || !task?.task_id) return;
+      try {
+        const freshRaw = await authApi.get(`/tasks/${task.task_id}`);
+        const fresh = normalizeTask(freshRaw);
+        setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh })); // merge defensivo
+      } catch (e) {
+        console.error('Failed to fetch fresh task', e);
+      }
+    };
+    fetchFresh();
+  }, [isOpen, task?.task_id]);
 
   const { updateTask, loading: updating } = useUpdateTask();
   const { deleteTask, loading: deleting } = useDeleteTask();
-  const { subtasks, loading: loadingSubtasks } = useSubtasks(task?.task_id || 0);
-  const { timeEntries, totalHours, loading: loadingTimeEntries, refetch: refetchTimeEntries } = useTimeEntries(task?.task_id || 0);
-  const { createTimeEntry, loading: creatingTimeEntry } = useCreateTimeEntry();
-  const { deleteTimeEntry, loading: deletingTimeEntry } = useDeleteTimeEntry();
+  const { updateTaskStatus, loading: updatingStatus } = useUpdateTaskStatus();
 
-  // Timer functionality
-  const [timerDisplay, setTimerDisplay] = useState('00:00:00');
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
-    if (isTimerRunning && timerStartTime) {
-      interval = setInterval(() => {
-        const now = new Date();
-        const diff = now.getTime() - timerStartTime.getTime();
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        setTimerDisplay(
-          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        );
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isTimerRunning, timerStartTime]);
-
-  const handleStartTimer = () => {
-    setIsTimerRunning(true);
-    setTimerStartTime(new Date());
-  };
-
-  const handleStopTimer = async () => {
-    if (!isTimerRunning || !timerStartTime || !task) return;
-
-    setIsTimerRunning(false);
-    
-    const endTime = new Date();
-    const startTime = timerStartTime;
-
+  const handleRefresh = async () => {
+    if (!currentTask?.task_id) return;
+    setIsRefreshing(true);
     try {
-      await createTimeEntry({
-        task_id: task.task_id,
-        user_id: 1, // TODO: Get from auth context
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        description: currentTimerDescription || 'Time tracked'
-      });
-
-      setTimerDisplay('00:00:00');
-      setCurrentTimerDescription('');
-      refetchTimeEntries();
+      const freshRaw = await authApi.get(`/tasks/${currentTask.task_id}`);
+      const fresh = normalizeTask(freshRaw);
+      setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh }));
+      onUpdate(fresh); // si quieres refrescar la lista padre
     } catch (error) {
-      console.error('Error creating time entry:', error);
+      console.error('Error refreshing task data:', error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
-  const handleDeleteTimeEntry = async (entryId: number) => {
-    try {
-      await deleteTimeEntry(entryId);
-      refetchTimeEntries();
-    } catch (error) {
-      console.error('Error deleting time entry:', error);
-    }
-  };
+
 
   const handleUpdateTask = async (updatedTask: Task) => {
     setIsEditing(false);
-    onUpdate();
+    const merged = normalizeTask({ ...(currentTask ?? {}), ...updatedTask });
+    setCurrentTask(merged);
+    onUpdate(merged);
+    onClose();
+  };
+  const startEditingStatus = () => {
+    if (currentTask) {
+      setTempStatus(currentTask.state);
+      setEditingStatus(true);
+    }
+  };
+
+  const startEditingPriority = () => {
+    if (currentTask) {
+      setTempPriority(currentTask.priority);
+      setEditingPriority(true);
+    }
+  };
+
+  const saveStatus = async () => {
+    if (!currentTask) return;
+
+    try {
+      const updatedTask = await updateTaskStatus(currentTask.task_id, tempStatus);
+      // Update local state with the returned task from API
+      if (updatedTask) {
+        const merged = { ...(currentTask ?? {}), ...updatedTask };
+        setCurrentTask(merged);
+        onUpdate(merged);
+        setEditingStatus(false);
+        setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
+      }
+      setEditingStatus(false);
+      onUpdate(updatedTask);
+      setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
+      // Close the modal after successful update
+      onClose();
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      // Revert temp status on error
+      setTempStatus(currentTask.state);
+    }
+  };
+
+  const savePriority = async () => {
+    if (!currentTask) return;
+
+    try {
+      const updatedTask = await updateTask(currentTask.task_id, {
+        priority: tempPriority
+      });
+      // Update local state with the returned task from API
+      if (updatedTask) {
+      const merged = { ...(currentTask ?? {}), ...updatedTask };
+      setCurrentTask(merged);
+      onUpdate(merged);
+      setEditingPriority(false);
+      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);      
+      }
+      setEditingPriority(false);
+      onUpdate(updatedTask);
+      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);
+      // Close the modal after successful update
+      onClose();
+    } catch (error) {
+      console.error('Error updating task priority:', error);
+      // Revert temp priority on error
+      setTempPriority(currentTask.priority);
+    }
+  };
+
+  const cancelStatus = () => {
+    setEditingStatus(false);
+  };
+
+  const cancelPriority = () => {
+    setEditingPriority(false);
   };
 
   const handleDeleteTask = async () => {
-    if (!task) return;
-    
+    if (!currentTask) return;
+
     if (window.confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
       try {
-        await deleteTask(task.task_id);
-        onDelete();
-        onClose();
+        const success = await deleteTask(currentTask.task_id);
+        if (success) {
+          onDelete();
+          onClose();
+        }
+        // Error handling is done in the hook, no need to handle here
       } catch (error) {
         console.error('Error deleting task:', error);
       }
     }
   };
 
-  const handleClose = () => {
-    if (isTimerRunning) {
-      if (window.confirm('Timer is running. Stop it before closing?')) {
-        handleStopTimer();
-      } else {
-        return;
-      }
-    }
-    onClose();
-  };
+  if (!isOpen || !currentTask) return null;
 
-  if (!isOpen || !task) return null;
-
-  const stateColors = getTaskStateColor(task.state);
-  const priorityColors = getTaskPriorityColor(task.priority);
-  const priorityIcon = getTaskPriorityIcon(task.priority);
-  const isOverdue = isTaskOverdue(task);
-  const assignedUserIds = parseAssignedUserIds(task.assigned_to_ids);
+  const stateColors = getTaskStateColor(currentTask.state);
+  const priorityColors = getTaskPriorityColor(currentTask.priority);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -171,34 +222,28 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#9fdbc2]/20">
           <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-bold text-[#0c272d]">{task.title}</h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${stateColors}`}>
-              {task.state}
-            </span>
-            <span className={`px-3 py-1 rounded-lg text-xs font-medium ${priorityColors}`}>
-              {priorityIcon} {task.priority}
-            </span>
+            <h2 className="text-xl font-bold text-[#0c272d]">{currentTask.title}</h2>
           </div>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setIsEditing(true)}
-              disabled={updating || deleting}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
-              title="Edit task"
+              title="Refresh task data"
             >
-              <Edit className="w-5 h-5 text-[#0c272d]/60" />
+              <RefreshCw className={`w-5 h-5 text-[#0c272d]/60 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={handleDeleteTask}
-              disabled={updating || deleting}
+              disabled={updating || deleting || updatingStatus}
               className="p-2 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
               title="Delete task"
             >
               <Trash2 className="w-5 h-5 text-red-500" />
             </button>
             <button
-              onClick={handleClose}
-              disabled={updating || deleting}
+              onClick={onClose}
+              disabled={updating || deleting || updatingStatus}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >
               <X className="w-5 h-5 text-[#0c272d]/60" />
@@ -206,192 +251,176 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Description */}
-          {task.description && (
-            <div>
-              <h3 className="text-sm font-medium text-[#0c272d] mb-2">Description</h3>
-              <p className="text-[#0c272d]/70 bg-gray-50 rounded-lg p-4">{task.description}</p>
+        <div className="p-6">
+          {/* Confirmation Message */}
+          {confirmationMessage && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm font-medium">
+              {confirmationMessage}
             </div>
           )}
 
-          {/* Task Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* Due Date */}
-              {task.limit_date && (
-                <div className="flex items-center space-x-3">
-                  <Calendar className={`w-5 h-5 ${isOverdue ? 'text-red-500' : 'text-[#0c272d]/40'}`} />
-                  <div>
-                    <p className="text-sm font-medium text-[#0c272d]">Due Date</p>
-                    <p className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-[#0c272d]/60'}`}>
-                      {formatDueDate(task)}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Assigned Users */}
-              {assignedUserIds.length > 0 && (
-                <div className="flex items-center space-x-3">
-                  <User className="w-5 h-5 text-[#0c272d]/40" />
-                  <div>
-                    <p className="text-sm font-medium text-[#0c272d]">Assigned To</p>
-                    <div className="flex -space-x-2 mt-1">
-                      {assignedUserIds.slice(0, 5).map((userId) => (
-                        <div
-                          key={userId}
-                          className="w-8 h-8 bg-[#14a67e] rounded-full border-2 border-white flex items-center justify-center text-white text-sm font-medium"
-                        >
-                          {userId}
-                        </div>
-                      ))}
-                      {assignedUserIds.length > 5 && (
-                        <div className="w-8 h-8 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center text-gray-600 text-sm font-medium">
-                          +{assignedUserIds.length - 5}
-                        </div>
-                      )}
+          {/* Task Controls Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Status Card */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4 h-48 flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-[#0c272d] flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span>Status</span>
+                </h3>
+                {!editingStatus && (
+                  <button
+                    onClick={startEditingStatus}
+                    disabled={updatingStatus}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                    title="Edit status"
+                  >
+                    <Edit className="w-4 h-4 text-[#0c272d]/60" />
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 flex flex-col justify-center">
+                {editingStatus ? (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <select
+                        value={tempStatus}
+                        onChange={(e) => setTempStatus(e.target.value as TaskState)}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium appearance-none pr-8 ${getTaskStateColor(tempStatus)}`}
+                      >
+                        <option value="To Do">To Do</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Done">Done</option>
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-current opacity-60" />
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={saveStatus}
+                        disabled={updatingStatus}
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 text-sm"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Save</span>
+                      </button>
+                      <button
+                        onClick={cancelStatus}
+                        disabled={updatingStatus}
+                        className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 text-sm"
+                      >
+                        <XIcon className="w-3 h-3" />
+                        <span>Cancel</span>
+                      </button>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Project Info */}
-              <div className="flex items-center space-x-3">
-                <div className="w-5 h-5 bg-[#14a67e]/20 rounded flex items-center justify-center">
-                  <div className="w-2 h-2 bg-[#14a67e] rounded-full"></div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#0c272d]">Project</p>
-                  <p className="text-sm text-[#0c272d]/60">ID: {task.proyect_id}</p>
-                </div>
+                ) : (
+                  <div className="text-center">
+                    <div className={`inline-flex px-4 py-2 rounded-full text-sm font-medium ${stateColors}`}>
+                      {currentTask.state}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Column - Time Tracking */}
-            <div className="space-y-4">
-              {/* Time Tracker */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-[#0c272d] mb-3">Time Tracking</h3>
-                
-                {/* Timer */}
-                <div className="mb-4">
-                  <div className="text-center mb-3">
-                    <div className="text-2xl font-mono font-bold text-[#0c272d] mb-2">
-                      {timerDisplay}
+            {/* Priority Card */}
+            <div className="bg-white border border-gray-200 rounded-lg p-4 h-48 flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-[#0c272d] flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Priority</span>
+                </h3>
+                {!editingPriority && (
+                  <button
+                    onClick={startEditingPriority}
+                    disabled={updating}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                    title="Edit priority"
+                  >
+                    <Edit className="w-4 h-4 text-[#0c272d]/60" />
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 flex flex-col justify-center">
+                {editingPriority ? (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <select
+                        value={tempPriority}
+                        onChange={(e) => setTempPriority(e.target.value as TaskPriority)}
+                        className={`w-full px-3 py-2 rounded-lg text-sm font-medium appearance-none pr-8 ${getTaskPriorityColor(tempPriority)}`}
+                      >
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none text-current opacity-60" />
                     </div>
-                    <div className="flex items-center justify-center space-x-2">
-                      {!isTimerRunning ? (
-                        <button
-                          onClick={handleStartTimer}
-                          className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                        >
-                          <Play className="w-4 h-4" />
-                          <span>Start</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleStopTimer}
-                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                        >
-                          <Square className="w-4 h-4" />
-                          <span>Stop</span>
-                        </button>
-                      )}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={savePriority}
+                        disabled={updating}
+                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 text-sm"
+                      >
+                        <Check className="w-3 h-3" />
+                        <span>Save</span>
+                      </button>
+                      <button
+                        onClick={cancelPriority}
+                        disabled={updating}
+                        className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 text-sm"
+                      >
+                        <XIcon className="w-3 h-3" />
+                        <span>Cancel</span>
+                      </button>
                     </div>
                   </div>
-                  
-                  {isTimerRunning && (
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Description (optional)"
-                        value={currentTimerDescription}
-                        onChange={(e) => setCurrentTimerDescription(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20"
-                      />
+                ) : (
+                  <div className="text-center">
+                    <div className={`inline-flex px-4 py-2 rounded-lg text-sm font-medium ${priorityColors}`}>
+                      {currentTask.priority}
                     </div>
-                  )}
-                </div>
-
-                {/* Total Time */}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#0c272d]/60">Total Time:</span>
-                  <span className="font-medium text-[#0c272d]">{formatDuration(totalHours)}</span>
-                </div>
+                    <p className="text-xs text-[#0c272d]/60 mt-2">
+                      {currentTask.priority === 'Critical' && 'Requires immediate attention'}
+                      {currentTask.priority === 'High' && 'High priority task'}
+                      {currentTask.priority === 'Medium' && 'Standard priority task'}
+                      {currentTask.priority === 'Low' && 'Low priority task'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Time Entries */}
-          {timeEntries.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-[#0c272d] mb-3">Time Entries</h3>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {timeEntries.map((entry) => (
-                  <div key={entry.time_entry_id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 text-sm">
-                        <Clock className="w-4 h-4 text-[#0c272d]/40" />
-                        <span className="font-medium text-[#0c272d]">
-                          {formatDuration(entry.duration_hours || 0)}
-                        </span>
-                        <span className="text-[#0c272d]/60">
-                          {formatDateSafe(entry.start_time)}
-                        </span>
-                      </div>
-                      {entry.description && (
-                        <p className="text-sm text-[#0c272d]/60 mt-1">{entry.description}</p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteTimeEntry(entry.time_entry_id)}
-                      disabled={deletingTimeEntry}
-                      className="p-1 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
-                      title="Delete time entry"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                ))}
+          {/* Edit Details Button */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-[#0c272d] mb-1">Need to edit more details?</h3>
+                <p className="text-sm text-[#0c272d]/60">Update title, description, due date, or assignments</p>
               </div>
+              <button
+                onClick={() => setIsEditing(true)}
+                disabled={updating || deleting || updatingStatus}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2 font-medium"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit Full Details</span>
+              </button>
             </div>
-          )}
-
-          {/* Subtasks */}
-          {subtasks.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-[#0c272d] mb-3">Subtasks</h3>
-              <div className="space-y-2">
-                {subtasks.map((subtask) => (
-                  <div key={subtask.task_id} className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
-                    <CheckCircle className="w-4 h-4 text-[#0c272d]/40" />
-                    <span className="flex-1 text-sm text-[#0c272d]">{subtask.title}</span>
-                    <span className={`px-2 py-1 rounded text-xs ${getTaskStateColor(subtask.state)}`}>
-                      {subtask.state}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Created/Updated Info */}
-          <div className="pt-4 border-t border-[#9fdbc2]/20 text-xs text-[#0c272d]/60">
-            <p>Created: {formatDateSafe(task.created_at)}</p>
-            <p>Updated: {formatDateSafe(task.updated_at)}</p>
           </div>
         </div>
       </div>
 
       {/* Edit Task Modal */}
       <TaskModal
+        key={`edit-${currentTask?.task_id}-${(currentTask as any)?.updated_at ?? ''}`}
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         onSubmit={handleUpdateTask}
         mode="edit"
-        task={task}
+        task={currentTask}
       />
     </div>
   );
