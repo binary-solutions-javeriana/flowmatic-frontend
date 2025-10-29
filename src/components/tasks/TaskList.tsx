@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Search, Filter, Calendar, User, Clock, X } from 'lucide-react';
+import { Plus, Search, Filter, X } from 'lucide-react';
 import type { Task, TaskFilters, TaskState, TaskPriority } from '@/lib/types/task-types';
 import { useProjectTasks } from '@/lib/hooks/use-tasks';
 import { filterTasksBySearch, sortTasksByPriority, sortTasksByDueDate } from '@/lib/tasks/utils';

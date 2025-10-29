@@ -3,16 +3,20 @@
 import React from 'react';
 import { Shield, Zap, Globe, Award, TrendingUp, Users2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const Benefits: React.FC = () => {
   return (
     <section id="benefits" className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decorative image */}
       <div className="absolute inset-0 opacity-5">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&h=1080&fit=crop"
           alt="Team collaboration"
+          fill
           className="w-full h-full object-cover"
+          sizes="100vw"
+          priority
         />
       </div>
 
@@ -119,10 +123,12 @@ const Benefits: React.FC = () => {
           >
             {/* Background image with overlay */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=800&fit=crop"
                 alt="Team success"
+                fill
                 className="w-full h-full object-cover opacity-20"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
               <div className="absolute inset-0 bg-gradient-to-br from-[#9fdbc2]/40 to-[#14a67e]/20"></div>
             </div>

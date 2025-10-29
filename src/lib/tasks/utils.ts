@@ -89,8 +89,15 @@ export function formatDueDate(task: Task): string {
 }
 
 // Parse assigned user IDs from comma-separated string
-export function parseAssignedUserIds(assignedToIds?: string): number[] {
+export function parseAssignedUserIds(assignedToIds?: string | number[]): number[] {
   if (!assignedToIds) return [];
+
+  if (Array.isArray(assignedToIds)) {
+    return assignedToIds
+      .map((id) => (typeof id === 'string' ? parseInt(id.trim(), 10) : id))
+      .filter((id): id is number => typeof id === 'number' && !Number.isNaN(id));
+  }
+
   return assignedToIds
     .split(',')
     .map(id => parseInt(id.trim(), 10))

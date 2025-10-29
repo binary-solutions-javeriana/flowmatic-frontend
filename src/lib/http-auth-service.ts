@@ -1,7 +1,7 @@
 // HttpAuthService - Concrete implementation of AuthService using HTTP
 // Following SOLID principles: Single Responsibility (handles HTTP transport only)
 
-import { api, ApiException } from './api';
+import { ApiException } from './api';
 import { config } from './config';
 import type { AuthService, AuthResult, AuthTokens, AuthUser } from './auth-service';
 import type {
@@ -70,6 +70,10 @@ export class HttpAuthService implements AuthService {
       }
 
       const responseData = await response.json() as LoginResponse;
+      const backendUserRecord =
+        typeof responseData.user === 'object' && responseData.user !== null
+          ? (responseData.user as Record<string, unknown>)
+          : undefined;
 
       // DEBUG: Log what backend returned
       console.log('=== BACKEND RESPONSE DEBUG ===');
@@ -77,11 +81,11 @@ export class HttpAuthService implements AuthService {
       console.log('userType from backend:', responseData.userType);
       console.log('isTenantAdmin from backend:', responseData.isTenantAdmin);
       console.log('user object from backend:', responseData.user);
-      console.log('user.role from backend:', responseData.user?.role);
-      console.log('user.rol from backend:', responseData.user?.rol);
-      console.log('user.name from backend:', responseData.user?.name);
-      console.log('user.email from backend:', responseData.user?.email);
-      console.log('user.id from backend:', responseData.user?.id);
+      console.log('user.role from backend:', backendUserRecord?.['role']);
+      console.log('user.rol from backend:', backendUserRecord?.['rol']);
+      console.log('user.name from backend:', backendUserRecord?.['name']);
+      console.log('user.email from backend:', backendUserRecord?.['email']);
+      console.log('user.id from backend:', backendUserRecord?.['id']);
       console.log('==============================');
 
       // Map user and include userType/isTenantAdmin info

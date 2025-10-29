@@ -146,9 +146,11 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   };
 
   const handleCreateTask = (task: Task) => {
-    // Task creation will be handled by the modal
+    setOptimisticTasks(prev => {
+      const existingWithoutNew = prev.filter(item => item.task_id !== task.task_id);
+      return [task, ...existingWithoutNew];
+    });
     setIsCreateModalOpen(false);
-    // Refresh tasks
     refetchTasks();
   };
 

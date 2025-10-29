@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { Bell, Search, LogOut, Settings } from 'lucide-react';
 import { useAuthState, useAuth } from '@/lib/auth-store';
 import { useRouter } from 'next/navigation';
 
@@ -12,7 +12,7 @@ interface HeaderProps {
   showProfileButton?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, showProfileButton = false }) => {
+const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, showProfileButton = true }) => {
   const { user } = useAuthState();
   const { logout } = useAuth();
   const router = useRouter();
@@ -122,52 +122,54 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
           </button>
           
           {/* User Avatar with Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="w-8 h-8 bg-gradient-to-br from-[#14a67e] to-[#9fdbc2] rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <span className="text-sm font-medium text-white">{initials}</span>
-            </button>
+          {showProfileButton && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="w-8 h-8 bg-gradient-to-br from-[#14a67e] to-[#9fdbc2] rounded-full flex items-center justify-center hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <span className="text-sm font-medium text-white">{initials}</span>
+              </button>
 
-            {/* Dropdown Menu */}
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 dark:border-gray-700/50 shadow-xl overflow-hidden z-[9999]">
-                {/* User Info */}
-                <div className="px-4 py-3 border-b border-[#9fdbc2]/20 dark:border-gray-700/50">
-                  <p className="text-sm font-medium text-[#0c272d] dark:text-gray-100">{displayName}</p>
-                  <p className="text-xs text-[#0c272d]/60 dark:text-gray-400 truncate">{user?.email}</p>
-                </div>
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 dark:border-gray-700/50 shadow-xl overflow-hidden z-[9999]">
+                  {/* User Info */}
+                  <div className="px-4 py-3 border-b border-[#9fdbc2]/20 dark:border-gray-700/50">
+                    <p className="text-sm font-medium text-[#0c272d] dark:text-gray-100">{displayName}</p>
+                    <p className="text-xs text-[#0c272d]/60 dark:text-gray-400 truncate">{user?.email}</p>
+                  </div>
 
-                {/* Menu Items */}
-                <div className="py-2">
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
-                      if (onNavigate) {
-                        onNavigate('settings');
-                      }
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Settings</span>
-                  </button>
-                </div>
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        if (onNavigate) {
+                          onNavigate('settings');
+                        }
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Settings</span>
+                    </button>
+                  </div>
 
-                {/* Logout */}
-                <div className="border-t border-[#9fdbc2]/20 dark:border-gray-700/50 py-2">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center space-x-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
+                  {/* Logout */}
+                  <div className="border-t border-[#9fdbc2]/20 dark:border-gray-700/50 py-2">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>

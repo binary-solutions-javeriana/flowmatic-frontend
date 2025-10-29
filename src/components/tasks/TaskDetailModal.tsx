@@ -24,28 +24,122 @@ import {
 } from '@/lib/tasks/utils';
 import TaskModal from './TaskModal';
 
-// Normaliza cualquier payload de API al shape que espera el frontend
-const normalizeTask = (t: any): Task => {
-  if (!t) return t as Task;
-  const assigned =
-    Array.isArray(t.assigned_to_ids)
-      ? t.assigned_to_ids
-      : typeof t.assigned_to_ids === 'string'
-        ? t.assigned_to_ids.split(',').map((x: string) => Number(x.trim())).filter((n) => !Number.isNaN(n))
-        : [];
+type TaskApiPayload = Partial<Task> & {
+  TaskID?: number;
+  id?: number;
+  Title?: string;
+  Description?: string;
+  State?: string;
+  Priority?: string;
+  LimitDate?: string;
+  limitDate?: string;
+  project_id?: number;
+  ProjectID?: number;
+  ProyectID?: number;
+  assigned_to_ids?: number[] | string | null;
+  assigned_to?: number[] | string | null;
+  AssignedToIds?: number[] | string | null;
+  AssignedToIDs?: number[] | string | null;
+  updated_at?: string;
+  UpdatedAt?: string;
+  updatedAt?: string;
+  CreatedBy?: number;
+};
 
-  return {
-    task_id: t.task_id ?? t.TaskID ?? t.id,
-    title: t.title ?? t.Title ?? '',
-    description: t.description ?? t.Description ?? '',
-    state: t.state ?? t.State ?? 'To Do',
-    priority: t.priority ?? t.Priority ?? 'Medium',
-    limit_date: t.limit_date ?? t.LimitDate ?? t.limitDate ?? '',
-    proyect_id: t.proyect_id ?? t.project_id ?? t.ProjectID ?? t.ProyectID,
-    assigned_to_ids: assigned,
-    // conserva cualquier otro campo que tu tipo Task admita
-    ...(t.updated_at || t.UpdatedAt || t.updatedAt ? { updated_at: t.updated_at ?? t.UpdatedAt ?? t.updatedAt } : {})
-  } as Task;
+type NormalizedTask = Task & { updated_at?: string; AssignedToIDs?: number[] | string | null; assigned_to?: number[] | string | null; };
+type TaskLikePayload = TaskApiPayload | NormalizedTask;
+
+const normalizeTaskState = (value?: string): TaskState => {
+  if (!value) return 'To Do';
+  const normalized = value.toLowerCase();
+  if (normalized === 'in progress') return 'In Progress';
+  if (normalized === 'done') return 'Done';
+  return 'To Do';
+};
+
+const normalizeTaskPriority = (value?: string): TaskPriority => {
+  if (!value) return 'Medium';
+  const normalized = value.toLowerCase();
+  if (normalized === 'low') return 'Low';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'high') return 'High';
+  if (normalized === 'critical') return 'Critical';
+  return 'Medium';
+};
+
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
+
+const normalizeAssignedIds = (value: Record<string, unknown>): number[] => {
+  const raw = value['assigned_to_ids'] ?? value['AssignedToIDs'] ?? value['AssignedToIds'] ?? value['assigned_to'];
+
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => {
+        if (typeof item === 'number') return item;
+        const parsed = Number(item);
+        return Number.isFinite(parsed) ? parsed : null;
+      })
+      .filter((item): item is number => item !== null);
+  }
+
+  if (typeof raw === 'string') {
+    return raw
+      .split(',')
+      .map((part) => Number(part.trim()))
+      .filter((item) => Number.isFinite(item));
+  }
+
+  return [];
+};
+
+// Normaliza cualquier payload de API al shape que espera el frontend
+const normalizeTask = (input?: TaskLikePayload | null): NormalizedTask | null => {
+  if (!input) {
+    return null;
+  }
+
+  const record = input as Record<string, unknown>;
+
+  const taskId = toNumber(record['task_id'] ?? record['TaskID'] ?? record['id']);
+  const projectId = toNumber(record['proyect_id'] ?? record['project_id'] ?? record['ProjectID'] ?? record['ProyectID']);
+  const createdBy = toNumber(record['created_by'] ?? record['CreatedBy']);
+  const limitDate = record['limit_date'] ?? record['LimitDate'] ?? record['limitDate'];
+  const updatedAt = record['updated_at'] ?? record['UpdatedAt'] ?? record['updatedAt'];
+
+  const normalizedTask: NormalizedTask = {
+    task_id: taskId ?? 0,
+    proyect_id: projectId ?? 0,
+    title: (record['title'] ?? record['Title'] ?? '').toString(),
+    description: (record['description'] ?? record['Description'] ?? undefined) as string | undefined,
+    state: normalizeTaskState(typeof record['state'] === 'string' ? record['state'] : typeof record['State'] === 'string' ? (record['State'] as string) : undefined),
+    priority: normalizeTaskPriority(typeof record['priority'] === 'string' ? record['priority'] : typeof record['Priority'] === 'string' ? (record['Priority'] as string) : undefined),
+    created_by: createdBy ?? 0,
+    assigned_to_ids: normalizeAssignedIds(record),
+  };
+
+  const parentTaskId = toNumber(record['parent_task_id']);
+  if (parentTaskId != null) {
+    normalizedTask.parent_task_id = parentTaskId;
+  }
+
+  if (typeof limitDate === 'string' && limitDate.length > 0) {
+    normalizedTask.limit_date = limitDate;
+  }
+
+  if (updatedAt) {
+    normalizedTask.updated_at = updatedAt as string;
+  }
+
+  return normalizedTask;
 };
 
 
@@ -70,21 +164,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [editingPriority, setEditingPriority] = useState(false);
   const [tempStatus, setTempStatus] = useState<TaskState>('To Do');
   const [tempPriority, setTempPriority] = useState<TaskPriority>('Medium');
-  const [currentTask, setCurrentTask] = useState<Task | null>(task);
+  const [currentTask, setCurrentTask] = useState<NormalizedTask | null>(() => normalizeTask(task));
   const [confirmationMessage, setConfirmationMessage] = useState<string>('');
 
   // Update currentTask when task prop changes
   React.useEffect(() => {
-    setCurrentTask(task ? normalizeTask(task) : null);
+    setCurrentTask(normalizeTask(task));
   }, [task]);
 
   React.useEffect(() => {
     const fetchFresh = async () => {
       if (!isOpen || !task?.task_id) return;
       try {
-        const freshRaw = await authApi.get(`/tasks/${task.task_id}`);
+        const freshRaw = await authApi.get<TaskApiPayload>(`/tasks/${task.task_id}`);
         const fresh = normalizeTask(freshRaw);
-        setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh })); // merge defensivo
+        if (fresh) {
+          setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh } as TaskLikePayload) ?? fresh);
+        }
       } catch (e) {
         console.error('Failed to fetch fresh task', e);
       }
@@ -100,10 +196,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (!currentTask?.task_id) return;
     setIsRefreshing(true);
     try {
-      const freshRaw = await authApi.get(`/tasks/${currentTask.task_id}`);
+      const freshRaw = await authApi.get<TaskApiPayload>(`/tasks/${currentTask.task_id}`);
       const fresh = normalizeTask(freshRaw);
-      setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh }));
-      onUpdate(fresh); // si quieres refrescar la lista padre
+      if (fresh) {
+        setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh } as TaskLikePayload) ?? fresh);
+        onUpdate(fresh); // si quieres refrescar la lista padre
+      }
     } catch (error) {
       console.error('Error refreshing task data:', error);
     } finally {
@@ -115,9 +213,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleUpdateTask = async (updatedTask: Task) => {
     setIsEditing(false);
-    const merged = normalizeTask({ ...(currentTask ?? {}), ...updatedTask });
-    setCurrentTask(merged);
-    onUpdate(merged);
+    const merged = normalizeTask({ ...(currentTask ?? {}), ...updatedTask } as TaskLikePayload);
+    if (merged) {
+      setCurrentTask(merged);
+      onUpdate(merged);
+    }
     onClose();
   };
   const startEditingStatus = () => {
@@ -139,18 +239,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
     try {
       const updatedTask = await updateTaskStatus(currentTask.task_id, tempStatus);
-      // Update local state with the returned task from API
       if (updatedTask) {
-        const merged = { ...(currentTask ?? {}), ...updatedTask };
+        const merged = normalizeTask({ ...currentTask, ...updatedTask } as TaskLikePayload) ?? currentTask;
         setCurrentTask(merged);
         onUpdate(merged);
-        setEditingStatus(false);
         setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
       }
       setEditingStatus(false);
-      onUpdate(updatedTask);
-      setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
-      // Close the modal after successful update
       onClose();
     } catch (error) {
       console.error('Error updating task status:', error);
@@ -166,18 +261,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const updatedTask = await updateTask(currentTask.task_id, {
         priority: tempPriority
       });
-      // Update local state with the returned task from API
       if (updatedTask) {
-      const merged = { ...(currentTask ?? {}), ...updatedTask };
-      setCurrentTask(merged);
-      onUpdate(merged);
-      setEditingPriority(false);
-      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);      
+        const merged = normalizeTask({ ...currentTask, ...updatedTask } as TaskLikePayload) ?? currentTask;
+        setCurrentTask(merged);
+        onUpdate(merged);
+        setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);
       }
       setEditingPriority(false);
-      onUpdate(updatedTask);
-      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);
-      // Close the modal after successful update
       onClose();
     } catch (error) {
       console.error('Error updating task priority:', error);
@@ -415,7 +505,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
       {/* Edit Task Modal */}
       <TaskModal
-        key={`edit-${currentTask?.task_id}-${(currentTask as any)?.updated_at ?? ''}`}
+        key={`edit-${currentTask?.task_id}-${currentTask?.updated_at ?? ''}`}
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         onSubmit={handleUpdateTask}

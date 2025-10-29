@@ -9,6 +9,7 @@ import { validateTaskData } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
 import { authApi } from '@/lib/authenticated-api';
 import { useAuthState } from '@/lib/auth-store';
+import type { Project } from '@/lib/types/project-types';
 
 
 interface TaskModalProps {
@@ -21,6 +22,45 @@ interface TaskModalProps {
   parentTaskId?: number;
   initialState?: TaskState;
 }
+
+type TenantUserOption = {
+  id: number;
+  email?: string;
+  mail?: string;
+  name?: string;
+};
+
+interface AssignableUserRecord {
+  UserID?: number;
+  user_id?: number;
+  id?: number;
+  email?: string;
+  Email?: string;
+  user_email?: string;
+  UserEmail?: string;
+  mail?: string;
+  Mail?: string;
+  user_mail?: string;
+  UserMail?: string;
+  correo?: string;
+  Correo?: string;
+  name?: string;
+  fullName?: string;
+  FullName?: string;
+  displayName?: string;
+  DisplayName?: string;
+  username?: string;
+  UserName?: string;
+  Nombre?: string;
+}
+
+type AssignableUsersResponse =
+  | AssignableUserRecord[]
+  | {
+      items?: AssignableUserRecord[];
+      data?: AssignableUserRecord[];
+      users?: AssignableUserRecord[];
+    };
 
 const TaskModal: React.FC<TaskModalProps> = ({
   isOpen,
@@ -41,7 +81,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
     limit_date: '',
     project_id: ''
   });
-  const [tenantUsers, setTenantUsers] = useState<Array<{ id: number; email?: string; mail?: string; name?: string }>>([]);
+  const [tenantUsers, setTenantUsers] = useState<TenantUserOption[]>([]);
   const [assigneeUserIds, setAssigneeUserIds] = useState<number[]>([]);
   const [assigneeSearch, setAssigneeSearch] = useState('');
   const { user } = useAuthState();
@@ -52,80 +92,135 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const { updateTask, loading: updating, error: updateError } = useUpdateTask();
   const { projects, loading: projectsLoading } = useProjects({ page: 1, limit: 100 });
 
+  const parseNumericId = (value: unknown): number | undefined => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+
+    return undefined;
+  };
+
   const setDateSafely = (isoDate: string) => {
     setFormData(prev => ({ ...prev, limit_date: isoDate || '' }));
   };
 
-  const getProjectById = (pid?: number | string) => {
-    if (!pid && pid !== 0) return null;
-    const n = Number(pid);
-    if (Number.isNaN(n)) return null;
+  const getProjectById = (pid?: number | string): Project | null => {
+    const numericId = parseNumericId(pid);
+    if (numericId == null) {
+      return null;
+    }
+
     return (
-      projects?.find(p => Number((p as any).proyect_id ?? (p as any).project_id) === n) || null
+      projects?.find((project) => {
+        if (project.proyect_id === numericId) {
+          return true;
+        }
+
+        if ('project_id' in project) {
+          const alternate = (project as Project & { project_id?: number }).project_id;
+          return alternate === numericId;
+        }
+
+        return false;
+      }) ?? null
     );
   };
 
-  const loadAssignableUsers = async (pid?: number) => {
-      try {
-        let res: any;
+  const resolveTenantId = (): number | undefined => {
+    const metadata =
+      typeof user?.user_metadata === 'object' && user?.user_metadata !== null
+        ? (user.user_metadata as Record<string, unknown>)
+        : undefined;
 
-        if (pid) {
-          // ✅ Usuarios vinculados al proyecto
-          res = await authApi.get(`/projects/${pid}/users?page=1&limit=200`);
-        } else {
-          // Fallback actual (creatorMail / tenant) por compatibilidad
-          const creatorMail = user?.email;
-          const tenantId = (user as any)?.user_metadata?.tenantId || (user as any)?.tenantId;
+    const metadataTenant = metadata ? parseNumericId(metadata.tenantId) : undefined;
 
-          if (creatorMail) {
-            res = await authApi.get(`/tasks/assignee-options?creatorMail=${encodeURIComponent(creatorMail)}`);
-          } else if (tenantId) {
-            res = await authApi.get(`/tasks/assignee-options/by-tenant?tenantId=${encodeURIComponent(String(tenantId))}`);
-          } else {
-            res = await authApi.get(`/tasks/assignee-options`);
-          }
-        }
+    const rootTenant =
+      typeof user === 'object' && user !== null && 'tenantId' in user
+        ? parseNumericId((user as Record<string, unknown>).tenantId)
+        : undefined;
 
-        // Normaliza formatos posibles de la respuesta
-        const arr = Array.isArray(res) ? res : (res?.items || res?.data || res?.users || []);
-        const normalized = (arr || [])
-          .map((u: any) => {
-            const id =
-              Number(u.UserID ?? u.user_id ?? u.id);
-
-            // Captura variantes comunes de email/nombre que suelen venir del back
-            const email =
-              u.email ?? u.Email ?? u.user_email ?? u.UserEmail ?? u.mail ?? u.Mail ?? u.user_mail ?? u.UserMail ?? u.correo ?? u.Correo;
-
-            const name =
-              u.name ?? u.fullName ?? u.FullName ?? u.displayName ?? u.DisplayName ?? u.username ?? u.UserName ?? u.Nombre;
-
-            return {
-              id,
-              // guarda ambos campos por compatibilidad con tu UI actual
-              email: typeof email === 'string' ? email : undefined,
-              mail: typeof email === 'string' ? email : undefined,
-              name: typeof name === 'string' ? name : undefined,
-            };
-          })
-          .filter((u: any) => Number.isFinite(u.id));
-
-        setTenantUsers(normalized);
-      } catch (e) {
-        console.warn('Failed to load assignee options', e);
-        setTenantUsers([]);
-      }
-    };
-
-  const getProjectDates = (p: any) => {
-    if (!p) return { start: '', end: '' };
-    const start =
-      p.start_date ?? p.StartDate ?? p.startDate ?? '';
-    const end =
-      p.end_date ?? p.EndDate ?? p.endDate ?? '';
-    return { start, end };
+    return metadataTenant ?? rootTenant;
   };
 
+  const loadAssignableUsers = async (pid?: number) => {
+    try {
+      let response: AssignableUsersResponse;
+
+      if (pid) {
+        response = await authApi.get<AssignableUsersResponse>(`/projects/${pid}/users?page=1&limit=200`);
+      } else {
+        const creatorMail = user?.email;
+        const tenantId = resolveTenantId();
+
+        if (creatorMail) {
+          response = await authApi.get<AssignableUsersResponse>(
+            `/tasks/assignee-options?creatorMail=${encodeURIComponent(creatorMail)}`
+          );
+        } else if (tenantId != null) {
+          response = await authApi.get<AssignableUsersResponse>(
+            `/tasks/assignee-options/by-tenant?tenantId=${encodeURIComponent(String(tenantId))}`
+          );
+        } else {
+          response = await authApi.get<AssignableUsersResponse>(`/tasks/assignee-options`);
+        }
+      }
+
+      const candidates = Array.isArray(response)
+        ? response
+        : response?.items ?? response?.data ?? response?.users ?? [];
+
+      const normalized = (candidates ?? [])
+        .map((candidate): TenantUserOption | null => {
+          const id = parseNumericId(candidate.UserID ?? candidate.user_id ?? candidate.id);
+          if (id == null) {
+            return null;
+          }
+
+          const emailCandidate =
+            candidate.email ??
+            candidate.Email ??
+            candidate.user_email ??
+            candidate.UserEmail ??
+            candidate.mail ??
+            candidate.Mail ??
+            candidate.user_mail ??
+            candidate.UserMail ??
+            candidate.correo ??
+            candidate.Correo;
+
+          const nameCandidate =
+            candidate.name ??
+            candidate.fullName ??
+            candidate.FullName ??
+            candidate.displayName ??
+            candidate.DisplayName ??
+            candidate.username ??
+            candidate.UserName ??
+            candidate.Nombre;
+
+          const email = typeof emailCandidate === 'string' ? emailCandidate : undefined;
+          const name = typeof nameCandidate === 'string' ? nameCandidate : undefined;
+
+          return {
+            id,
+            email,
+            mail: email,
+            name,
+          };
+        })
+        .filter((option): option is TenantUserOption => option !== null);
+
+      setTenantUsers(normalized);
+    } catch (error) {
+      console.warn('Failed to load assignee options', error);
+      setTenantUsers([]);
+    }
+  };
 
   const toNumberArray = (val: unknown): number[] => {
     if (Array.isArray(val)) return val.map((x) => Number(x)).filter((x) => !Number.isNaN(x));
@@ -139,17 +234,6 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return Number.isNaN(n) ? [] : [n];
   };
 
-  const toDateOnlyISO = (value?: string | Date) => {
-    if (!value) return '';
-    let s = typeof value === 'string' ? value : new Date(value).toISOString();
-    // Soporta “YYYY-MM”
-    if (/^\d{4}[-/]\d{2}$/.test(s)) s = s.replace('/', '-') + '-01';
-    const d = new Date(s);
-    if (Number.isNaN(d.getTime())) return '';
-    const tz = d.getTimezoneOffset() * 60000;
-    return new Date(d.getTime() - tz).toISOString().slice(0, 10); // YYYY-MM-DD
-  };
-
   const isWithin = (v: string, min?: string, max?: string) => {
     if (!v) return true;
     if (min && v < min) return false;
@@ -157,8 +241,19 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return true;
   };
 
-  const pickLimitDate = (t: any): string | undefined =>
-    t?.limit_date ?? t?.LimitDate ?? t?.limitDate ?? undefined;
+  const pickLimitDate = (
+    value?: (Task & { LimitDate?: string; limitDate?: string }) | null
+  ): string | undefined => {
+    if (!value) {
+      return undefined;
+    }
+
+    if (value.limit_date) {
+      return value.limit_date;
+    }
+
+    return value.LimitDate ?? value.limitDate ?? undefined;
+  };
 
   const toInputDate = (value?: string | Date): string => {
     if (!value) return '';
@@ -219,11 +314,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
         title: task.title,
         description: task.description || '',
         state: task.state,
-        priority: (task.priority as any) || 'Medium',
+        priority: task.priority ?? 'Medium',
         assigned_to_ids: Array.isArray(task.assigned_to_ids)
           ? task.assigned_to_ids.join(',')
-          : (task.assigned_to_ids || ''),
-        project_id: String(task.proyect_id ?? (task as any).project_id ?? projectId ?? '')
+          : (task.assigned_to_ids ?? ''),
+        project_id: String(task.proyect_id ?? projectId ?? '')
         // importante: aquí NO pongas directamente la fecha; usa setDateSafely abajo
       }));
       setDateSafely(isoFromTask || fallbackFromProject); // <- única fuente: formData.limit_date
@@ -249,7 +344,8 @@ const TaskModal: React.FC<TaskModalProps> = ({
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
       });
-      setAssigneeUserIds(user?.id ? [Number(user.id)] : []);
+      const defaultAssignee = parseNumericId(user?.id);
+      setAssigneeUserIds(defaultAssignee != null ? [defaultAssignee] : []);
       setDateSafely('');
     }
 
@@ -282,9 +378,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
       let projectStartDate: string | undefined;
       let projectEndDate: string | undefined;
 
-      const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
-      if (selectedProjectId) {
-        const selectedProject = projects?.find(p => p.proyect_id === selectedProjectId);
+      const selectedProjectId = formData.project_id ? parseNumericId(formData.project_id) : projectId;
+      if (selectedProjectId != null) {
+        const selectedProject = getProjectById(selectedProjectId);
         if (selectedProject) {
           projectStartDate = selectedProject.start_date;
           projectEndDate = selectedProject.end_date;
@@ -304,18 +400,16 @@ const TaskModal: React.FC<TaskModalProps> = ({
       let result: Task | null = null;
 
       if (mode === 'create') {
-        const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
+        const selectedProjectId = formData.project_id ? parseNumericId(formData.project_id) : projectId;
         const createData: CreateTaskRequest = {
           title: formData.title,
           description: formData.description || undefined,
           state: formData.state,
           priority: formData.priority,
-          created_by: user?.id
-            ? (typeof user.id === 'string' ? parseInt(user.id, 10) : (user.id as unknown as number))
-            : 0,  
+          created_by: parseNumericId(user?.id) ?? 0,
           assigned_to_ids: assigneeUserIds,
           limit_date: formData.limit_date || undefined,
-          ...(selectedProjectId && { proyect_id: selectedProjectId }),
+          ...(selectedProjectId != null && { proyect_id: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId }),
         };
 
@@ -325,7 +419,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           title: formData.title,
           description: formData.description || undefined,
           state: formData.state,
-          priority: (formData.priority as any) as TaskPriority,
+          priority: formData.priority,
           assigned_to_ids: assigneeUserIds,
           limit_date: formData.limit_date || undefined
         };
@@ -334,12 +428,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
       }
 
       if (result) {
-        const normalized = {
-          ...(task ?? {}),    // conserva ids/campos existentes si result viene parcial
+        const resolvedTask: Task = {
           ...result,
-          limit_date: formData.limit_date || result.limit_date || (task as any)?.limit_date || ''
+          limit_date: formData.limit_date || result.limit_date || task?.limit_date,
         };
-        onSubmit(result);
+        onSubmit(resolvedTask);
         onClose();
       }
     } catch (error) {
@@ -570,16 +663,14 @@ const TaskModal: React.FC<TaskModalProps> = ({
             {/* Project dates text */}
             {(() => {
             // 1) identificar el proyecto de referencia
-            let projectForDates: any = null;
-            let selectedProjectId: number | undefined;
+            const resolvedProjectId =
+              mode === 'edit' && task?.proyect_id
+                ? task.proyect_id
+                : formData.project_id
+                  ? parseNumericId(formData.project_id)
+                  : projectId;
 
-            if (mode === 'edit' && task?.proyect_id) {
-              selectedProjectId = task.proyect_id;
-              projectForDates = projects?.find(p => p.proyect_id === task.proyect_id) || null;
-            } else {
-              selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
-              projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
-            }
+            const projectForDates = resolvedProjectId != null ? getProjectById(resolvedProjectId) : null;
 
             // 2) calcular min/max (en formato YYYY-MM-DD para <input type="date">)
             const minDate = projectForDates?.start_date ? toInputDate(projectForDates.start_date) : '';

@@ -6,7 +6,6 @@ import {
   Kanban, 
   List, 
   Calendar, 
-  Plus,
   ArrowLeft,
   Settings
 } from 'lucide-react';

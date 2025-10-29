@@ -1,24 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, MoreVertical, ChevronDown } from 'lucide-react';
+import { Calendar, User, ChevronDown } from 'lucide-react';
 import type { Task, TaskState, TaskPriority } from '@/lib/types/task-types';
 import {
   getTaskStateColor,
   getTaskPriorityColor,
-  getTaskPriorityIcon,
   formatDueDate,
   isTaskOverdue,
   parseAssignedUserIds
 } from '@/lib/tasks/utils';
-import { formatDateSafe } from '../dashboard/utils';
 import { useUpdateTaskStatus, useUpdateTask } from '@/lib/hooks/use-tasks';
 
 interface TaskCardProps {
   task: Task;
   onClick?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
   showProject?: boolean;
   compact?: boolean;
 }
@@ -26,8 +22,6 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({
   task,
   onClick,
-  onEdit,
-  onDelete,
   showProject = false,
   compact = false
 }) => {
@@ -47,7 +41,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const stateColors = getTaskStateColor(task.state);
   const priorityColors = getTaskPriorityColor(task.priority);
-  const priorityIcon = getTaskPriorityIcon(task.priority);
   const isOverdue = isTaskOverdue(task);
   const assignedUserIds = parseAssignedUserIds(task.assigned_to_ids);
 
@@ -56,11 +49,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
       e.stopPropagation();
       onClick();
     }
-  };
-
-  const handleMenuClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // TODO: Implement dropdown menu
   };
 
   const handleStatusChange = async (newState: TaskState) => {
@@ -123,9 +111,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               </select>
               <ChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 w-3 h-3 pointer-events-none" />
             </div>
-            <button onClick={handleMenuClick} className="text-[#0c272d]/40 hover:text-[#0c272d]">
-              <MoreVertical className="w-4 h-4" />
-            </button>
           </div>
         </div>
         
@@ -184,9 +169,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <h3 className="font-semibold text-[#0c272d] text-base sm:text-lg leading-tight flex-1 mr-2">
           {task.title}
         </h3>
-        <button onClick={handleMenuClick} className="text-[#0c272d]/40 hover:text-[#0c272d] p-1 flex-shrink-0">
-          <MoreVertical className="w-4 h-4" />
-        </button>
       </div>
 
       {task.description && (

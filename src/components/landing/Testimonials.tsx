@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Quote, Star } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import Image from 'next/image';
 
 const Testimonials: React.FC = () => {
   const [emblaRef] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
@@ -94,9 +95,11 @@ const Testimonials: React.FC = () => {
 
                     <div className="flex items-center space-x-4 mt-auto">
                       <div className="relative">
-                        <img
+                        <Image
                           src={testimonial.image}
                           alt={testimonial.name}
+                          width={56}
+                          height={56}
                           className="w-14 h-14 rounded-full object-cover ring-2 ring-[#9fdbc2]/30 group-hover:ring-[#14a67e]/50 transition-all"
                         />
                         <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#14a67e] rounded-full border-2 border-white flex items-center justify-center">

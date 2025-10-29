@@ -4,7 +4,10 @@ import { vi } from 'vitest';
 // Polyfill IntersectionObserver for JSDOM (used by framer-motion and others)
 if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
   class MockIntersectionObserver {
-    constructor(_: IntersectionObserverCallback, __?: IntersectionObserverInit) {}
+    constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+      void callback;
+      void options;
+    }
     observe() {}
     unobserve() {}
     disconnect() {}

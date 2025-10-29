@@ -149,12 +149,11 @@ export function useProjects(initialFilters?: ProjectFilters) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => {
     fetchProjects(initialFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchProjects, initialFilters]);
 
   return {
     projects,
@@ -208,30 +207,6 @@ export function useCreateProject() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthState();
-
-  // Ensure methodology exists and return its ID
-  const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
-    if (!name || !name.trim()) return undefined;
-    try {
-      // Try to find by name
-      const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
-
-      // Handle possible response shapes
-      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
-      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
-      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
-      if (idFromFound) return Number(idFromFound);
-
-      // Create if not found
-      const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
-      const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
-      return idFromCreated ? Number(idFromCreated) : undefined;
-    } catch (e) {
-      console.warn('[useCreateProject] Failed to ensure methodology, continuing without one:', e);
-      return undefined;
-    }
-  }, []);
 
   const createProject = async (data: CreateProjectRequest): Promise<Project | null> => {
     setLoading(true);

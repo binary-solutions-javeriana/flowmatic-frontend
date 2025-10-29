@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, CheckCircle, Shield, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle, Users, TrendingUp, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const Hero: React.FC = () => {
   return (
@@ -129,10 +130,12 @@ const Hero: React.FC = () => {
           >
             {/* Background decorative image */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=800&fit=crop"
                 alt="Educational collaboration"
+                fill
                 className="w-full h-full object-cover opacity-10 blur-sm"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
             </div>
 

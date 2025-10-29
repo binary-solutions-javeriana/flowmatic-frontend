@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 const Footer: React.FC = () => {
   return (
@@ -7,7 +8,7 @@ const Footer: React.FC = () => {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <img src="/logo/flowmatic_logo.png" alt="Flowmatic Logo" className="w-8 h-8" />
+              <Image src="/logo/flowmatic_logo.png" alt="Flowmatic Logo" className="w-8 h-8" width={32} height={32} priority />
               <span className="text-xl font-bold text-white">Flowmatic</span>
             </div>
             <p className="text-white/70">Streamlining project management for teams and organizations worldwide.</p>
