@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { X, Calendar, User, AlertCircle, Plus } from 'lucide-react';
 import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskState, TaskPriority } from '@/lib/types/task-types';
 import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
@@ -8,6 +8,7 @@ import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
 import { useAuthState } from '@/lib/auth-store';
+import { authApi } from '@/lib/authenticated-api';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
   });
   const [tenantUsers, setTenantUsers] = useState<Array<{ id: number; email?: string; mail?: string; name?: string }>>([]);
   const [assigneeUserIds, setAssigneeUserIds] = useState<number[]>([]);
+  const [assigneeSearch, setAssigneeSearch] = useState('');
   const { user } = useAuthState();
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,6 +50,29 @@ const TaskModal: React.FC<TaskModalProps> = ({
   const { createTask, loading: creating, error: createError } = useCreateTask();
   const { updateTask, loading: updating, error: updateError } = useUpdateTask();
   const { projects, loading: projectsLoading } = useProjects({ page: 1, limit: 100 });
+
+  const setDateSafely = (isoDate: string) => {
+    setFormData(prev => ({ ...prev, limit_date: isoDate || '' }));
+  };
+
+  const getProjectById = (pid?: number | string) => {
+    if (!pid && pid !== 0) return null;
+    const n = Number(pid);
+    if (Number.isNaN(n)) return null;
+    return (
+      projects?.find(p => Number((p as any).proyect_id ?? (p as any).project_id) === n) || null
+    );
+  };
+
+  const getProjectDates = (p: any) => {
+    if (!p) return { start: '', end: '' };
+    const start =
+      p.start_date ?? p.StartDate ?? p.startDate ?? '';
+    const end =
+      p.end_date ?? p.EndDate ?? p.endDate ?? '';
+    return { start, end };
+  };
+
 
   const toNumberArray = (val: unknown): number[] => {
     if (Array.isArray(val)) return val.map((x) => Number(x)).filter((x) => !Number.isNaN(x));
@@ -61,8 +86,60 @@ const TaskModal: React.FC<TaskModalProps> = ({
     return Number.isNaN(n) ? [] : [n];
   };
 
+  const toDateOnlyISO = (value?: string | Date) => {
+    if (!value) return '';
+    let s = typeof value === 'string' ? value : new Date(value).toISOString();
+    // Soporta “YYYY-MM”
+    if (/^\d{4}[-/]\d{2}$/.test(s)) s = s.replace('/', '-') + '-01';
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return '';
+    const tz = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tz).toISOString().slice(0, 10); // YYYY-MM-DD
+  };
+
+  const isWithin = (v: string, min?: string, max?: string) => {
+    if (!v) return true;
+    if (min && v < min) return false;
+    if (max && v > max) return false;
+    return true;
+  };
+
+  const pickLimitDate = (t: any): string | undefined =>
+    t?.limit_date ?? t?.LimitDate ?? t?.limitDate ?? undefined;
+
+  const toInputDate = (value?: string | Date): string => {
+    if (!value) return '';
+
+    // Si ya es string YYYY-MM-DD, devuélvelo tal cual (sin tocar zona horaria)
+    if (typeof value === 'string') {
+      const s = value.trim().replace(/\//g, '-');
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;        // YYYY-MM-DD
+      if (/^\d{4}-\d{2}$/.test(s))   return `${s}-01`;    // YYYY-MM -> primer día del mes
+
+      // Si viene con tiempo (tiene 'T'), ajusta a local sin cambiar de día
+      if (s.includes('T')) {
+        const d = new Date(s);
+        if (Number.isNaN(d.getTime())) return '';
+        const tz = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+      }
+
+      // Cualquier otro formato raro, intenta parsear y ajustar
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return '';
+      const tz = d.getTimezoneOffset() * 60000;
+      return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+    }
+
+    // Si es objeto Date
+    const d = value as Date;
+    const tz = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+  };
+
+
   // Initialize form data and fetch tenant users
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loadTenantUsers = async () => {
       try {
         const auth = await import('@/lib/authenticated-api');
@@ -84,30 +161,61 @@ const TaskModal: React.FC<TaskModalProps> = ({
     loadTenantUsers();
 
     if (mode === 'edit' && task) {
-      setFormData({
+      // 1) Fecha de la BD
+      const isoFromTask = toInputDate(pickLimitDate(task)); // YYYY-MM-DD
+
+      // 2) Fallback: fecha del proyecto (si aplica)
+      let fallbackFromProject = '';
+      const projectFromTask = task?.proyect_id
+        ? projects?.find(p => p.proyect_id === task.proyect_id)
+        : null;
+      if (!isoFromTask && projectFromTask?.end_date) {
+        fallbackFromProject = toInputDate(projectFromTask.end_date);
+      }
+
+      // 3) Cargar datos y fecha en el estado
+      setFormData(prev => ({
+        ...prev,
         title: task.title,
         description: task.description || '',
         state: task.state,
-        priority: task.priority || 'Medium',
-        assigned_to_ids: Array.isArray(task.assigned_to_ids) ? task.assigned_to_ids.join(',') : (task.assigned_to_ids || ''),
-        limit_date: task.limit_date && formatDateSafe(task.limit_date) !== 'Unknown' ? formatDateSafe(task.limit_date) : '',
-        project_id: projectId ? projectId.toString() : ''
-      });
-      setAssigneeUserIds(toNumberArray(task.assigned_to_ids));   
-     } else {
+        priority: (task.priority as any) || 'Medium',
+        assigned_to_ids: Array.isArray(task.assigned_to_ids)
+          ? task.assigned_to_ids.join(',')
+          : (task.assigned_to_ids || ''),
+        project_id: String(task.proyect_id ?? (task as any).project_id ?? projectId ?? '')
+        // importante: aquí NO pongas directamente la fecha; usa setDateSafely abajo
+      }));
+      setDateSafely(isoFromTask || fallbackFromProject); // <- única fuente: formData.limit_date
+
+      (async () => {
+        try {
+          const assignees = await authApi.get<Array<{ TaskID: number; UserID: number }>>(
+            `/tasks/${task.task_id}/assignees`
+          );
+          const ids = Array.isArray(assignees) ? assignees.map(a => Number(a.UserID)) : [];
+          setAssigneeUserIds(ids.length ? ids : toNumberArray(task.assigned_to_ids));
+        } catch {
+          setAssigneeUserIds(toNumberArray(task.assigned_to_ids));
+        }
+      })();
+    } else {
       setFormData({
         title: '',
         description: '',
         state: initialState || 'To Do',
-        priority: 'Medium' as TaskPriority,
+        priority: 'Medium' as any,
         assigned_to_ids: '',
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
       });
       setAssigneeUserIds(user?.id ? [Number(user.id)] : []);
+      setDateSafely('');
     }
+
     setErrors([]);
-  }, [mode, task, isOpen, initialState, projectId, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, task, isOpen, initialState, projectId, user, projects]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -173,7 +281,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
           description: formData.description || undefined,
           state: formData.state,
           priority: (formData.priority as any) as TaskPriority,
-          // do not send assigned_to_ids in update payload
+          assigned_to_ids: assigneeUserIds,
           limit_date: formData.limit_date || undefined
         };
 
@@ -181,6 +289,11 @@ const TaskModal: React.FC<TaskModalProps> = ({
       }
 
       if (result) {
+        const normalized = {
+          ...(task ?? {}),    // conserva ids/campos existentes si result viene parcial
+          ...result,
+          limit_date: formData.limit_date || result.limit_date || (task as any)?.limit_date || ''
+        };
         onSubmit(result);
         onClose();
       }
@@ -335,38 +448,69 @@ const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Assigned Users (Tenant-scoped, multi-select) */}
+          {/* Assigned Users (Tenant-scoped, multi-select with checkboxes) */}
           <div>
-            <label htmlFor="assignees" className="block text-sm font-medium text-[#0c272d] mb-2">
+            <label className="block text-sm font-medium text-[#0c272d] mb-2">
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
                 <span>Assign To *</span>
               </div>
             </label>
 
-            <select
-              id="assignees"
-              multiple
-              value={(Array.isArray(assigneeUserIds) ? assigneeUserIds : []).map(String)}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions).map(o => Number(o.value));
-                setAssigneeUserIds(selected);
-              }}
-              className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={assigneeSearch}
+              onChange={(e) => setAssigneeSearch(e.target.value)}
+              className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300 mb-2"
               disabled={isSubmitting}
-              size={Math.min(tenantUsers.length || 4, 6)}
-              required
-            >
+            />
+
+            {/* Scrollable Checkbox List */}
+            <div className="max-h-48 overflow-y-auto border border-[#9fdbc2]/30 rounded-xl bg-white/50">
               {tenantUsers.length === 0 ? (
-                <option value="" disabled>No users found</option>
+                <div className="p-4 text-center text-[#0c272d]/60">No users found</div>
               ) : (
-                tenantUsers.map((u) => (
-                  <option key={u.id} value={String(u.id)}>
-                    {u.mail || u.email || u.name || `User ${u.id}`}
-                  </option>
-                ))
+                tenantUsers
+                  .filter((u) => {
+                    const displayName = u.mail || u.email || u.name || `User ${u.id}`;
+                    return displayName.toLowerCase().includes(assigneeSearch.toLowerCase());
+                  })
+                  .map((u) => {
+                    const displayName = u.mail || u.email || u.name || `User ${u.id}`;
+                    const isChecked = assigneeUserIds.includes(u.id);
+                    return (
+                      <label
+                        key={u.id}
+                        className="flex items-center space-x-3 p-3 hover:bg-[#9fdbc2]/10 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setAssigneeUserIds(prev => [...prev, u.id]);
+                            } else {
+                              setAssigneeUserIds(prev => prev.filter(id => id !== u.id));
+                            }
+                          }}
+                          disabled={isSubmitting}
+                          className="w-4 h-4 text-[#14a67e] border-[#9fdbc2]/30 rounded focus:ring-[#14a67e]/20"
+                        />
+                        <span className="text-[#0c272d] text-sm">{displayName}</span>
+                      </label>
+                    );
+                  })
               )}
-            </select>
+            </div>
+
+            {/* Selected count */}
+            {assigneeUserIds.length > 0 && (
+              <div className="mt-2 text-xs text-[#0c272d]/70">
+                {assigneeUserIds.length} user{assigneeUserIds.length !== 1 ? 's' : ''} selected
+              </div>
+            )}
           </div>
 
           {/* Due Date */}
@@ -377,62 +521,52 @@ const TaskModal: React.FC<TaskModalProps> = ({
                 <span>Due Date *</span>
               </div>
             </label>
+            
+            {/* Project dates text */}
             {(() => {
-              let projectForDates = null;
-              if (mode === 'edit' && task?.proyect_id) {
-                // For edit mode, get project from task
-                projectForDates = projects?.find(p => p.proyect_id === task.proyect_id);
-              } else {
-                // For create mode, get from form or prop
-                const selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
-                projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
-              }
-              return projectForDates ? (
-                <div className="text-xs text-[#0c272d]/70 mb-2">
-                  Project dates: {projectForDates.start_date ? formatDateSafe(projectForDates.start_date) : 'N/A'} - {projectForDates.end_date ? formatDateSafe(projectForDates.end_date) : 'N/A'}
-                </div>
-              ) : null;
-            })()}
-            {(() => {
-              let minDate = '';
-              let maxDate = '';
-              let projectForDates = null;
-              let selectedProjectId: number | undefined;
+            // 1) identificar el proyecto de referencia
+            let projectForDates: any = null;
+            let selectedProjectId: number | undefined;
 
-              if (mode === 'edit' && task?.proyect_id) {
-                // For edit mode, get project from task
-                selectedProjectId = task.proyect_id;
-                projectForDates = projects?.find(p => p.proyect_id === task.proyect_id);
-              } else {
-                // For create mode, get from form or prop
-                selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
-                projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
-              }
+            if (mode === 'edit' && task?.proyect_id) {
+              selectedProjectId = task.proyect_id;
+              projectForDates = projects?.find(p => p.proyect_id === task.proyect_id) || null;
+            } else {
+              selectedProjectId = formData.project_id ? parseInt(formData.project_id) : projectId;
+              projectForDates = selectedProjectId ? projects?.find(p => p.proyect_id === selectedProjectId) : null;
+            }
 
-              if (projectForDates) {
-                if (projectForDates.start_date) {
-                  minDate = new Date(projectForDates.start_date).toISOString().split('T')[0];
-                }
-                if (projectForDates.end_date) {
-                  maxDate = new Date(projectForDates.end_date).toISOString().split('T')[0];
-                }
-              }
+            // 2) calcular min/max (en formato YYYY-MM-DD para <input type="date">)
+            const minDate = projectForDates?.start_date ? toInputDate(projectForDates.start_date) : '';
+            const maxDate = projectForDates?.end_date ? toInputDate(projectForDates.end_date) : '';
 
-              return (
+            // Si el valor actual está fuera del rango, NO apliques min/max (para no limpiar el valor)
+            const valueOk = isWithin(formData.limit_date, minDate || undefined, maxDate || undefined);
+            const finalMin = valueOk ? (minDate || undefined) : undefined;
+            const finalMax = valueOk ? (maxDate || undefined) : undefined;
+
+            return (
+              <>
+                {projectForDates && (projectForDates.start_date || projectForDates.end_date) && (
+                  <div className="text-xs text-[#0c272d]/70 mb-2">
+                    Project dates: {projectForDates.start_date ? formatDateSafe(projectForDates.start_date) : 'N/A'} - {projectForDates.end_date ? formatDateSafe(projectForDates.end_date) : 'N/A'}
+                  </div>
+                )}
+
                 <input
-                  key={`date-input-${selectedProjectId || 'no-project'}`} // Force re-mount when project changes
+                  key={`date-${task?.task_id ?? 'new'}-${finalMin ?? 'nomin'}-${finalMax ?? 'nomax'}-${formData.limit_date || 'empty'}`}
                   type="date"
                   id="limit_date"
                   value={formData.limit_date}
-                  onChange={(e) => handleInputChange('limit_date', e.target.value)}
-                  min={minDate}
-                  max={maxDate}
+                  onChange={(e) => setDateSafely(e.target.value)}
+                  min={finalMin}
+                  max={finalMax}
                   className="w-full px-4 py-3 bg-white/50 border border-[#9fdbc2]/30 rounded-xl text-[#0c272d] focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 transition-all duration-300"
-                  disabled={isSubmitting}
-                  required
                 />
-              );
+              </>
+            );
             })()}
+
           </div>
 
           {/* Submit Buttons */}

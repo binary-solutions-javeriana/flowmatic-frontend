@@ -311,12 +311,54 @@ export function useUpdateTask() {
         ...(data as any).description !== undefined && { Description: (data as any).description },
         ...(data as any).state !== undefined && { State: (data as any).state },
         ...(priorityValue !== undefined) && { Priority: priorityValue },
-        ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date },
-        ...(data as any).assigned_to_ids !== undefined && { AssignedUserIds: (data as any).assigned_to_ids }
+        ...(data as any).limit_date !== undefined && { LimitDate: (data as any).limit_date }
+        // Note: assigned_to_ids is handled separately via assign/unassign endpoints
       };
 
       const response = await authApi.patch<Task>(`/tasks/${taskId}`, payload);
+
+      // Handle assignee changes separately if provided
+      if ((data as any).assigned_to_ids !== undefined) {
+        // Normaliza entrada del front a arreglo de números
+        const nextIds: number[] = Array.isArray((data as any).assigned_to_ids)
+          ? (data as any).assigned_to_ids.map(Number).filter(n => !Number.isNaN(n))
+          : typeof (data as any).assigned_to_ids === 'string'
+            ? (data as any).assigned_to_ids
+                .split(',')
+                .map(s => Number(s.trim()))
+                .filter(n => !Number.isNaN(n))
+            : [];
+
+        try {
+          // 1) Traer asignados actuales; soporta dos formatos de respuesta
+          const current = await authApi.get<any>(`/tasks/${taskId}/assignees`);
+          const currentIds: number[] = Array.isArray(current)
+            ? (
+                // formato A: [{ TaskID, UserID }]
+                current.length && typeof current[0] === 'object' && 'UserID' in current[0]
+                  ? current.map((a: any) => Number(a.UserID))
+                  // formato B: [1,2,3]
+                  : current.map(Number)
+              ).filter((n: number) => !Number.isNaN(n))
+            : [];
+
+          // 2) Calcular delta
+          const toAdd = nextIds.filter(id => !currentIds.includes(id));
+          const toRemove = currentIds.filter(id => !nextIds.includes(id));
+
+          // 3) Aplicar cambios en paralelo
+          await Promise.allSettled([
+            ...toAdd.map(id => authApi.post(`/tasks/${taskId}/assignees/${id}`, {})),
+            ...toRemove.map(id => authApi.delete(`/tasks/${taskId}/assignees/${id}`))
+          ]);
+        } catch (assigneeErr) {
+          console.warn(`Failed to sync assignees for task ${taskId}:`, assigneeErr);
+          // No rompemos toda la actualización si solo falló la sincronización de asignados
+        }
+      }
+
       return response;
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
       setError(errorMessage);

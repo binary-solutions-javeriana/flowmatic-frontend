@@ -1,5 +1,5 @@
 'use client';
-
+import { authApi } from '@/lib/authenticated-api';
 import React, { useState } from 'react';
 import {
   X,
@@ -23,6 +23,31 @@ import {
   getTaskPriorityColor
 } from '@/lib/tasks/utils';
 import TaskModal from './TaskModal';
+
+// Normaliza cualquier payload de API al shape que espera el frontend
+const normalizeTask = (t: any): Task => {
+  if (!t) return t as Task;
+  const assigned =
+    Array.isArray(t.assigned_to_ids)
+      ? t.assigned_to_ids
+      : typeof t.assigned_to_ids === 'string'
+        ? t.assigned_to_ids.split(',').map((x: string) => Number(x.trim())).filter((n) => !Number.isNaN(n))
+        : [];
+
+  return {
+    task_id: t.task_id ?? t.TaskID ?? t.id,
+    title: t.title ?? t.Title ?? '',
+    description: t.description ?? t.Description ?? '',
+    state: t.state ?? t.State ?? 'To Do',
+    priority: t.priority ?? t.Priority ?? 'Medium',
+    limit_date: t.limit_date ?? t.LimitDate ?? t.limitDate ?? '',
+    proyect_id: t.proyect_id ?? t.project_id ?? t.ProjectID ?? t.ProyectID,
+    assigned_to_ids: assigned,
+    // conserva cualquier otro campo que tu tipo Task admita
+    ...(t.updated_at || t.UpdatedAt || t.updatedAt ? { updated_at: t.updated_at ?? t.UpdatedAt ?? t.updatedAt } : {})
+  } as Task;
+};
+
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -50,18 +75,35 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   // Update currentTask when task prop changes
   React.useEffect(() => {
-    setCurrentTask(task);
+    setCurrentTask(task ? normalizeTask(task) : null);
   }, [task]);
+
+  React.useEffect(() => {
+    const fetchFresh = async () => {
+      if (!isOpen || !task?.task_id) return;
+      try {
+        const freshRaw = await authApi.get(`/tasks/${task.task_id}`);
+        const fresh = normalizeTask(freshRaw);
+        setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh })); // merge defensivo
+      } catch (e) {
+        console.error('Failed to fetch fresh task', e);
+      }
+    };
+    fetchFresh();
+  }, [isOpen, task?.task_id]);
 
   const { updateTask, loading: updating } = useUpdateTask();
   const { deleteTask, loading: deleting } = useDeleteTask();
   const { updateTaskStatus, loading: updatingStatus } = useUpdateTaskStatus();
 
   const handleRefresh = async () => {
+    if (!currentTask?.task_id) return;
     setIsRefreshing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      onUpdate();
+      const freshRaw = await authApi.get(`/tasks/${currentTask.task_id}`);
+      const fresh = normalizeTask(freshRaw);
+      setCurrentTask((prev) => normalizeTask({ ...(prev ?? {}), ...fresh }));
+      onUpdate(fresh); // si quieres refrescar la lista padre
     } catch (error) {
       console.error('Error refreshing task data:', error);
     } finally {
@@ -69,14 +111,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     }
   };
 
+
+
   const handleUpdateTask = async (updatedTask: Task) => {
     setIsEditing(false);
-    setCurrentTask(updatedTask);
-    onUpdate(updatedTask);
-    // Close the modal immediately after successful update
+    const merged = normalizeTask({ ...(currentTask ?? {}), ...updatedTask });
+    setCurrentTask(merged);
+    onUpdate(merged);
     onClose();
   };
-
   const startEditingStatus = () => {
     if (currentTask) {
       setTempStatus(currentTask.state);
@@ -98,7 +141,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const updatedTask = await updateTaskStatus(currentTask.task_id, tempStatus);
       // Update local state with the returned task from API
       if (updatedTask) {
-        setCurrentTask(updatedTask);
+        const merged = { ...(currentTask ?? {}), ...updatedTask };
+        setCurrentTask(merged);
+        onUpdate(merged);
+        setEditingStatus(false);
+        setConfirmationMessage(`Status updated to "${tempStatus}" successfully!`);
       }
       setEditingStatus(false);
       onUpdate(updatedTask);
@@ -121,7 +168,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       });
       // Update local state with the returned task from API
       if (updatedTask) {
-        setCurrentTask(updatedTask);
+      const merged = { ...(currentTask ?? {}), ...updatedTask };
+      setCurrentTask(merged);
+      onUpdate(merged);
+      setEditingPriority(false);
+      setConfirmationMessage(`Priority updated to "${tempPriority}" successfully!`);      
       }
       setEditingPriority(false);
       onUpdate(updatedTask);
@@ -364,6 +415,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
       {/* Edit Task Modal */}
       <TaskModal
+        key={`edit-${currentTask?.task_id}-${(currentTask as any)?.updated_at ?? ''}`}
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         onSubmit={handleUpdateTask}
