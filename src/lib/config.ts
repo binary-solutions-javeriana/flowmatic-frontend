@@ -36,6 +36,34 @@ export const config = {
       return `${this.baseUrl}/health`;
     }
   },
+  payments: {
+    // Payment service configuration
+    get baseUrl() {
+      // For payments, always use direct backend URL to ensure proper redirects
+      return config.api.backendUrl;
+    },
+    
+    get apiUrl() {
+      return `${this.baseUrl}/${config.api.version}/payments`;
+    },
+    
+    get healthUrl() {
+      return `${this.apiUrl}/health`;
+    },
+    
+    // Default return URLs
+    get successUrl() {
+      return globalThis.window 
+        ? `${globalThis.window.location.origin}/payment-success`
+        : 'http://localhost:4000/payment-success';
+    },
+    
+    get cancelUrl() {
+      return globalThis.window
+        ? `${globalThis.window.location.origin}/payment-cancel`
+        : 'http://localhost:4000/payment-cancel';
+    }
+  },
   auth: {
     // Token storage keys
     accessTokenKey: 'flowmatic_access_token',
@@ -67,6 +95,6 @@ export function validateEnvironment() {
 }
 
 // Call validation on import
-if (typeof window !== 'undefined') {
+if (globalThis.window) {
   validateEnvironment();
 }
