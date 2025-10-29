@@ -220,15 +220,14 @@ export function useCreateProject() {
   const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
     if (!name || !name.trim()) return undefined;
     try {
-      // Try to find by name
+      // Try to find by name using the search endpoint
       const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
+      const found = await authApi.get<BackendMethodology>(`/methodologies/search?name=${queryName}`);
 
-      // Handle possible response shapes
-      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
-      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
-      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
-      if (idFromFound) return Number(idFromFound);
+      if (found && (found.MethodologyID || found.id || found.methodologyId)) {
+        const idFromFound = found.MethodologyID ?? found.id ?? found.methodologyId;
+        return Number(idFromFound);
+      }
 
       // Create if not found
       const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
@@ -296,12 +295,16 @@ export function useUpdateProject() {
   const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
     if (!name || !name.trim()) return undefined;
     try {
+      // Try to find by name using the search endpoint
       const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
-      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
-      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
-      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
-      if (idFromFound) return Number(idFromFound);
+      const found = await authApi.get<BackendMethodology>(`/methodologies/search?name=${queryName}`);
+
+      if (found && (found.MethodologyID || found.id || found.methodologyId)) {
+        const idFromFound = found.MethodologyID ?? found.id ?? found.methodologyId;
+        return Number(idFromFound);
+      }
+
+      // Create if not found
       const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
       const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
       return idFromCreated ? Number(idFromCreated) : undefined;
