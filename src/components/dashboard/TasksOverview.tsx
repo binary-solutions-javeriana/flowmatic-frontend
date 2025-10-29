@@ -42,6 +42,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const [isClient, setIsClient] = useState(false);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | number>('all');
 
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
     page: 1, 
@@ -184,7 +185,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     }
 
     // Validate that targetState is a valid TaskState
-    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done'];
     if (!validStates.includes(targetState as TaskState)) {
       console.error('Invalid task state:', targetState);
       setDraggedTask(null);

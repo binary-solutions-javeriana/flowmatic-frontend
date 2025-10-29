@@ -280,12 +280,12 @@ export function useCreateTask() {
 
       let response: Task;
       
-      if (data.proyect_id) {
-        // Create task via project endpoint
-        response = await authApi.post<Task>(`/projects/${data.proyect_id}/tasks`, data as unknown as Record<string, unknown>);
+      if (projectId) {
+        // endpoint por proyecto
+        response = await authApi.post<Task>(`/projects/${projectId}/tasks`, payload);
       } else {
-        // Create standalone task
-        response = await authApi.post<Task>('/tasks', data as unknown as Record<string, unknown>);
+        // endpoint general
+        response = await authApi.post<Task>('/tasks', payload);
       }
       
       return response;

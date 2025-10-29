@@ -8,6 +8,8 @@ import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
 import { authApi } from '@/lib/authenticated-api';
+import { useAuthState } from '@/lib/auth-store';
+
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -308,12 +310,13 @@ const TaskModal: React.FC<TaskModalProps> = ({
           description: formData.description || undefined,
           state: formData.state,
           priority: formData.priority,
-          created_by: 1, // TODO: Get from auth context
-          assigned_to_ids: formData.assigned_to_ids || undefined,
+          created_by: user?.id
+            ? (typeof user.id === 'string' ? parseInt(user.id, 10) : (user.id as unknown as number))
+            : 0,  
+          assigned_to_ids: assigneeUserIds,
           limit_date: formData.limit_date || undefined,
           ...(selectedProjectId && { proyect_id: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId }),
-          assigned_to_ids: assigneeUserIds
         };
 
         result = await createTask(createData);
