@@ -4,6 +4,7 @@ export interface Project {
   proyect_id: number;
   name_proyect: string;
   description?: string;
+  mail?: string;
   state: string;
   type?: string;
   start_date?: string;
@@ -38,6 +39,7 @@ export interface ProjectsResponse {
 export interface CreateProjectRequest {
   name_proyect: string;
   description?: string;
+  mail?: string;
   state: string;
   type?: string;
   start_date?: string;
@@ -48,6 +50,7 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest {
   name_proyect?: string;
   description?: string;
+  mail?: string;
   state?: string;
   type?: string;
   start_date?: string;

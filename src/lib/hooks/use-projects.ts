@@ -22,14 +22,17 @@ interface BackendProject {
   Name?: string;
   description?: string;
   Description?: string;
+  Mail?: string;
   state?: string;
   State?: string;
   type?: string;
   MethodologyName?: string;
+  MethodologyID?: number;
   start_date?: string;
   Start_date?: string;
   end_date?: string;
   End_date?: string;
+  TenantID?: number;
   created_at?: string;
   CreatedAt?: string;
   updated_at?: string;
@@ -56,6 +59,7 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
   const proyect_id = item?.proyect_id ?? item?.ProjectID ?? item?.id;
   const name_proyect = item?.name_proyect ?? item?.NameProject ?? item?.name ?? item?.Name;
   const description = item?.description ?? item?.Description ?? undefined;
+  const mail = item?.Mail ?? undefined;
   const state = item?.state ?? item?.State ?? 'Planning';
   const type = item?.type ?? item?.MethodologyName ?? undefined;
   const start_date = item?.start_date ?? item?.Start_date ?? undefined;
@@ -68,6 +72,7 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
     proyect_id: Number(proyect_id),
     name_proyect: String(name_proyect || ''),
     description,
+    mail: mail ? String(mail) : undefined,
     state: String(state || 'Planning'),
     type: type ? String(type) : undefined,
     start_date: start_date ? String(start_date) : undefined,

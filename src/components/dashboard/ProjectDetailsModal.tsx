@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Calendar, User, Edit2, Trash2, AlertCircle, CheckSquare } from 'lucide-react';
+import { X, Calendar, User, Mail, Edit2, Trash2, AlertCircle, CheckSquare } from 'lucide-react';
 import type { Project } from '@/lib/types/project-types';
 import { getProjectStateColor } from '@/lib/projects/utils';
 import { useDeleteProject } from '@/lib/projects';
@@ -92,15 +92,15 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <h2 className="text-2xl font-bold text-[#0c272d]">
                     {project.name_proyect}
                   </h2>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors}`}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusColors}`}>
                     {project.state}
                   </span>
+                  {project.type && (
+                    <span className="inline-block px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-semibold">
+                      📋 {project.type}
+                    </span>
+                  )}
                 </div>
-                {project.type && (
-                  <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">
-                    {project.type}
-                  </span>
-                )}
               </div>
               <button
                 onClick={onClose}
@@ -121,64 +121,53 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </div>
             )}
 
-            {/* Description */}
-            {project.description && (
+            {/* Project Information */}
+            <div className="space-y-6">
+              {/* Description */}
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-[#0c272d]">Description</h3>
-                <p className="text-[#0c272d]/70 leading-relaxed">
-                  {project.description}
-                </p>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-[#0c272d]/70 leading-relaxed">
+                    {project.description || 'No description available'}
+                  </p>
+                </div>
               </div>
-            )}
 
-            {/* Project Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Dates */}
+              {/* Email */}
+              {project.mail && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-[#0c272d]">Project Email</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
+                      <Mail className="w-4 h-4 text-[#14a67e]" />
+                      <span>{project.mail}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline */}
               {(project.start_date || project.end_date) && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-[#0c272d]">Timeline</h3>
-                  <div className="space-y-2">
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-2">
                     {project.start_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
-                        <span className="font-medium">Start:</span>
+                        <span className="font-medium">Start Date:</span>
                         <span>{formatDateSafe(project.start_date)}</span>
                       </div>
                     )}
                     {project.end_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
-                        <span className="font-medium">End:</span>
+                        <span className="font-medium">End Date:</span>
                         <span>{formatDateSafe(project.end_date)}</span>
                       </div>
                     )}
                   </div>
                 </div>
               )}
-
-              {/* Metadata */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-[#0c272d]">Information</h3>
-                <div className="space-y-2">
-                  {project.created_by && (
-                    <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
-                      <User className="w-4 h-4 text-[#14a67e]" />
-                      <span className="font-medium">Created by:</span>
-                      <span>User #{project.created_by}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
-                    <Calendar className="w-4 h-4 text-[#14a67e]" />
-                    <span className="font-medium">Created:</span>
-                    <span>{formatDateSafe(project.created_at)}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
-                    <Calendar className="w-4 h-4 text-[#14a67e]" />
-                    <span className="font-medium">Updated:</span>
-                    <span>{formatDateSafe(project.updated_at)}</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Delete Confirmation - GitHub Style */}
