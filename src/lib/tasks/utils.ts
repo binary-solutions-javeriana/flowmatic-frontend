@@ -1,4 +1,4 @@
-import type { Task, TaskState, TaskPriority } from '../types/task-types';
+import type { Task, TaskState, TaskPriority, TimeEntry } from '../types/task-types';
 
 // Task state colors for UI
 export function getTaskStateColor(state: TaskState): string {
@@ -119,7 +119,7 @@ export function getTaskProgress(task: Task, subtasks: Task[] = []): number {
 }
 
 // Calculate total time worked on task
-export function calculateTotalTime(timeEntries: any[]): number {
+export function calculateTotalTime(timeEntries: TimeEntry[]): number {
   return timeEntries.reduce((total, entry) => {
     return total + (entry.duration_hours || 0);
   }, 0);
@@ -193,7 +193,7 @@ export function getTaskStats(tasks: Task[]): {
       'Medium': 0,
       'High': 0,
       'Critical': 0
-    },
+    } as Record<TaskPriority, number>,
     overdue: 0
   };
 

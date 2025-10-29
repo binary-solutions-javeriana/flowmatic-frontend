@@ -7,6 +7,7 @@ import Overview from './Overview';
 import ProjectsList from './ProjectsList';
 import TasksOverview from './TasksOverview';
 import Settings from './Settings';
+import Notifications from './Notifications';
 import type { SidebarItem } from './types';
 import { useProjects } from '@/lib/projects';
 import {
@@ -44,6 +45,7 @@ const Dashboard: React.FC = () => {
         return project ? `Tasks for ${project.name_proyect}` : 'Tasks';
       }
       case 'settings': return 'Settings & Preferences';
+      case 'notifications': return 'Notifications';
       default: return activeView.charAt(0).toUpperCase() + activeView.slice(1);
     }
   }, [activeView, selectedProjectId, projects]);
@@ -54,7 +56,7 @@ const Dashboard: React.FC = () => {
   };
     
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white dark:from-gray-900 dark:to-gray-800 flex">
       <Sidebar
         isOpen={sidebarOpen}
         items={sidebarItems}
@@ -71,7 +73,7 @@ const Dashboard: React.FC = () => {
             </div>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400">
               Error: {error}
             </div>
           )}
@@ -81,6 +83,7 @@ const Dashboard: React.FC = () => {
               {activeView === 'projects' && <ProjectsList onViewTasks={handleViewTasks} />}
               {activeView === 'tasks' && <TasksOverview projectId={selectedProjectId} />}
               {activeView === 'settings' && <Settings />}
+              {activeView === 'notifications' && <Notifications />}
             </>
           )}
         </main>

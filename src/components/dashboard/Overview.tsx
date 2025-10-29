@@ -62,13 +62,13 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#0c272d]/60">Total Projects</p>
-              <p className="text-3xl font-bold text-[#0c272d]">{totalProjects}</p>
+              <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60">Total Projects</p>
+              <p className="text-3xl font-bold text-[#0c272d] dark:text-white">{totalProjects}</p>
             </div>
-            <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#14a67e]/10 dark:bg-[#14a67e]/20 rounded-xl flex items-center justify-center">
               <FolderOpen className="w-6 h-6 text-[#14a67e]" />
             </div>
           </div>
@@ -78,13 +78,13 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#0c272d]/60">In Progress</p>
-              <p className="text-3xl font-bold text-[#0c272d]">{inProgressProjects}</p>
+              <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60">In Progress</p>
+              <p className="text-3xl font-bold text-[#0c272d] dark:text-white">{inProgressProjects}</p>
             </div>
-            <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#14a67e]/10 dark:bg-[#14a67e]/20 rounded-xl flex items-center justify-center">
               <Activity className="w-6 h-6 text-[#14a67e]" />
             </div>
           </div>
@@ -94,13 +94,13 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#0c272d]/60">Planning</p>
-              <p className="text-3xl font-bold text-[#0c272d]">{planningProjects}</p>
+              <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60">Planning</p>
+              <p className="text-3xl font-bold text-[#0c272d] dark:text-white">{planningProjects}</p>
             </div>
-            <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#14a67e]/10 dark:bg-[#14a67e]/20 rounded-xl flex items-center justify-center">
               <Target className="w-6 h-6 text-[#14a67e]" />
             </div>
           </div>
@@ -110,15 +110,15 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#0c272d]/60">Task Completion</p>
-              <p className="text-3xl font-bold text-[#0c272d]">
+              <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60">Task Completion</p>
+              <p className="text-3xl font-bold text-[#0c272d] dark:text-white">
                 {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
               </p>
             </div>
-            <div className="w-12 h-12 bg-[#14a67e]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#14a67e]/10 dark:bg-[#14a67e]/20 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-[#14a67e]" />
             </div>
           </div>
@@ -129,21 +129,21 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
         </div>
       </div>
 
-      <div className="bg-white/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 shadow-lg">
+      <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-[#0c272d]">Recent Projects</h2>
+          <h2 className="text-xl font-semibold text-[#0c272d] dark:text-white">Recent Projects</h2>
           <button className="text-[#14a67e] hover:text-[#14a67e]/80 text-sm font-medium">View All</button>
         </div>
         <div className="space-y-4">
           {projects.map((project, index) => (
-            <div key={project.id || `project-${index}`} className="flex items-center justify-between p-4 bg-white/40 rounded-xl border border-[#9fdbc2]/10">
+            <div key={project.id || `project-${index}`} className="flex items-center justify-between p-4 bg-white/40 dark:bg-gray-700/40 rounded-xl border border-[#9fdbc2]/10 dark:border-gray-600/10">
               <div className="flex items-center space-x-4">
                 <div className="w-10 h-10 bg-[#14a67e]/10 rounded-lg flex items-center justify-center">
                   <FolderOpen className="w-5 h-5 text-[#14a67e]" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-[#0c272d]">{project.name}</h3>
-                  <p className="text-sm text-[#0c272d]/60">
+                  <h3 className="font-medium text-[#0c272d] dark:text-white">{project.name}</h3>
+                  <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60">
                     {project.tasks.total === 0 
                       ? 'No tasks assigned yet' 
                       : `${project.tasks.completed}/${project.tasks.total} tasks completed`
@@ -159,7 +159,7 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
                       style={{ width: `${project.progress}%` }}
                     ></div>
                   </div>
-                  <p className="text-sm text-[#0c272d]/60 mt-1">{project.progress}% complete</p>
+                  <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mt-1">{project.progress}% complete</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                   {project.status}

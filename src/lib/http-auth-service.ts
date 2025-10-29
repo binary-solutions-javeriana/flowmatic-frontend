@@ -71,8 +71,32 @@ export class HttpAuthService implements AuthService {
 
       const responseData = await response.json() as LoginResponse;
 
+      // DEBUG: Log what backend returned
+      console.log('=== BACKEND RESPONSE DEBUG ===');
+      console.log('Full response:', responseData);
+      console.log('userType from backend:', responseData.userType);
+      console.log('isTenantAdmin from backend:', responseData.isTenantAdmin);
+      console.log('user object from backend:', responseData.user);
+      console.log('user.role from backend:', responseData.user?.role);
+      console.log('user.rol from backend:', responseData.user?.rol);
+      console.log('user.name from backend:', responseData.user?.name);
+      console.log('user.email from backend:', responseData.user?.email);
+      console.log('user.id from backend:', responseData.user?.id);
+      console.log('==============================');
+
+      // Map user and include userType/isTenantAdmin info
+      const user = this.mapUser(responseData.user, responseData.userType, responseData.isTenantAdmin);
+
+    console.log('=== MAPPED USER DEBUG ===');
+    console.log('Mapped user:', user);
+    console.log('user_metadata:', user.user_metadata);
+    console.log('user_metadata.role:', user.user_metadata?.role);
+    console.log('user_metadata.rol:', user.user_metadata?.rol);
+    console.log('user_metadata.name:', user.user_metadata?.name);
+    console.log('=========================');
+
       return {
-        user: this.mapUser(responseData.user),
+        user,
         tokens: this.mapTokens(responseData)
       };
     } catch (error) {
@@ -196,25 +220,61 @@ export class HttpAuthService implements AuthService {
 
   // Private helper methods
 
-  private mapUser(user: ApiUser): AuthUser {
+  private mapUser(user: ApiUser, userType?: 'user' | 'tenantAdmin', isTenantAdmin?: boolean): AuthUser {
+    // Extended user metadata shape
+    interface ExtendedUserMetadata {
+      isTenantAdmin?: boolean;
+      userType?: 'user' | 'tenantAdmin';
+      [key: string]: unknown;
+    }
+
+    interface ExtendedUser {
+      id: string;
+      email: string;
+      app_metadata?: Record<string, unknown>;
+      user_metadata?: ExtendedUserMetadata;
+      aud?: string;
+    }
+
     // If response already has Supabase-like shape, pass through safely
+    const extendedUser = user as unknown as ExtendedUser;
     if (
-      (user as any).aud !== undefined ||
-      (user as any).app_metadata !== undefined ||
-      (user as any).user_metadata !== undefined
+      extendedUser.aud !== undefined ||
+      extendedUser.app_metadata !== undefined ||
+      extendedUser.user_metadata !== undefined
     ) {
-      const u = user as unknown as {
-        id: string;
-        email: string;
-        app_metadata?: Record<string, unknown>;
-        user_metadata?: Record<string, unknown>;
-        aud?: string;
+      const u = extendedUser;
+      
+      console.log('[mapUser] User has metadata, processing...', {
+        existingMetadata: u.user_metadata,
+        topLevelUserType: userType,
+        topLevelIsTenantAdmin: isTenantAdmin
+      });
+      
+      // Merge metadata: prioritize values from user_metadata, then top-level params
+      const existingIsTenantAdmin = u.user_metadata?.isTenantAdmin;
+      const existingUserType = u.user_metadata?.userType;
+      
+      const finalIsTenantAdmin = existingIsTenantAdmin !== undefined 
+        ? existingIsTenantAdmin 
+        : (isTenantAdmin !== undefined ? isTenantAdmin : false);
+        
+      const finalUserType = existingUserType || userType || (finalIsTenantAdmin ? 'tenantAdmin' : 'user');
+      
+      // Add userType info to existing metadata
+      const user_metadata = {
+        ...(u.user_metadata || {}),
+        userType: finalUserType,
+        isTenantAdmin: finalIsTenantAdmin
       };
+      
+      console.log('[mapUser] Final metadata:', user_metadata);
+      
       return {
         id: u.id,
         email: u.email,
         app_metadata: u.app_metadata || {},
-        user_metadata: u.user_metadata || {},
+        user_metadata,
         aud: u.aud || 'authenticated'
       };
     }
@@ -225,24 +285,60 @@ export class HttpAuthService implements AuthService {
       email: string;
       name?: string;
       role?: string;
+      rol?: string; // Database field name
       tenantId?: number;
       auth_provider_id?: string;
+      userType?: 'user' | 'tenantAdmin';
+      isTenantAdmin?: boolean;
     };
 
-    const derivedName = backend.name || (backend.email ? backend.email.split('@')[0] : 'User');
+    // Debug logging for backend user processing
+    console.log('=== mapUser BACKEND DEBUG ===');
+    console.log('backend user:', backend);
+    console.log('backend.role:', backend.role);
+    console.log('backend.rol:', backend.rol);
+    console.log('userType param:', userType);
+    console.log('isTenantAdmin param:', isTenantAdmin);
+    console.log('==============================');
 
-    return {
+    const derivedName = backend.name || (backend.email ? backend.email.split('@')[0] : 'User');
+    
+    // Determine if user is tenant admin from multiple sources
+    const isAdmin = isTenantAdmin ?? backend.isTenantAdmin ?? (userType === 'tenantAdmin') ?? (backend.userType === 'tenantAdmin');
+
+    // Use rol field if role is not available (database field name)
+    // Also check userType as fallback since backend might return userType instead of role
+    const userRole = backend.role || backend.rol || backend.userType || userType;
+    
+    console.log('=== mapUser ROLE PROCESSING ===');
+    console.log('backend.role:', backend.role);
+    console.log('backend.rol:', backend.rol);
+    console.log('backend.userType:', backend.userType);
+    console.log('Final userRole:', userRole);
+    console.log('derivedName:', derivedName);
+    console.log('================================');
+
+    const mappedUser = {
       id: backend.id,
       email: backend.email,
       app_metadata: { provider: 'email' },
       user_metadata: {
         name: derivedName,
-        role: backend.role,
+        role: userRole,
         tenantId: backend.tenantId,
-        auth_provider_id: backend.auth_provider_id
+        auth_provider_id: backend.auth_provider_id,
+        userType: userType || backend.userType || (isAdmin ? 'tenantAdmin' : 'user'),
+        isTenantAdmin: isAdmin
       },
       aud: 'authenticated'
     };
+
+    console.log('=== mapUser RESULT DEBUG ===');
+    console.log('mapped user:', mappedUser);
+    console.log('mapped user_metadata:', mappedUser.user_metadata);
+    console.log('============================');
+
+    return mappedUser;
   }
 
   private mapTokens(response: {

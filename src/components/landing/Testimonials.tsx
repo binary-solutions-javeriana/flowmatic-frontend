@@ -89,7 +89,7 @@ const Testimonials: React.FC = () => {
                     <Quote className="w-10 h-10 text-[#9fdbc2] mb-4 group-hover:text-[#14a67e] transition-colors" />
                     
                     <p className="text-[#0c272d]/80 mb-6 leading-relaxed italic">
-                      "{testimonial.quote}"
+                      &ldquo;{testimonial.quote}&rdquo;
                     </p>
 
                     <div className="flex items-center space-x-4 mt-auto">

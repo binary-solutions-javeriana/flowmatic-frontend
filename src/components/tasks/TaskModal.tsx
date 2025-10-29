@@ -7,7 +7,6 @@ import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
 import { useProjects } from '@/lib/hooks/use-projects';
 import { validateTaskData } from '@/lib/tasks/utils';
 import { formatDateSafe } from '../dashboard/utils';
-import { useAuthState } from '@/lib/auth-store';
 import { authApi } from '@/lib/authenticated-api';
 
 interface TaskModalProps {
@@ -243,7 +242,7 @@ const TaskModal: React.FC<TaskModalProps> = ({
         title: '',
         description: '',
         state: initialState || 'To Do',
-        priority: 'Medium' as any,
+        priority: 'Medium',
         assigned_to_ids: '',
         limit_date: '',
         project_id: projectId ? projectId.toString() : ''
@@ -308,12 +307,9 @@ const TaskModal: React.FC<TaskModalProps> = ({
           title: formData.title,
           description: formData.description || undefined,
           state: formData.state,
-          // map Spanish labels to backend expected text values
-          // keep UI labels but backend expects numeric 1-5; mapping handled in hook
-          priority: (formData.priority as any) as TaskPriority,
-          created_by: user?.id ? (typeof user.id === 'string' ? parseInt(user.id, 10) : (user.id as unknown as number)) : 0,
-          // assignee handled by backend via dedicated endpoint; omit here per validation
-          // do not send assigned_to_ids here; we will have a dedicated assign flow
+          priority: formData.priority,
+          created_by: 1, // TODO: Get from auth context
+          assigned_to_ids: formData.assigned_to_ids || undefined,
           limit_date: formData.limit_date || undefined,
           ...(selectedProjectId && { proyect_id: selectedProjectId }),
           ...(parentTaskId && { parent_task_id: parentTaskId }),

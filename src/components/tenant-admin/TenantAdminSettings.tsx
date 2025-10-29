@@ -8,8 +8,10 @@ import {
   Moon,
   Sun,
 } from 'lucide-react';
+import { tenantAdminService } from '@/lib/tenant-admin-service';
 import { getStoredUser } from '@/lib/auth-redirect';
 import { useDarkMode } from '@/lib/dark-mode-context';
+import type { TenantDashboardResponse } from '@/lib/types/tenant-admin-types';
 
 interface SettingsSection {
   id: string;
@@ -18,19 +20,23 @@ interface SettingsSection {
   description: string;
 }
 
+interface TenantAdminSettingsProps {
+  tenantAdminId: number;
+}
+
 interface UserInfo {
   name: string;
   email: string;
+  role: string;
   createdAt: string;
 }
 
-const Settings: React.FC = () => {
+const TenantAdminSettings: React.FC<TenantAdminSettingsProps> = ({ tenantAdminId }) => {
   const [activeSection, setActiveSection] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -38,17 +44,25 @@ const Settings: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Get user data from localStorage
+        // Fetch dashboard data to get tenant info
+        const dashboardData: TenantDashboardResponse = await tenantAdminService.getDashboardData(tenantAdminId);
+
+        // Get user email from localStorage
         const storedUser = getStoredUser();
+        const userEmail = storedUser?.email || 'N/A';
+
+        // Extract data from dashboard response
+        const tenantInfo = dashboardData.tenantInfo;
         
-        if (storedUser) {
+        if (tenantInfo) {
           setUserInfo({
-            name: storedUser.user_metadata?.name || storedUser.email?.split('@')[0] || 'User',
-            email: storedUser.email || 'N/A',
-            createdAt: new Date().toISOString().split('T')[0] // Default to today since we don't have creation date
+            name: tenantInfo.universityName || 'Tenant Admin',
+            email: userEmail,
+            role: 'TenantAdmin',
+            createdAt: tenantInfo.createdAt || new Date().toISOString().split('T')[0]
           });
         } else {
-          setError('Unable to load user information');
+          setError('Unable to load tenant information');
         }
       } catch (err) {
         console.error('Error loading profile data:', err);
@@ -59,7 +73,7 @@ const Settings: React.FC = () => {
     };
 
     loadProfileData();
-  }, []);
+  }, [tenantAdminId]);
 
   const settingsSections: SettingsSection[] = [
     {
@@ -132,6 +146,16 @@ const Settings: React.FC = () => {
                   id="profile-email"
                   type="email"
                   value={userInfo.email}
+                  disabled
+                  className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-[#0c272d] dark:text-gray-100 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label htmlFor="profile-role" className="block text-sm font-medium text-[#0c272d]/70 dark:text-gray-300 mb-2">Role</label>
+                <input
+                  id="profile-role"
+                  type="text"
+                  value={userInfo.role}
                   disabled
                   className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-[#0c272d] dark:text-gray-100 cursor-not-allowed"
                 />
@@ -274,5 +298,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
-
+export default TenantAdminSettings;

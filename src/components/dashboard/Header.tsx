@@ -8,9 +8,11 @@ import { useRouter } from 'next/navigation';
 interface HeaderProps {
   title: string;
   onNavigate?: (view: string) => void;
+  showSearch?: boolean;
+  showProfileButton?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
+const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, showProfileButton = false }) => {
   const { user } = useAuthState();
   const { logout } = useAuth();
   const router = useRouter();
@@ -93,23 +95,29 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
   const initials = getUserInitials();
 
   return (
-    <header className="bg-white/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 p-6 relative z-20">
+    <header className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 dark:border-gray-700/50 p-6 relative z-20">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#0c272d]">{title}</h1>
-          <p className="text-[#0c272d]/60">Welcome back, {displayName}</p>
+          <h1 className="text-2xl font-bold text-[#0c272d] dark:text-gray-100">{title}</h1>
+          <p className="text-[#0c272d]/60 dark:text-gray-400">Welcome back, {displayName}</p>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 bg-white/50 backdrop-blur-sm border border-[#9fdbc2]/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 focus:border-[#14a67e]/30 transition-all duration-300"
-            />
-          </div>
-          <button className="relative p-2 rounded-xl bg-white/50 backdrop-blur-sm border border-[#9fdbc2]/30 hover:bg-white/70 transition-all duration-300">
-            <Bell className="w-5 h-5 text-[#0c272d]" />
+          {showSearch && (
+            <div className="relative">
+              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-[#0c272d]/40 dark:text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="pl-10 pr-4 py-2 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border border-[#9fdbc2]/30 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#14a67e]/20 focus:border-[#14a67e]/30 transition-all duration-300 text-[#0c272d] dark:text-gray-100"
+              />
+            </div>
+          )}
+          <button 
+            onClick={() => onNavigate && onNavigate('notifications')}
+            aria-label="Notifications"
+            className="relative p-2 rounded-xl bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border border-[#9fdbc2]/30 dark:border-gray-600 hover:bg-white/70 dark:hover:bg-gray-600/50 transition-all duration-300"
+          >
+            <Bell className="w-5 h-5 text-[#0c272d] dark:text-gray-100" />
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
           </button>
           
@@ -124,11 +132,11 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
 
             {/* Dropdown Menu */}
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 shadow-xl overflow-hidden z-[9999]">
+              <div className="absolute right-0 mt-2 w-56 bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-[#9fdbc2]/20 dark:border-gray-700/50 shadow-xl overflow-hidden z-[9999]">
                 {/* User Info */}
-                <div className="px-4 py-3 border-b border-[#9fdbc2]/20">
-                  <p className="text-sm font-medium text-[#0c272d]">{displayName}</p>
-                  <p className="text-xs text-[#0c272d]/60 truncate">{user?.email}</p>
+                <div className="px-4 py-3 border-b border-[#9fdbc2]/20 dark:border-gray-700/50">
+                  <p className="text-sm font-medium text-[#0c272d] dark:text-gray-100">{displayName}</p>
+                  <p className="text-xs text-[#0c272d]/60 dark:text-gray-400 truncate">{user?.email}</p>
                 </div>
 
                 {/* Menu Items */}
@@ -136,21 +144,11 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
                   <button
                     onClick={() => {
                       setShowDropdown(false);
-                      // Navigate to profile settings
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 hover:bg-[#9fdbc2]/10 hover:text-[#0c272d] transition-colors flex items-center space-x-2"
-                  >
-                    <UserIcon className="w-4 h-4" />
-                    <span>Profile</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDropdown(false);
                       if (onNavigate) {
                         onNavigate('settings');
                       }
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 hover:bg-[#9fdbc2]/10 hover:text-[#0c272d] transition-colors flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
@@ -158,10 +156,10 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate }) => {
                 </div>
 
                 {/* Logout */}
-                <div className="border-t border-[#9fdbc2]/20 py-2">
+                <div className="border-t border-[#9fdbc2]/20 dark:border-gray-700/50 py-2">
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center space-x-2"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>

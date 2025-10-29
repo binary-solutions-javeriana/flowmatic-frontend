@@ -20,8 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
   };
 
   return (
-    <div className={`${isOpen ? 'w-64' : 'w-16'} transition-all duration-500 ease-in-out bg-white/60 backdrop-blur-lg border-r border-[#9fdbc2]/20 flex flex-col shadow-lg relative z-10`}>
-      <div className="h-[106px] flex items-center justify-center border-b border-[#9fdbc2]/20 transition-all duration-500 ease-in-out px-4">
+    <div className={`${isOpen ? 'w-64' : 'w-16'} transition-all duration-500 ease-in-out bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border-r border-[#9fdbc2]/20 dark:border-gray-700/50 flex flex-col shadow-lg relative z-10`}>
+      <div className="h-[106px] flex items-center justify-center border-b border-[#9fdbc2]/20 dark:border-gray-700/50 transition-all duration-500 ease-in-out px-4">
         {isOpen ? (
           /* Open state - horizontal layout */
           <div className="w-full flex items-center justify-between">
@@ -31,13 +31,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
                 alt="Flowmatic" 
                 className="w-8 h-8 object-contain"
               />
-              <span className="text-lg font-bold text-[#0c272d] whitespace-nowrap">Flowmatic</span>
+              <span className="text-lg font-bold text-[#0c272d] dark:text-gray-100 whitespace-nowrap">Flowmatic</span>
             </div>
             <button 
               onClick={onToggle} 
-              className="p-2 rounded-lg hover:bg-[#9fdbc2]/10 transition-all duration-300 hover:scale-105 active:scale-95"
+              aria-label="Toggle sidebar"
+              className="p-2 rounded-lg hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              <Menu className="w-5 h-5 text-[#0c272d] transition-transform duration-300" />
+              <Menu className="w-5 h-5 text-[#0c272d] dark:text-gray-100 transition-transform duration-300" />
             </button>
           </div>
         ) : (
@@ -51,10 +52,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
               />
             </div>
             <button 
-              onClick={onToggle} 
-              className="p-2 rounded-lg hover:bg-[#9fdbc2]/10 transition-all duration-300 hover:scale-105 active:scale-95"
+              onClick={onToggle}
+              aria-label="Toggle sidebar"
+              className="p-2 rounded-lg hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 transition-all duration-300 hover:scale-105 active:scale-95"
             >
-              <Menu className="w-5 h-5 text-[#0c272d] transition-transform duration-300 rotate-180" />
+              <Menu className="w-5 h-5 text-[#0c272d] dark:text-gray-100 transition-transform duration-300 rotate-180" />
             </button>
           </div>
         )}
@@ -69,8 +71,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
               onClick={() => onSelect(item.id)}
               className={`w-full flex items-center ${isOpen ? 'space-x-3 px-3' : 'justify-center px-1'} py-2 rounded-xl transition-all duration-250 ease-in-out hover:scale-105 active:scale-95 ${
                 item.active
-                  ? 'bg-[#14a67e]/10 text-[#14a67e] border border-[#14a67e]/20 shadow-sm'
-                  : 'text-[#0c272d]/70 hover:bg-[#9fdbc2]/10 hover:text-[#0c272d] hover:shadow-sm'
+                  ? 'bg-[#14a67e]/10 dark:bg-[#14a67e]/20 text-[#14a67e] dark:text-[#14a67e] border border-[#14a67e]/20 dark:border-[#14a67e]/30 shadow-sm'
+                  : 'text-[#0c272d]/70 dark:text-gray-400 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 hover:shadow-sm'
               }`}
               style={{
                 transitionDelay: `${index * 25}ms`
@@ -89,10 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
         })}
       </nav>
 
-      <div className="px-4 py-4 border-t border-[#9fdbc2]/20 transition-all duration-500 ease-in-out">
+      <div className="px-4 py-4 border-t border-[#9fdbc2]/20 dark:border-gray-700/50 transition-all duration-500 ease-in-out">
         <button
           onClick={handleBackToLanding}
-          className={`w-full flex items-center ${isOpen ? 'space-x-3 px-3' : 'justify-center px-1'} py-2 rounded-xl text-[#0c272d]/70 hover:bg-[#9fdbc2]/10 hover:text-[#0c272d] transition-all duration-500 ease-in-out hover:scale-105 active:scale-95 hover:shadow-sm`}
+          className={`w-full flex items-center ${isOpen ? 'space-x-3 px-3' : 'justify-center px-1'} py-2 rounded-xl text-[#0c272d]/70 dark:text-gray-400 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-all duration-500 ease-in-out hover:scale-105 active:scale-95 hover:shadow-sm`}
         >
           <ArrowLeft className="w-5 h-5 flex-shrink-0 transition-all duration-300" />
           <span className={`font-medium whitespace-nowrap transition-all duration-500 ease-in-out ${
