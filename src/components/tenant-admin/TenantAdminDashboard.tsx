@@ -107,7 +107,7 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
       />
 
       <div className="flex-1 flex flex-col">
-        <Header title={headerTitle} onNavigate={setActiveView} showSearch={false} showProfileButton={false} />
+        <Header title={headerTitle} onNavigate={setActiveView} showSearch={false}/>
         <main className="flex-1 p-6 overflow-auto">
           {loading && (
             <div className="flex items-center justify-center h-64">
