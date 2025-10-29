@@ -22,14 +22,17 @@ interface BackendProject {
   Name?: string;
   description?: string;
   Description?: string;
+  Mail?: string;
   state?: string;
   State?: string;
   type?: string;
   MethodologyName?: string;
+  MethodologyID?: number;
   start_date?: string;
   Start_date?: string;
   end_date?: string;
   End_date?: string;
+  TenantID?: number;
   created_at?: string;
   CreatedAt?: string;
   updated_at?: string;
@@ -56,6 +59,7 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
   const proyect_id = item?.proyect_id ?? item?.ProjectID ?? item?.id;
   const name_proyect = item?.name_proyect ?? item?.NameProject ?? item?.name ?? item?.Name;
   const description = item?.description ?? item?.Description ?? undefined;
+  const mail = item?.Mail ?? undefined;
   const state = item?.state ?? item?.State ?? 'Planning';
   const type = item?.type ?? item?.MethodologyName ?? undefined;
   const start_date = item?.start_date ?? item?.Start_date ?? undefined;
@@ -67,6 +71,7 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
     proyect_id: Number(proyect_id),
     name_proyect: String(name_proyect || ''),
     description,
+    mail: mail ? String(mail) : undefined,
     state: String(state || 'Planning'),
     type: type ? String(type) : undefined,
     start_date: start_date ? String(start_date) : undefined,
@@ -264,12 +269,16 @@ export function useUpdateProject() {
   const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
     if (!name || !name.trim()) return undefined;
     try {
+      // Try to find by name using the search endpoint
       const queryName = encodeURIComponent(name.trim());
-      const lookup = await authApi.get<BackendMethodology[] | BackendApiResponse<BackendMethodology[]>>(`/methodologies?name=${queryName}`);
-      const list: BackendMethodology[] = Array.isArray(lookup) ? lookup : Array.isArray((lookup as BackendApiResponse<BackendMethodology[]>)?.data) ? (lookup as BackendApiResponse<BackendMethodology[]>).data || [] : [];
-      const found = list.find((m: BackendMethodology) => (m?.Name || m?.name) === name || (m?.Name || m?.name) === name.trim());
-      const idFromFound = found?.MethodologyID ?? found?.id ?? found?.methodologyId;
-      if (idFromFound) return Number(idFromFound);
+      const found = await authApi.get<BackendMethodology>(`/methodologies/search?name=${queryName}`);
+
+      if (found && (found.MethodologyID || found.id || found.methodologyId)) {
+        const idFromFound = found.MethodologyID ?? found.id ?? found.methodologyId;
+        return Number(idFromFound);
+      }
+
+      // Create if not found
       const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
       const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
       return idFromCreated ? Number(idFromCreated) : undefined;

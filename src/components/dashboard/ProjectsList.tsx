@@ -393,22 +393,8 @@ const ProjectCard: React.FC<{
           {project.state}
         </span>
       </div>
-      
-      {project.description && (
-        <p className="text-sm text-[#0c272d]/60 dark:text-gray-300/60 mb-4 line-clamp-2">
-          {project.description}
-        </p>
-      )}
 
-      <div className="space-y-3">
-        {project.type && (
-          <div className="flex items-center text-xs text-[#0c272d]/60 dark:text-gray-300/60">
-            <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded">
-              {project.type}
-            </span>
-          </div>
-        )}
-        
+      <div className="space-y-3">        
         <div className="flex items-center justify-between text-xs text-[#0c272d]/60 dark:text-gray-300/60">
           {project.start_date && (
             <div className="flex items-center space-x-1">
@@ -427,7 +413,7 @@ const ProjectCard: React.FC<{
 
       <div className="mt-3 pt-3 border-t border-[#9fdbc2]/20 dark:border-gray-600/20 flex items-center justify-between">
         <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
-          Project ID: {project.proyect_id}
+          {project.type ? `📋 ${project.type}` : 'No methodology assigned'}
         </span>
         <button
           onClick={onViewTasks}
