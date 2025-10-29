@@ -1,5 +1,0 @@
-- [ ] Make TaskList component more responsive: improve grid layout for mobile, adjust filter layout
-- [ ] Enhance TaskCard responsiveness: better text sizing and spacing on small screens
-- [ ] Improve TaskModal responsiveness: better form layout and modal sizing on mobile
-- [ ] Optimize KanbanBoard for mobile: adjust column layout and task card display
-- [ ] Refine TasksOverview responsiveness: improve stats cards and view controls layout

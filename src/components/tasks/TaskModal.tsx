@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 import { X, Calendar, User, AlertCircle, Plus } from 'lucide-react';
 import type { Task, CreateTaskRequest, UpdateTaskRequest, TaskState, TaskPriority } from '@/lib/types/task-types';
 import { useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks';
@@ -63,6 +63,58 @@ const TaskModal: React.FC<TaskModalProps> = ({
       projects?.find(p => Number((p as any).proyect_id ?? (p as any).project_id) === n) || null
     );
   };
+
+  const loadAssignableUsers = async (pid?: number) => {
+      try {
+        let res: any;
+
+        if (pid) {
+          // ✅ Usuarios vinculados al proyecto
+          res = await authApi.get(`/projects/${pid}/users?page=1&limit=200`);
+        } else {
+          // Fallback actual (creatorMail / tenant) por compatibilidad
+          const creatorMail = user?.email;
+          const tenantId = (user as any)?.user_metadata?.tenantId || (user as any)?.tenantId;
+
+          if (creatorMail) {
+            res = await authApi.get(`/tasks/assignee-options?creatorMail=${encodeURIComponent(creatorMail)}`);
+          } else if (tenantId) {
+            res = await authApi.get(`/tasks/assignee-options/by-tenant?tenantId=${encodeURIComponent(String(tenantId))}`);
+          } else {
+            res = await authApi.get(`/tasks/assignee-options`);
+          }
+        }
+
+        // Normaliza formatos posibles de la respuesta
+        const arr = Array.isArray(res) ? res : (res?.items || res?.data || res?.users || []);
+        const normalized = (arr || [])
+          .map((u: any) => {
+            const id =
+              Number(u.UserID ?? u.user_id ?? u.id);
+
+            // Captura variantes comunes de email/nombre que suelen venir del back
+            const email =
+              u.email ?? u.Email ?? u.user_email ?? u.UserEmail ?? u.mail ?? u.Mail ?? u.user_mail ?? u.UserMail ?? u.correo ?? u.Correo;
+
+            const name =
+              u.name ?? u.fullName ?? u.FullName ?? u.displayName ?? u.DisplayName ?? u.username ?? u.UserName ?? u.Nombre;
+
+            return {
+              id,
+              // guarda ambos campos por compatibilidad con tu UI actual
+              email: typeof email === 'string' ? email : undefined,
+              mail: typeof email === 'string' ? email : undefined,
+              name: typeof name === 'string' ? name : undefined,
+            };
+          })
+          .filter((u: any) => Number.isFinite(u.id));
+
+        setTenantUsers(normalized);
+      } catch (e) {
+        console.warn('Failed to load assignee options', e);
+        setTenantUsers([]);
+      }
+    };
 
   const getProjectDates = (p: any) => {
     if (!p) return { start: '', end: '' };
@@ -140,25 +192,12 @@ const TaskModal: React.FC<TaskModalProps> = ({
 
   // Initialize form data and fetch tenant users
   useLayoutEffect(() => {
-    const loadTenantUsers = async () => {
-      try {
-        const auth = await import('@/lib/authenticated-api');
-        let users: Array<{ id: number; email?: string; mail?: string; name?: string }> = [];
-        const creatorMail = user?.email;
-        const tenantId = (user as any)?.user_metadata?.tenantId || (user as any)?.tenantId;
-        if (creatorMail) {
-          users = await auth.authApi.get(`/tasks/assignee-options?creatorMail=${encodeURIComponent(creatorMail)}`);
-        } else if (tenantId) {
-          users = await auth.authApi.get(`/tasks/assignee-options/by-tenant?tenantId=${encodeURIComponent(String(tenantId))}`);
-        } else {
-          users = await auth.authApi.get(`/tasks/assignee-options`);
-        }
-        setTenantUsers(Array.isArray(users) ? users : []);
-      } catch (e) {
-        console.warn('Failed to load tenant users', e);
-      }
-    };
-    loadTenantUsers();
+    const initialPid =
+      (mode === 'edit' && task?.proyect_id)
+        ? Number(task.proyect_id)
+        : (projectId ? Number(projectId) : undefined);    
+
+    loadAssignableUsers(initialPid);
 
     if (mode === 'edit' && task) {
       // 1) Fecha de la BD
@@ -216,6 +255,13 @@ const TaskModal: React.FC<TaskModalProps> = ({
     setErrors([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, task, isOpen, initialState, projectId, user, projects]);
+
+  useLayoutEffect(() => {
+    const pid = formData.project_id ? parseInt(formData.project_id) : projectId;
+    loadAssignableUsers(pid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.project_id]);
+
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
