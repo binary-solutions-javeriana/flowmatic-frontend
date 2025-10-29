@@ -9,6 +9,7 @@ import UserManagement from './UserManagement';
 import TenantProjects from './TenantProjects';
 import TenantAdminSettings from './TenantAdminSettings';
 import Notifications from './Notifications';
+import PagosFacturas from '../dashboard/PagosFacturas';
 import type { SidebarItem } from '../dashboard/types';
 import type { TenantDashboardResponse, ProjectSummaryDto } from '@/lib/types/tenant-admin-types';
 import { tenantAdminService } from '@/lib/tenant-admin-service';
@@ -17,6 +18,7 @@ import {
   Users,
   FolderOpen,
   Settings as SettingsIcon,
+  CreditCard,
 } from 'lucide-react';
 
 interface TenantAdminDashboardProps {
@@ -82,6 +84,7 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
       { id: 'users', icon: Users, label: 'Users', active: activeView === 'users' },
       { id: 'projects', icon: FolderOpen, label: 'Projects', active: activeView === 'projects' },
       { id: 'settings', icon: SettingsIcon, label: 'Settings', active: activeView === 'settings' },
+      { id: 'pagos-facturas', icon: CreditCard, label: 'Pagos y Facturas', active: activeView === 'pagos-facturas' },
     ],
     [activeView]
   );
@@ -92,6 +95,7 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
       case 'users': return 'User Management';
       case 'projects': return 'All Projects';
       case 'settings': return 'Settings';
+      case 'pagos-facturas': return 'Pagos y Facturas';
       case 'notifications': return 'Notifications';
       default: return activeView.charAt(0).toUpperCase() + activeView.slice(1);
     }
@@ -170,6 +174,7 @@ const TenantAdminDashboard: React.FC<TenantAdminDashboardProps> = ({ tenantAdmin
                 </>
               )}
               {activeView === 'settings' && <TenantAdminSettings tenantAdminId={tenantAdminId} />}
+              {activeView === 'pagos-facturas' && <PagosFacturas tenantAdminId={tenantAdminId} />}
               {activeView === 'notifications' && <Notifications />}
             </>
           )}
