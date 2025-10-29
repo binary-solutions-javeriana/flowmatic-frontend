@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Award, Users, Globe, Target, Heart, Lightbulb, Shield, BookOpen } from 'lucide-react';
+import { Award, Users, Globe, Target, Shield, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 const About: React.FC = () => {
   const teamMembers = [
@@ -72,10 +73,13 @@ const About: React.FC = () => {
     <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#9fdbc2]/5 relative overflow-hidden">
       {/* Background decorative image */}
       <div className="absolute inset-0 opacity-5">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1920&h=1080&fit=crop"
           alt="Education background"
+          fill
           className="w-full h-full object-cover"
+          sizes="100vw"
+          priority
         />
       </div>
 
@@ -162,10 +166,12 @@ const About: React.FC = () => {
           >
             {/* Background image */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&h=800&fit=crop"
                 alt="Achievement"
+                fill
                 className="w-full h-full object-cover opacity-10"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
             </div>
 
@@ -267,10 +273,12 @@ const About: React.FC = () => {
         >
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-5">
-            <img
+            <Image
               src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1200&h=600&fit=crop"
               alt="Commitment"
+              fill
               className="w-full h-full object-cover"
+              sizes="100vw"
             />
           </div>
 

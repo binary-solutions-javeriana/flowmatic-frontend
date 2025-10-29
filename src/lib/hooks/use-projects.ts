@@ -65,7 +65,6 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
   const start_date = item?.start_date ?? item?.Start_date ?? undefined;
   const end_date = item?.end_date ?? item?.End_date ?? undefined;
   const created_at = item?.created_at ?? item?.CreatedAt ?? '';
-  const updated_at = item?.updated_at ?? item?.UpdatedAt ?? '';
   const created_by = item?.created_by ?? undefined;
 
   return {
@@ -79,7 +78,6 @@ function adaptBackendProjectToUI(item: BackendProject): Project {
     end_date: end_date ? String(end_date) : undefined,
     created_by: typeof created_by === 'number' ? created_by : undefined,
     created_at: created_at ? String(created_at) : '',
-    updated_at: updated_at ? String(updated_at) : '',
   };
 }
 
@@ -156,12 +154,11 @@ export function useProjects(initialFilters?: ProjectFilters) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => {
     fetchProjects(initialFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchProjects, initialFilters]);
 
   return {
     projects,
@@ -215,29 +212,6 @@ export function useCreateProject() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthState();
-
-  // Ensure methodology exists and return its ID
-  const ensureMethodology = useCallback(async (name?: string): Promise<number | undefined> => {
-    if (!name || !name.trim()) return undefined;
-    try {
-      // Try to find by name using the search endpoint
-      const queryName = encodeURIComponent(name.trim());
-      const found = await authApi.get<BackendMethodology>(`/methodologies/search?name=${queryName}`);
-
-      if (found && (found.MethodologyID || found.id || found.methodologyId)) {
-        const idFromFound = found.MethodologyID ?? found.id ?? found.methodologyId;
-        return Number(idFromFound);
-      }
-
-      // Create if not found
-      const created = await authApi.post<BackendMethodology>(`/methodologies`, { Name: name.trim() } as unknown as Record<string, unknown>);
-      const idFromCreated = created?.MethodologyID ?? created?.id ?? created?.methodologyId;
-      return idFromCreated ? Number(idFromCreated) : undefined;
-    } catch (e) {
-      console.warn('[useCreateProject] Failed to ensure methodology, continuing without one:', e);
-      return undefined;
-    }
-  }, []);
 
   const createProject = async (data: CreateProjectRequest): Promise<Project | null> => {
     setLoading(true);
@@ -399,7 +373,7 @@ export function useRecentProjects(limit: number = 5) {
     setError(null);
 
     try {
-      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}&orderBy=updated_at&order=desc`);
+      const response = await authApi.get<ProjectsResponse>(`/projects?limit=${limit}&orderBy=title&order=asc`);
       setProjects(response.data || []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch recent projects';

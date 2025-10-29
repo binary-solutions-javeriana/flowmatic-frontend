@@ -57,7 +57,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
 
         <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-          Updated {formatDateSafe(project.updated_at)}
+          ID: {project.proyect_id}
         </div>
       </div>
     </Link>

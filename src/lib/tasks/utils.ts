@@ -9,8 +9,6 @@ export function getTaskStateColor(state: TaskState): string {
       return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'Done':
       return 'bg-green-100 text-green-800 border-green-200';
-    case 'Cancelled':
-      return 'bg-red-100 text-red-800 border-red-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
@@ -91,8 +89,15 @@ export function formatDueDate(task: Task): string {
 }
 
 // Parse assigned user IDs from comma-separated string
-export function parseAssignedUserIds(assignedToIds?: string): number[] {
+export function parseAssignedUserIds(assignedToIds?: string | number[]): number[] {
   if (!assignedToIds) return [];
+
+  if (Array.isArray(assignedToIds)) {
+    return assignedToIds
+      .map((id) => (typeof id === 'string' ? parseInt(id.trim(), 10) : id))
+      .filter((id): id is number => typeof id === 'number' && !Number.isNaN(id));
+  }
+
   return assignedToIds
     .split(',')
     .map(id => parseInt(id.trim(), 10))
@@ -112,11 +117,10 @@ export function getTaskProgress(task: Task, subtasks: Task[] = []): number {
       case 'To Do': return 0;
       case 'In Progress': return 50;
       case 'Done': return 100;
-      case 'Cancelled': return 0;
       default: return 0;
     }
   }
-  
+
   const completedSubtasks = subtasks.filter(subtask => subtask.state === 'Done').length;
   return Math.round((completedSubtasks / subtasks.length) * 100);
 }
@@ -189,9 +193,8 @@ export function getTaskStats(tasks: Task[]): {
     byState: {
       'To Do': 0,
       'In Progress': 0,
-      'Done': 0,
-      'Cancelled': 0
-    } as Record<TaskState, number>,
+      'Done': 0
+    },
     byPriority: {
       'Low': 0,
       'Medium': 0,
@@ -200,46 +203,72 @@ export function getTaskStats(tasks: Task[]): {
     } as Record<TaskPriority, number>,
     overdue: 0
   };
-  
+
   tasks.forEach(task => {
     // Count by state
     stats.byState[task.state]++;
-    
+
     // Count by priority
     stats.byPriority[task.priority]++;
-    
+
     // Count overdue
     if (isTaskOverdue(task)) {
       stats.overdue++;
     }
   });
-  
+
   return stats;
 }
 
 // Validate task data
-export function validateTaskData(data: Partial<Task>): { isValid: boolean; errors: string[] } {
+export function validateTaskData(data: Partial<Task>, projectStartDate?: string, projectEndDate?: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
+  // Title is mandatory
   if (!data.title || data.title.trim().length === 0) {
     errors.push('Title is required');
   }
-  
+
   if (data.title && data.title.length > 255) {
     errors.push('Title must be less than 255 characters');
   }
-  
+
+  // Assigned users are mandatory (check if assigned_to_ids exists and has values)
+  const assignedIds = Array.isArray(data.assigned_to_ids)
+    ? data.assigned_to_ids
+    : typeof data.assigned_to_ids === 'string'
+      ? data.assigned_to_ids.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id))
+      : [];
+
+  if (!assignedIds || assignedIds.length === 0) {
+    errors.push('At least one user must be assigned to the task');
+  }
+
   if (data.description && data.description.length > 1000) {
     errors.push('Description must be less than 1000 characters');
   }
-  
+
   if (data.limit_date) {
     const dueDate = new Date(data.limit_date);
     if (isNaN(dueDate.getTime())) {
       errors.push('Invalid due date format');
+    } else {
+      // Validate against project date range
+      if (projectStartDate) {
+        const projectStart = new Date(projectStartDate);
+        if (dueDate < projectStart) {
+          errors.push('Due date cannot be before the project start date');
+        }
+      }
+      if (projectEndDate) {
+        const projectEnd = new Date(projectEndDate);
+        if (dueDate > projectEnd) {
+          errors.push('Due date cannot be after the project end date');
+        }
+      }
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors

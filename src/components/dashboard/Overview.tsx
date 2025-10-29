@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, CheckCircle2, FolderOpen, Target, TrendingUp } from 'lucide-react';
 import type { Project as BackendProject } from '@/lib/projects/types';
 import { adaptBackendProjectToUI } from '@/lib/projects/utils';
 import type { Project } from './types';
 import { getStatusColor } from './utils';
 import { useTasks } from '@/lib/hooks/use-tasks';
+import type { Task } from '@/lib/types/task-types';
+
+type TaskWithBackendFields = Task & {
+  ProjectID?: number;
+  State?: string;
+};
 
 interface OverviewProps {
   projects: BackendProject[];
@@ -21,22 +27,31 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
 
   // Calculate task statistics for each project
   useEffect(() => {
-    if (tasks && tasks.length > 0) {
-      const stats: Record<number, { total: number; completed: number }> = {};
-      
-      tasks.forEach(task => {
-        const projectId = task.proyect_id;
-        if (!stats[projectId]) {
-          stats[projectId] = { total: 0, completed: 0 };
-        }
-        stats[projectId].total += 1;
-        if (task.state === 'Done') {
-          stats[projectId].completed += 1;
-        }
-      });
-      
-      setProjectStats(stats);
+    if (!tasks || tasks.length === 0) {
+      setProjectStats({});
+      return;
     }
+
+    const stats: Record<number, { total: number; completed: number }> = {};
+    (tasks as TaskWithBackendFields[]).forEach(task => {
+      const projectId = task.proyect_id ?? task.ProjectID;
+      if (projectId == null) {
+        return;
+      }
+
+      if (!stats[projectId]) {
+        stats[projectId] = { total: 0, completed: 0 };
+      }
+
+      stats[projectId].total += 1;
+
+      const normalizedState = (task.State ?? task.state)?.toLowerCase();
+      if (normalizedState === 'done' || normalizedState === 'completed') {
+        stats[projectId].completed += 1;
+      }
+    });
+
+    setProjectStats(stats);
   }, [tasks]);
 
   // Adapt backend projects to UI format with real task statistics
@@ -53,12 +68,25 @@ const Overview: React.FC<OverviewProps> = ({ projects: backendProjects }) => {
   const completedProjects = backendProjects.filter(p => p.state === 'Completed').length;
   const inProgressProjects = backendProjects.filter(p => p.state === 'In Progress').length;
   const planningProjects = backendProjects.filter(p => p.state === 'Planning').length;
-  const onHoldProjects = backendProjects.filter(p => p.state === 'On Hold').length;
-  
   // Calculate overall task statistics
-  const totalTasks = tasks?.length || 0;
-  const completedTasks = tasks?.filter(task => task.state === 'Done').length || 0;
-  const inProgressTasks = tasks?.filter(task => task.state === 'In Progress').length || 0;
+  const { totalTasks, completedTasks } = useMemo(() => {
+    if (!tasks || tasks.length === 0) {
+      return { totalTasks: 0, completedTasks: 0 };
+    }
+
+    const extendedTasks = tasks as TaskWithBackendFields[];
+    return extendedTasks.reduce(
+      (acc, task) => {
+        acc.totalTasks += 1;
+        const normalizedState = (task.State ?? task.state)?.toLowerCase();
+        if (normalizedState === 'done' || normalizedState === 'completed') {
+          acc.completedTasks += 1;
+        }
+        return acc;
+      },
+      { totalTasks: 0, completedTasks: 0 }
+    );
+  }, [tasks]);
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

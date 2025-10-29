@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { Plus, Search, Calendar, X, Filter, CheckSquare } from 'lucide-react';
 import { useProjects } from '@/lib/hooks/use-projects';
 import type { ProjectFilters, Project } from '@/lib/types/project-types';
@@ -15,7 +14,6 @@ interface ProjectsListProps {
 }
 
 const ProjectsList: React.FC<ProjectsListProps> = ({ onViewTasks }) => {
-  const router = useRouter();
   const [filters, setFilters] = useState<ProjectFilters>({
     page: 1,
     limit: 12

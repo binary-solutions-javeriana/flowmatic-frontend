@@ -4,6 +4,7 @@ import React from "react";
 import styled from "styled-components";
 import { useAuth } from "@/lib/auth-store";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const StyledWrapper = styled.div`
   .form_container {
@@ -248,7 +249,7 @@ export default function StyledLoginForm() {
     <StyledWrapper>
       <form className="form_container" onSubmit={handleSubmit}>
         <div className="logo_section">
-          <img src="/logo/flowmatic_logo.png" alt="Flowmatic" className="logo_image" />
+          <Image src="/logo/flowmatic_logo.png" alt="Flowmatic" className="logo_image" width={88} height={88} priority />
           <span className="logo_text">Flowmatic</span>
         </div>
         <div className="title_container">

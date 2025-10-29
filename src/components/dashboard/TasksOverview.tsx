@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { Task, TaskState } from '@/lib/types/task-types';
 import { useProjects } from '@/lib/projects';
-import { useTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
+import { useTasks, useProjectTasks, useUpdateTaskStatus } from '@/lib/hooks/use-tasks';
 import TaskDetailModal from '../tasks/TaskDetailModal';
 import TaskModal from '../tasks/TaskModal';
 import { formatDateSafe } from './utils';
@@ -29,7 +29,6 @@ declare module 'canvas-confetti' {
 }
 
 type ViewMode = 'kanban' | 'list';
-type ProjectFilter = 'all' | number;
 
 interface TasksOverviewProps {
   projectId?: number;
@@ -37,13 +36,13 @@ interface TasksOverviewProps {
 
 const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
-  const [selectedProject, setSelectedProject] = useState<ProjectFilter>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [optimisticTasks, setOptimisticTasks] = useState<Task[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | number>('all');
 
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
     page: 1, 
@@ -52,11 +51,23 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     order: 'desc' 
   });
 
-  // Fetch all tasks across all projects
-  const { tasks, loading: tasksLoading, error: tasksError, refetch: refetchTasks } = useTasks({
+  // Fetch tasks based on projectId
+  const { tasks: allTasks, loading: allTasksLoading, error: allTasksError, refetch: refetchAllTasks } = useTasks({
     page: 1,
     limit: 100
   });
+
+  // Fetch project-specific tasks if projectId is provided
+  const { tasks: projectTasks, loading: projectTasksLoading, error: projectTasksError, refetch: refetchProjectTasks } = useProjectTasks(
+    projectId && projectId > 0 ? projectId : null,
+    { page: 1, limit: 100 }
+  );
+
+  // Use project tasks if projectId is provided, otherwise use all tasks
+  const tasks = projectId ? projectTasks : allTasks;
+  const tasksLoading = projectId ? projectTasksLoading : allTasksLoading;
+  const tasksError = projectId ? projectTasksError : allTasksError;
+  const refetchTasks = projectId ? refetchProjectTasks : refetchAllTasks;
 
   // Hook for updating task status
   const { updateTaskStatus } = useUpdateTaskStatus();
@@ -112,14 +123,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     }
   }, [tasks]);
 
-  // Sync selectedProject with projectId prop
-  useEffect(() => {
-    if (projectId) {
-      setSelectedProject(projectId);
-    } else {
-      setSelectedProject('all');
-    }
-  }, [projectId]);
+
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
@@ -132,17 +136,21 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   };
 
   const handleTaskUpdate = () => {
-    // Tasks will be refreshed automatically by their respective components
+    // Refresh tasks after update
+    refetchTasks();
   };
 
   const handleTaskDelete = () => {
-    // Handle task deletion if needed
+    // Refresh tasks after deletion
+    refetchTasks();
   };
 
   const handleCreateTask = (task: Task) => {
-    // Task creation will be handled by the modal
+    setOptimisticTasks(prev => {
+      const existingWithoutNew = prev.filter(item => item.task_id !== task.task_id);
+      return [task, ...existingWithoutNew];
+    });
     setIsCreateModalOpen(false);
-    // Refresh tasks
     refetchTasks();
   };
 
@@ -179,7 +187,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     }
 
     // Validate that targetState is a valid TaskState
-    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done', 'Cancelled'];
+    const validStates: TaskState[] = ['To Do', 'In Progress', 'Done'];
     if (!validStates.includes(targetState as TaskState)) {
       console.error('Invalid task state:', targetState);
       setDraggedTask(null);
@@ -227,16 +235,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       });
   };
 
-  // Filter tasks by selected project (use optimistic tasks if available)
-  const tasksToUse = optimisticTasks.length > 0 ? optimisticTasks : tasks;
-  
-  // If we have a specific projectId (from URL), filter by that project
-  // Otherwise, use the selectedProject filter
-  const filteredTasks = projectId 
-    ? tasksToUse.filter(task => task.proyect_id === projectId)
-    : selectedProject === 'all' 
-      ? tasksToUse 
-      : tasksToUse.filter(task => task.proyect_id === selectedProject);
+  // Use optimistic tasks if available, otherwise use the fetched tasks
+  const filteredTasks = optimisticTasks.length > 0 ? optimisticTasks : tasks;
 
   const getTaskStats = () => {
     if (!filteredTasks || filteredTasks.length === 0) return { total: 0, completed: 0, inProgress: 0, pending: 0 };
@@ -290,8 +290,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     <div className="space-y-6">
 
       {/* Stats Cards with Controls */}
-      <div className="flex items-center justify-between">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
           <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl p-6 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-lg flex items-center justify-center min-h-[120px]">
             <div className="flex items-center space-x-4">
               <div className="p-3 bg-blue-50 rounded-xl">
@@ -403,8 +403,8 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
       {/* Main Content - Tasks View */}
       <div className="min-h-[600px]">
         {viewMode === 'kanban' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {['To Do', 'In Progress', 'Done'].map((state) => {
               const stateTasks = filteredTasks.filter(task => task.state === state);
               return (
                 <div
@@ -435,7 +435,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                   </div>
 
                   {/* Tasks */}
-                  <div className="p-4 space-y-3 min-h-[400px]">
+                  <div className="p-4 min-h-[400px]">
                     {stateTasks.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-32 text-[#0c272d]/40 dark:text-gray-400/60">
                         <div className="w-12 h-12 bg-white/60 dark:bg-gray-700/60 rounded-xl flex items-center justify-center mb-2">
@@ -444,35 +444,37 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                         <p className="text-sm text-center">No tasks</p>
                       </div>
                     ) : (
-                      stateTasks.map((task) => (
-                        <div
-                          key={task.task_id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, task)}
-                          onDragEnd={handleDragEnd}
-                          className="cursor-move transition-all duration-200 ease-in-out"
-                          onClick={() => handleTaskClick(task)}
-                        >
-                          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-sm hover:shadow-md transition-all duration-200">
-                            <h4 className="font-medium text-[#0c272d] dark:text-white text-sm mb-1 line-clamp-2">
-                              {task.title}
-                            </h4>
-                            <p className="text-xs text-[#0c272d]/60 dark:text-gray-300/60 line-clamp-2">
-                              {task.description}
-                            </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full">
-                                {task.priority || 'Medium'}
-                              </span>
-                              {task.limit_date && (
-                                <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
-                                  {formatDateSafe(task.limit_date)}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {stateTasks.map((task) => (
+                          <div
+                            key={task.task_id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, task)}
+                            onDragEnd={handleDragEnd}
+                            className="cursor-move transition-all duration-200 ease-in-out"
+                            onClick={() => handleTaskClick(task)}
+                          >
+                            <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-xl p-3 border border-[#9fdbc2]/20 dark:border-gray-700/20 shadow-sm hover:shadow-md transition-all duration-200 h-full">
+                              <h4 className="font-medium text-[#0c272d] dark:text-white text-sm mb-1 line-clamp-2">
+                                {task.title}
+                              </h4>
+                              <p className="text-xs text-[#0c272d]/60 dark:text-gray-300/60 line-clamp-2">
+                                {task.description}
+                              </p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-xs px-2 py-1 bg-[#14a67e]/10 text-[#14a67e] rounded-full">
+                                  {task.priority || 'Medium'}
                                 </span>
-                              )}
+                                {task.limit_date && (
+                                  <span className="text-xs text-[#0c272d]/60 dark:text-gray-300/60">
+                                    {formatDateSafe(task.limit_date)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -488,7 +490,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
                 <p className="text-[#0c272d]/60 dark:text-gray-300/60">No tasks match your current filter.</p>
               </div>
             ) : (
-              ['To Do', 'In Progress', 'Done', 'Cancelled'].map((state) => {
+              ['To Do', 'In Progress', 'Done'].map((state) => {
                 const stateTasks = filteredTasks.filter(task => task.state === state);
                 if (stateTasks.length === 0) return null;
                 
@@ -557,7 +559,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateTask}
         mode="create"
-        projectId={projectId || (selectedProject !== 'all' ? selectedProject : undefined)}
+        projectId={projectId}
       />
 
     </div>

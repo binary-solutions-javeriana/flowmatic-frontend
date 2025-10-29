@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-store";
 import { useRouter } from "next/navigation";
 import { useFormErrorHandler } from "@/lib/use-error-handler";
 import { CompactErrorDisplay } from "@/components/ErrorDisplay";
+import Image from "next/image";
 
 // Validation schema for register form
 const registerSchema = z.object({
@@ -340,7 +341,7 @@ export default function RegisterForm({ onSubmit, className }: RegisterFormProps)
       <form onSubmit={handleSubmit} className={className} noValidate>
         <div className="form_container">
           <div className="logo_section">
-            <img src="/logo/flowmatic_logo.png" alt="Flowmatic" className="logo_image" />
+            <Image src="/logo/flowmatic_logo.png" alt="Flowmatic" className="logo_image" width={88} height={88} priority />
             <span className="logo_text">Flowmatic</span>
           </div>
           <div className="title_container">

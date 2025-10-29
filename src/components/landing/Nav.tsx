@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const Nav: React.FC = () => {
   return (
@@ -9,10 +10,13 @@ const Nav: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-2">
-            <img 
+            <Image 
               src="/logo/flowmatic_logo.png" 
               alt="Flowmatic" 
               className="w-8 h-8 object-contain"
+              width={32}
+              height={32}
+              priority
             />
             <span className="text-xl font-bold text-[#0c272d]">Flowmatic</span>
           </div>

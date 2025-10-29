@@ -207,6 +207,30 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Metadata */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-[#0c272d]">Information</h3>
+                <div className="space-y-2">
+                  {project.created_by && (
+                    <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
+                      <User className="w-4 h-4 text-[#14a67e]" />
+                      <span className="font-medium">Created by:</span>
+                      <span>User #{project.created_by}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
+                    <Calendar className="w-4 h-4 text-[#14a67e]" />
+                    <span className="font-medium">Created:</span>
+                    <span>{formatDateSafe(project.created_at)}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
+                    <Calendar className="w-4 h-4 text-[#14a67e]" />
+                    <span className="font-medium">Updated:</span>
+                    <span>Project ID: {project.proyect_id}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Project Members Section */}

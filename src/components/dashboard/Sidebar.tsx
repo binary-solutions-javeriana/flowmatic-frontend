@@ -4,6 +4,7 @@ import React from 'react';
 import { ArrowLeft, Menu } from 'lucide-react';
 import type { SidebarItem } from './types';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,10 +27,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
           /* Open state - horizontal layout */
           <div className="w-full flex items-center justify-between">
             <div className={`flex items-center space-x-2 transition-all duration-500 ease-in-out ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
-              <img 
+              <Image 
                 src="/logo/flowmatic_logo.png" 
                 alt="Flowmatic" 
                 className="w-8 h-8 object-contain"
+                width={32}
+                height={32}
+                priority
               />
               <span className="text-lg font-bold text-[#0c272d] dark:text-gray-100 whitespace-nowrap">Flowmatic</span>
             </div>
@@ -45,10 +49,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, items, onToggle, onSelect }) 
           /* Collapsed state - vertical layout */
           <div className="flex flex-col items-center space-y-2">
             <div className={`transition-all duration-500 ease-in-out ${!isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'}`}>
-              <img 
+              <Image 
                 src="/logo/flowmatic_logo.png" 
                 alt="Flowmatic" 
                 className="w-8 h-8 object-contain"
+                width={32}
+                height={32}
+                priority
               />
             </div>
             <button 

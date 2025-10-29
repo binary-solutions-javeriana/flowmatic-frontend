@@ -14,7 +14,6 @@ import {
   FolderOpen,
   Home,
   Settings as SettingsIcon,
-  CheckSquare,
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -32,7 +31,6 @@ const Dashboard: React.FC = () => {
     () => [
       { id: 'overview', icon: Home, label: 'Overview', active: activeView === 'overview' },
       { id: 'projects', icon: FolderOpen, label: 'Projects', active: activeView === 'projects' },
-      { id: 'tasks', icon: CheckSquare, label: 'Tasks', active: activeView === 'tasks' },
       { id: 'settings', icon: SettingsIcon, label: 'Settings', active: activeView === 'settings' },
     ],
     [activeView]
@@ -42,12 +40,15 @@ const Dashboard: React.FC = () => {
     switch (activeView) {
       case 'overview': return 'Dashboard Overview';
       case 'projects': return 'Projects';
-      case 'tasks': return 'Task Management';
+      case 'tasks': {
+        const project = projects.find(p => p.proyect_id === selectedProjectId);
+        return project ? `Tasks for ${project.name_proyect}` : 'Tasks';
+      }
       case 'settings': return 'Settings & Preferences';
       case 'notifications': return 'Notifications';
       default: return activeView.charAt(0).toUpperCase() + activeView.slice(1);
     }
-  }, [activeView]);
+  }, [activeView, selectedProjectId, projects]);
 
   const handleViewTasks = (projectId: number) => {
     setSelectedProjectId(projectId);

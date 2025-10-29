@@ -41,21 +41,9 @@ interface ProjectModalProps {
   mode: "create" | "edit";
 }
 
-const PROJECT_STATES: ProjectState[] = [
-  "Planning",
-  "In Progress",
-  "Completed",
-  "On Hold",
-  "Cancelled",
-];
+const PROJECT_STATES: ProjectState[] = ['Planning', 'In Progress', 'Completed', 'On Hold', 'Cancelled'];
 
-const ProjectModal: React.FC<ProjectModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  project,
-  mode,
-}) => {
+const ProjectModal: React.FC<ProjectModalProps> = ({ isOpen, onClose, onSubmit, project, mode }) => {
   const { user } = useAuthState();
   const { createProject } = useCreateProject();
   const { updateProject } = useUpdateProject();
