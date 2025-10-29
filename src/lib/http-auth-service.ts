@@ -225,65 +225,8 @@ export class HttpAuthService implements AuthService {
   // Private helper methods
 
   private mapUser(user: ApiUser, userType?: 'user' | 'tenantAdmin', isTenantAdmin?: boolean): AuthUser {
-    // Extended user metadata shape
-    interface ExtendedUserMetadata {
-      isTenantAdmin?: boolean;
-      userType?: 'user' | 'tenantAdmin';
-      [key: string]: unknown;
-    }
-
-    interface ExtendedUser {
-      id: string;
-      email: string;
-      app_metadata?: Record<string, unknown>;
-      user_metadata?: ExtendedUserMetadata;
-      aud?: string;
-    }
-
-    // If response already has Supabase-like shape, pass through safely
-    const extendedUser = user as unknown as ExtendedUser;
-    if (
-      extendedUser.aud !== undefined ||
-      extendedUser.app_metadata !== undefined ||
-      extendedUser.user_metadata !== undefined
-    ) {
-      const u = extendedUser;
-      
-      console.log('[mapUser] User has metadata, processing...', {
-        existingMetadata: u.user_metadata,
-        topLevelUserType: userType,
-        topLevelIsTenantAdmin: isTenantAdmin
-      });
-      
-      // Merge metadata: prioritize values from user_metadata, then top-level params
-      const existingIsTenantAdmin = u.user_metadata?.isTenantAdmin;
-      const existingUserType = u.user_metadata?.userType;
-      
-      const finalIsTenantAdmin = existingIsTenantAdmin !== undefined 
-        ? existingIsTenantAdmin 
-        : (isTenantAdmin !== undefined ? isTenantAdmin : false);
-        
-      const finalUserType = existingUserType || userType || (finalIsTenantAdmin ? 'tenantAdmin' : 'user');
-      
-      // Add userType info to existing metadata
-      const user_metadata = {
-        ...(u.user_metadata || {}),
-        userType: finalUserType,
-        isTenantAdmin: finalIsTenantAdmin
-      };
-      
-      console.log('[mapUser] Final metadata:', user_metadata);
-      
-      return {
-        id: u.id,
-        email: u.email,
-        app_metadata: u.app_metadata || {},
-        user_metadata,
-        aud: u.aud || 'authenticated'
-      };
-    }
-
     // Backend shape → normalize to our canonical AuthUser
+    // Always process as backend user first to ensure we get all fields
     const backend = user as unknown as {
       id: string;
       email: string;
@@ -291,6 +234,7 @@ export class HttpAuthService implements AuthService {
       role?: string;
       rol?: string; // Database field name
       tenantId?: number;
+      tenantName?: string; // NEW: Institution name
       auth_provider_id?: string;
       userType?: 'user' | 'tenantAdmin';
       isTenantAdmin?: boolean;
@@ -301,6 +245,8 @@ export class HttpAuthService implements AuthService {
     console.log('backend user:', backend);
     console.log('backend.role:', backend.role);
     console.log('backend.rol:', backend.rol);
+    console.log('backend.tenantId:', backend.tenantId);
+    console.log('backend.tenantName:', backend.tenantName);
     console.log('userType param:', userType);
     console.log('isTenantAdmin param:', isTenantAdmin);
     console.log('==============================');
@@ -327,6 +273,7 @@ export class HttpAuthService implements AuthService {
       email: backend.email,
       app_metadata: { provider: 'email' },
       user_metadata: {
+        tenantName: backend.tenantName, // NEW: Add tenantName to metadata
         name: derivedName,
         role: userRole,
         tenantId: backend.tenantId,
@@ -337,6 +284,8 @@ export class HttpAuthService implements AuthService {
       aud: 'authenticated'
     };
 
+    console.log('mapped user_metadata.tenantName:', mappedUser.user_metadata.tenantName);
+    console.log('mapped user_metadata.role:', mappedUser.user_metadata.role);
     console.log('=== mapUser RESULT DEBUG ===');
     console.log('mapped user:', mappedUser);
     console.log('mapped user_metadata:', mappedUser.user_metadata);

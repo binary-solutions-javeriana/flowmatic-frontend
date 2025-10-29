@@ -2,12 +2,23 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Calendar, User, Edit2, Trash2, AlertCircle, CheckSquare } from 'lucide-react';
+import { X, Calendar, User, Mail, Edit2, Trash2, AlertCircle, CheckSquare, Users } from 'lucide-react';
 import type { Project } from '@/lib/types/project-types';
 import { getProjectStateColor } from '@/lib/projects/utils';
 import { useDeleteProject } from '@/lib/projects';
+import { authApi } from '@/lib/authenticated-api';
+import { useAuthState } from '@/lib/auth-store';
 import ProjectModal from './ProjectModal';
 import { formatDateSafe } from './utils';
+
+interface ProjectMember {
+  UserID: number;
+  ProjectID: number;
+  Name: string;
+  Mail: string;
+  RoleID: number | null;
+  RoleName: string | null;
+}
 
 interface ProjectDetailsModalProps {
   isOpen: boolean;
@@ -25,11 +36,19 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
   onViewTasks
 }) => {
   const router = useRouter();
+  const { user } = useAuthState();
   const { deleteProject, loading: deleting } = useDeleteProject();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+
+  // Check if current user is a student (case insensitive and multiple possible values)
+  const userRole = (user?.user_metadata?.role as string)?.toLowerCase() || '';
+  const isStudent = userRole === 'estudiante' || userRole === 'student' || userRole === 'alumno';
 
   if (!isOpen || !project) return null;
 
@@ -80,6 +99,26 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
     }
   };
 
+  const handleViewMembers = async () => {
+    if (!showMembers) {
+      setMembersLoading(true);
+      try {
+        console.log('[ProjectDetailsModal] Fetching members for project:', project.proyect_id);
+        const response = await authApi.get<{data: ProjectMember[], meta: any}>(`/projects/${project.proyect_id}/users`);
+        console.log('[ProjectDetailsModal] Raw response:', response);
+        console.log('[ProjectDetailsModal] Response data:', response?.data);
+        console.log('[ProjectDetailsModal] Data length:', response?.data?.length);
+        setMembers(response?.data || []);
+      } catch (err) {
+        console.error('Failed to fetch project members:', err);
+        setMembers([]);
+      } finally {
+        setMembersLoading(false);
+      }
+    }
+    setShowMembers(!showMembers);
+  };
+
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
@@ -92,15 +131,15 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                   <h2 className="text-2xl font-bold text-[#0c272d]">
                     {project.name_proyect}
                   </h2>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors}`}>
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold ${statusColors}`}>
                     {project.state}
                   </span>
+                  {project.type && (
+                    <span className="inline-block px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-semibold">
+                      📋 {project.type}
+                    </span>
+                  )}
                 </div>
-                {project.type && (
-                  <span className="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">
-                    {project.type}
-                  </span>
-                )}
               </div>
               <button
                 onClick={onClose}
@@ -121,34 +160,47 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
               </div>
             )}
 
-            {/* Description */}
-            {project.description && (
+            {/* Project Information */}
+            <div className="space-y-6">
+              {/* Description */}
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-[#0c272d]">Description</h3>
-                <p className="text-[#0c272d]/70 leading-relaxed">
-                  {project.description}
-                </p>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <p className="text-[#0c272d]/70 leading-relaxed">
+                    {project.description || 'No description available'}
+                  </p>
+                </div>
               </div>
-            )}
 
-            {/* Project Details Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Dates */}
+              {/* Email */}
+              {project.mail && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-[#0c272d]">Project Email</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
+                      <Mail className="w-4 h-4 text-[#14a67e]" />
+                      <span>{project.mail}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Timeline */}
               {(project.start_date || project.end_date) && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-[#0c272d]">Timeline</h3>
-                  <div className="space-y-2">
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-2">
                     {project.start_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
-                        <span className="font-medium">Start:</span>
+                        <span className="font-medium">Start Date:</span>
                         <span>{formatDateSafe(project.start_date)}</span>
                       </div>
                     )}
                     {project.end_date && (
                       <div className="flex items-center space-x-2 text-sm text-[#0c272d]/70">
                         <Calendar className="w-4 h-4 text-[#14a67e]" />
-                        <span className="font-medium">End:</span>
+                        <span className="font-medium">End Date:</span>
                         <span>{formatDateSafe(project.end_date)}</span>
                       </div>
                     )}
@@ -180,6 +232,53 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Project Members Section */}
+            {showMembers && (
+              <div className="bg-gradient-to-r from-blue-50 to-blue-50/50 border border-blue-200 rounded-xl p-6 space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <h4 className="text-base font-bold text-blue-900">Project Members</h4>
+                  {membersLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                  )}
+                </div>
+                
+                {membersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
+                  </div>
+                ) : members.length > 0 ? (
+                  <div className="space-y-3">
+                    {members.map((member) => (
+                      <div
+                        key={member.UserID}
+                        className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-100"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{member.Name}</p>
+                            <p className="text-sm text-gray-600">{member.Mail}</p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                          {member.RoleName || 'Member'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-blue-300 mx-auto mb-3" />
+                    <p className="text-blue-700 font-medium">No members assigned</p>
+                    <p className="text-blue-600 text-sm">This project doesn't have any members assigned yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Delete Confirmation - GitHub Style */}
             {showDeleteConfirm && (
@@ -248,21 +347,24 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between px-8 py-6 border-t border-[#9fdbc2]/20 bg-white/50">
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={deleting || showDeleteConfirm}
-              className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 font-medium disabled:opacity-50"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Delete Project</span>
-            </button>
+          <div className={`flex items-center px-8 py-6 border-t border-[#9fdbc2]/20 bg-white/50 ${isStudent ? 'justify-end' : 'justify-between'}`}>
+            {!isStudent && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting || showDeleteConfirm}
+                className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 font-medium disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete Project</span>
+              </button>
+            )}
             <div className="flex items-center space-x-3">
               <button
-                onClick={onClose}
-                className="px-6 py-3 text-[#0c272d] hover:bg-[#9fdbc2]/10 rounded-xl transition-all duration-200 font-medium"
+                onClick={handleViewMembers}
+                className="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-300 flex items-center space-x-2 font-medium"
               >
-                Close
+                <Users className="w-4 h-4" />
+                <span>View Members</span>
               </button>
               <button
                 onClick={handleViewTasks}
@@ -271,13 +373,15 @@ const ProjectDetailsModal: React.FC<ProjectDetailsModalProps> = ({
                 <CheckSquare className="w-4 h-4" />
                 <span>View Tasks</span>
               </button>
-              <button
-                onClick={handleEdit}
-                className="bg-[#14a67e] text-white px-6 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2 font-medium"
-              >
-                <Edit2 className="w-4 h-4" />
-                <span>Edit Project</span>
-              </button>
+              {!isStudent && (
+                <button
+                  onClick={handleEdit}
+                  className="bg-[#14a67e] text-white px-6 py-3 rounded-xl hover:bg-[#14a67e]/90 transition-all duration-300 flex items-center space-x-2 font-medium"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  <span>Edit Project</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

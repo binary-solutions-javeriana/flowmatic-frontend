@@ -91,15 +91,101 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
     return 'U';
   };
 
+  // Get user role from metadata
+  const getUserRole = (): string => {
+    if (!user || !user.user_metadata) return 'Usuario';
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Check if user is tenant admin
+    if (metadata.isTenantAdmin === true || metadata.userType === 'tenantAdmin') {
+      return 'Administrador';
+    }
+
+    // Check for role field
+    if (metadata.role) {
+      return String(metadata.role);
+    }
+
+    return 'Usuario';
+  };
+
+  // Get tenant information
+  const getTenantInfo = (): string => {
+    if (!user || !user.user_metadata) return '';
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Prefer tenantName if available, otherwise fall back to tenantId
+    if (metadata.tenantName) {
+      return String(metadata.tenantName);
+    }
+
+    if (metadata.tenantId) {
+      return `Tenant: ${metadata.tenantId}`;
+    }
+
+    return '';
+  };
+
+  // Check if user is admin (TenantAdmin or SuperAdmin)
+  const isAdmin = (): boolean => {
+    if (!user || !user.user_metadata) return false;
+
+    const metadata = user.user_metadata as Record<string, unknown>;
+
+    // Check if user is tenant admin or has SuperAdmin role
+    const isTenantAdmin = metadata.isTenantAdmin === true;
+    const isUserTypeTenantAdmin = metadata.userType === 'tenantAdmin';
+    const isSuperAdmin = metadata.role === 'SuperAdmin';
+
+    const result = isTenantAdmin || isUserTypeTenantAdmin || isSuperAdmin;
+
+    // Debug log
+    console.log('[isAdmin] Check:', {
+      isTenantAdmin,
+      isUserTypeTenantAdmin,
+      isSuperAdmin,
+      role: metadata.role,
+      userType: metadata.userType,
+      result
+    });
+
+    return result;
+  };
+
   const displayName = getUserDisplayName();
   const initials = getUserInitials();
+  const userRole = getUserRole();
+  const tenantInfo = getTenantInfo();
+  const userIsAdmin = isAdmin();
+
+  // Debug logs
+  console.log('=== HEADER COMPONENT DEBUG ===');
+  console.log('user object:', user);
+  console.log('user.user_metadata:', user?.user_metadata);
+  console.log('displayName:', displayName);
+  console.log('userRole:', userRole);
+  console.log('tenantInfo:', tenantInfo);
+  console.log('userIsAdmin:', userIsAdmin);
+  console.log('==============================');
 
   return (
     <header className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg border-b border-[#9fdbc2]/20 dark:border-gray-700/50 p-6 relative z-20">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0c272d] dark:text-gray-100">{title}</h1>
-          <p className="text-[#0c272d]/60 dark:text-gray-400">Welcome back, {displayName}</p>
+          <p className="text-[#0c272d]/60 dark:text-gray-400">
+            Welcome back, {displayName}
+            <span className="ml-2 text-sm font-medium text-[#14a67e] dark:text-[#9fdbc2]">
+              ({userRole})
+            </span>
+            {tenantInfo && (
+              <span className="ml-2 text-xs text-[#0c272d]/50 dark:text-gray-500">
+                {tenantInfo}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center space-x-4">
           {showSearch && (
@@ -142,18 +228,21 @@ const Header: React.FC<HeaderProps> = ({ title, onNavigate, showSearch = false, 
 
                   {/* Menu Items */}
                   <div className="py-2">
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        if (onNavigate) {
-                          onNavigate('settings');
-                        }
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Settings</span>
-                    </button>
+                    {/* Settings - Only visible for admins */}
+                    {userIsAdmin && (
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          if (onNavigate) {
+                            onNavigate('settings');
+                          }
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-[#0c272d]/70 dark:text-gray-300 hover:bg-[#9fdbc2]/10 dark:hover:bg-gray-700/50 hover:text-[#0c272d] dark:hover:text-gray-100 transition-colors flex items-center space-x-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Logout */}
