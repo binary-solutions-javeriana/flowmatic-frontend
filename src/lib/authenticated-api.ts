@@ -3,6 +3,7 @@
 
 import { ApiException } from './api';
 import { createAuthHeaders, isAuthenticated } from './auth-utils';
+import { config } from './config';
 
 // Authenticated API client that automatically adds auth headers
 export async function authenticatedApi<T>(
@@ -14,7 +15,9 @@ export async function authenticatedApi<T>(
   }
 
   const authHeaders = createAuthHeaders();
-  const url = `http://localhost:3000/v1${path}`;
+  // Force proxy on client to avoid CORS: build URL as relative when in browser
+  const base = typeof window !== 'undefined' ? '/api/backend' : config.api.backendUrl;
+  const url = `${base}/${config.api.version}${path}`;
   
   console.log(`[AuthenticatedApi] ${init?.method || 'GET'} ${url}`, {
     url,
