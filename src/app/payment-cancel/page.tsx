@@ -1,44 +1,40 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { config } from '@/lib/config';
 
-const PaymentCancelPage: React.FC = () => {
+// Ensure this page is treated as dynamic to avoid prerender CSR bailout errors
+export const dynamic = 'force-dynamic';
+
+function PaymentCancelInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Obtener sessionId de la URL o localStorage
     const urlSessionId = searchParams.get('sessionId');
     const storedSessionId = localStorage.getItem('paymentSessionId');
     const finalSessionId = urlSessionId || storedSessionId;
-    
     setSessionId(finalSessionId);
   }, [searchParams]);
 
   const handleBackToDashboard = () => {
-    // Limpiar sessionId del localStorage
     localStorage.removeItem('paymentSessionId');
     router.push('/dashboard');
   };
 
   const handleRetryPayment = async () => {
     setLoading(true);
-    
     try {
-      // Cancelar la sesión anterior si existe
       if (sessionId) {
-        await fetch(`http://localhost:3000/v1/payments/session/${sessionId}/cancel`, {
+        await fetch(`${config.payments.apiUrl}/session/${sessionId}/cancel`, {
           method: 'POST'
         });
       }
-      
-      // Volver a la página de dashboard
       router.push('/dashboard');
-      
     } catch (error) {
       console.error('Error retrying payment:', error);
     } finally {
@@ -49,12 +45,10 @@ const PaymentCancelPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#9fdbc2]/5 to-white dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl border border-[#9fdbc2]/20 dark:border-gray-700/50 p-8 shadow-lg text-center">
-        {/* Cancel Icon */}
         <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
 
-        {/* Title */}
         <h1 className="text-2xl font-bold text-[#0c272d] dark:text-gray-100 mb-2">
           Pago Cancelado
         </h1>
@@ -63,7 +57,6 @@ const PaymentCancelPage: React.FC = () => {
           El proceso de pago ha sido cancelado. No se realizó ningún cargo a tu cuenta.
         </p>
 
-        {/* Session Info */}
         {sessionId && (
           <div className="bg-white/40 dark:bg-gray-700/40 rounded-xl p-4 mb-6 text-left">
             <h3 className="font-semibold text-[#0c272d] dark:text-gray-100 mb-3">
@@ -86,7 +79,6 @@ const PaymentCancelPage: React.FC = () => {
           </div>
         )}
 
-        {/* Reasons for cancellation */}
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-6">
           <h3 className="font-medium text-yellow-800 dark:text-yellow-400 mb-2">
             Posibles motivos de cancelación:
@@ -99,7 +91,6 @@ const PaymentCancelPage: React.FC = () => {
           </ul>
         </div>
 
-        {/* Action Buttons */}
         <div className="space-y-3">
           <button
             onClick={handleRetryPayment}
@@ -131,14 +122,19 @@ const PaymentCancelPage: React.FC = () => {
             <span>Volver al Dashboard</span>
           </button>
         </div>
-
-        {/* Support Link */}
+        
         <p className="text-xs text-[#0c272d]/50 dark:text-gray-500 mt-6">
           ¿Necesitas ayuda? <a href="mailto:support@flowmatic.com" className="text-[#14a67e] hover:underline">Contacta soporte</a>
         </p>
       </div>
     </div>
   );
-};
+}
 
-export default PaymentCancelPage;
+export default function PaymentCancelPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}> 
+      <PaymentCancelInner />
+    </Suspense>
+  );
+}
