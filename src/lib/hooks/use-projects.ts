@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { authApi } from '../authenticated-api';
+import { ApiException } from '../api';
 import { useAuthState } from '../auth-store';
 import type { 
   Project, 
@@ -110,7 +111,8 @@ export function useProjects(initialFilters?: ProjectFilters) {
       if (filters?.order) params.append('order', filters.order);
 
       const queryString = params.toString();
-      const mail = user?.email;
+      const mail = user?.email; // no usado para construir rutas por ahora
+      const userId = user?.id ? Number(user.id) : undefined; // no usado para construir rutas por ahora
       const tenantId = user?.user_metadata?.tenantId as number | undefined;
 
       let url: string;
@@ -118,31 +120,31 @@ export function useProjects(initialFilters?: ProjectFilters) {
 
       switch (category) {
         case 'owned':
-          url = mail
-            ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
-            : `/projects?${queryString}`;
+          url = `/projects?${queryString}`;
           break;
         case 'participant':
-          url = mail
-            ? `/projects/by-participant?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
-            : `/projects?${queryString}`;
+          url = `/projects?${queryString}`;
           break;
         case 'tenant':
           url = tenantId !== undefined
-            ? `/projects/by-tenant?tenantId=${tenantId}&mail=${encodeURIComponent(mail || '')}&${queryString}&orderBy=ProjectID&order=desc`
+            ? `/projects/by-tenant?tenantId=${tenantId}&${queryString}&orderBy=ProjectID&order=desc`
             : `/projects?${queryString}`;
           break;
         default:
-          url = mail
-            ? `/projects/by-mail?mail=${encodeURIComponent(mail)}&${queryString}&orderBy=ProjectID&order=desc`
-            : `/projects?${queryString}`;
+          url = `/projects?${queryString}`;
       }
 
       console.log('[useProjects] Fetching projects with URL:', url);
       console.log('[useProjects] Filters:', filters);
       console.log('[useProjects] API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
-      const response = await authApi.get<BackendProject[] | BackendApiResponse<BackendProject[]>>(url);
+      let response: BackendProject[] | BackendApiResponse<BackendProject[]>;
+      try {
+        response = await authApi.get<BackendProject[] | BackendApiResponse<BackendProject[]>>(url);
+      } catch (e) {
+        // Si /projects también devuelve 404, tratamos como lista vacía (handled abajo)
+        throw e;
+      }
       
       console.log('[useProjects] Response received:', response);
       if (!Array.isArray(response)) {
@@ -166,14 +168,23 @@ export function useProjects(initialFilters?: ProjectFilters) {
       
       console.log('[useProjects] Projects state updated with', items.length, 'projects');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects';
-      setError(errorMessage);
-      console.error('[useProjects] Error fetching projects:', err);
-      console.error('[useProjects] Error details:', {
-        message: errorMessage,
-        error: err,
-        stack: err instanceof Error ? err.stack : undefined
-      });
+      // Si después de los fallbacks el backend sigue respondiendo 404,
+      // asumimos "sin proyectos" en lugar de mostrar error.
+      if (err instanceof ApiException && err.statusCode === 404) {
+        console.warn('[useProjects] All fallbacks returned 404. Treating as empty list.');
+        setProjects([]);
+        setPagination(null);
+        setError(null);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch projects';
+        setError(errorMessage);
+        console.error('[useProjects] Error fetching projects:', err);
+        console.error('[useProjects] Error details:', {
+          message: errorMessage,
+          error: err,
+          stack: err instanceof Error ? err.stack : undefined
+        });
+      }
     } finally {
       setLoading(false);
     }

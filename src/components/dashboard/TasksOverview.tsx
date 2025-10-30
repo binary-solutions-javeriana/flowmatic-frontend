@@ -47,7 +47,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
   const { projects, loading: projectsLoading, error: projectsError } = useProjects({ 
     page: 1, 
     limit: 100, 
-    orderBy: 'created_at', 
+    orderBy: 'ProjectID', 
     order: 'desc' 
   });
 

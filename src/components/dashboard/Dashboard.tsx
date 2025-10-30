@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
   const { projects, loading, error } = useProjects({ 
     page: 1, 
     limit: 100, 
-    orderBy: 'created_at', 
+    orderBy: 'ProjectID', 
     order: 'desc' 
   });
 

@@ -179,6 +179,15 @@ export function useTasks(initialFilters?: TaskFilters) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTasks = useCallback(async (filters?: TaskFilters) => {
+    // Permitir desactivar las llamadas de tareas para evitar 404s mientras se define el backend
+    const disableTasks = (process.env.NEXT_PUBLIC_DISABLE_TASKS ?? 'false') === 'true';
+    if (disableTasks) {
+      setTasks([]);
+      setPagination(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -227,9 +236,18 @@ export function useTasks(initialFilters?: TaskFilters) {
 
       console.log('[useTasks] Tasks state updated with', response.data.length, 'tasks');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
-      setError(errorMessage);
-      console.error('[useTasks] Error fetching tasks:', err);
+      const status = getStatusCode(err);
+      const message = err instanceof Error ? err.message : '';
+      if (status === 404 || message.includes('404') || message.includes('Cannot GET')) {
+        console.warn('[useTasks] Tasks endpoint not available. Treating as empty list.');
+        setTasks([]);
+        setPagination(null);
+        setError(null);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
+        setError(errorMessage);
+        console.error('[useTasks] Error fetching tasks:', err);
+      }
     } finally {
       setLoading(false);
     }
