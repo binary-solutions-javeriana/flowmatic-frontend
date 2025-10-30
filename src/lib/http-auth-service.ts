@@ -25,7 +25,9 @@ export class HttpAuthService implements AuthService {
 
   async login(credentials: LoginRequest): Promise<AuthResult> {
     try {
-      const url = 'http://localhost:3000/v1/auth/login';
+      // Always use proxy on the client to avoid CORS and cross-origin issues
+      const base = typeof window !== 'undefined' ? '/api/backend' : config.api.backendUrl;
+      const url = `${base}/${config.api.version}/auth/login`;
       const requestBody = JSON.stringify(credentials);
       
       console.log(`[HttpAuthService] POST ${url}`, {
@@ -34,7 +36,7 @@ export class HttpAuthService implements AuthService {
         credentials: credentials
       });
       
-      // Direct fetch call to bypass config and proxy
+      // Use config and proxy (avoids CORS and ngrok interstitial)
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -110,7 +112,7 @@ export class HttpAuthService implements AuthService {
 
   async register(credentials: RegisterRequest): Promise<AuthResult> {
     try {
-      const url = 'http://10.43.103.86:3000/v1/auth/register';
+      const url = `${config.api.apiUrl}/auth/register`;
       const requestBody = JSON.stringify(credentials);
       
       console.log(`[HttpAuthService] POST ${url}`, {
@@ -119,7 +121,7 @@ export class HttpAuthService implements AuthService {
         credentials: credentials
       });
       
-      // Direct fetch call to bypass config and proxy
+      // Use config and proxy (avoids CORS and ngrok interstitial)
       const response = await fetch(url, {
         method: 'POST',
         headers: {
