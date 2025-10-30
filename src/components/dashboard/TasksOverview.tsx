@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Kanban, 
   List, 
@@ -57,10 +57,13 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ projectId }) => {
     limit: 100
   });
 
+  // Memoize filters to avoid refetch loops from object identity changes
+  const projectTasksFilters = useMemo(() => ({ page: 1, limit: 100 }), []);
+
   // Fetch project-specific tasks if projectId is provided
   const { tasks: projectTasks, loading: projectTasksLoading, error: projectTasksError, refetch: refetchProjectTasks } = useProjectTasks(
     projectId && projectId > 0 ? projectId : null,
-    { page: 1, limit: 100 }
+    projectTasksFilters
   );
 
   // Use project tasks if projectId is provided, otherwise use all tasks
